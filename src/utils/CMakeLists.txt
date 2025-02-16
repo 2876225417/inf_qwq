@@ -14,4 +14,7 @@ target_link_libraries(utils
     PUBLIC
     onnxruntime::onnxruntime
     ${OpenCV_LIBS}
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Gui
 )

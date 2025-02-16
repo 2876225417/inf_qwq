@@ -15,6 +15,13 @@ target_include_directories(components
     ${OpenCV_INCLUDE_DIRS}
 )
 
+
+target_link_libraries(components
+    PRIVATE
+    utils
+)
+
+# 3rdparty
 target_link_libraries(components
     PUBLIC
     Qt6::Core

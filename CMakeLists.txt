@@ -15,7 +15,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${ONNXRUNTIME_INCLUDE_DIR}
-)
+) 
 
 find_package(onnxruntime REQUIRED)
 find_package(OpenCV REQUIRED)
