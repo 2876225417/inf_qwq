@@ -1,27 +1,26 @@
 #pragma once
 
 #include <QPixmap>
-#include <QObject>
 #include <QTimer>
-
+#include <QThread>
 #include <opencv2/opencv.hpp>
+#include <qthread.h>
 
-
-class video_capturer: public QObject {
+class video_capturer: public QThread {
     Q_OBJECT
 public:
-    explicit video_capturer(QObject* parent = nullptr);
+    explicit video_capturer(QThread* parent = nullptr);
     ~video_capturer();
 
-    void start();
     void stop();
+    void run() override;
 signals:
-    void frame_captured(QPixmap frame);
+    void frame_captured(QImage frame);
 private slots:
-    void capture_frame();
-
+    // void capture_frame();
 private:
+
     cv::VideoCapture m_capturer;
-    QTimer* m_timer;
+    volatile bool m_stop = false;
 };
 

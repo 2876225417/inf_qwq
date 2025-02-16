@@ -1,6 +1,7 @@
 
 
 #include <components/camera_wrapper.h>
+#include <qimage.h>
 #include <qpixmap.h>
 
 
@@ -16,9 +17,10 @@ camera_wrapper::camera_wrapper(QWidget* parent)
     connect( m_video_capturer 
            , &video_capturer::frame_captured
            , this
-           , [this](QPixmap frame) {
-                m_video_stream->setPixmap(frame);
+           , [this](QImage frame) {
+                qDebug() << "Captured!";
            });
+    m_video_capturer->run();
     m_camera_layout->addWidget(m_video_stream);
 
     setLayout(m_camera_layout);
