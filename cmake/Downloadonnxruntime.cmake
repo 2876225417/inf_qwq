@@ -1,4 +1,4 @@
-# 独立下载模块
+
 function(download_onnxruntime)
     set(options ENABLE_GPU)
     cmake_parse_arguments(ORT "${options}" "" "" ${ARGN})
@@ -7,7 +7,6 @@ function(download_onnxruntime)
     set(ONNXRUNTIME_ROOT "${3RDPARTY_DIR}/onnxruntime")
 
     if(NOT EXISTS "${ONNXRUNTIME_ROOT}/LICENSE")
-        # 平台判定
         if(CMAKE_SYSTEM_NAME MATCHES "Linux")
             set(ORT_OS "linux")
             set(EXT "tgz")
@@ -18,7 +17,6 @@ function(download_onnxruntime)
             message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
         endif()
 
-        # GPU版本后缀处理
         if(ORT_ENABLE_GPU)
             set(GPU_SUFFIX "-gpu")
             set(VALIDATE_FILE "cuda")
@@ -27,11 +25,9 @@ function(download_onnxruntime)
             set(VALIDATE_FILE "LICENSE")
         endif()
 
-        # 构造下载路径
         set(ORT_FILENAME "onnxruntime-${ORT_OS}-x64${GPU_SUFFIX}-1.20.1.${EXT}")
         set(DOWNLOAD_URL "https://github.com/microsoft/onnxruntime/releases/download/v1.20.1/${ORT_FILENAME}")
 
-        # 下载和解压
         message(STATUS "Downloading ONNX Runtime: ${DOWNLOAD_URL}")
         file(DOWNLOAD
             ${DOWNLOAD_URL}
@@ -40,7 +36,6 @@ function(download_onnxruntime)
             SHOW_PROGRESS
         )
 
-        # 解压并重命名
         execute_process(
             COMMAND ${CMAKE_COMMAND} -E tar xf "${3RDPARTY_DIR}/${ORT_FILENAME}"
             WORKING_DIRECTORY ${3RDPARTY_DIR}
@@ -50,13 +45,10 @@ function(download_onnxruntime)
             message(FATAL_ERROR "解压失败: ${result}")
         endif()
 
-        # 清理和验证
         file(REMOVE "${3RDPARTY_DIR}/${ORT_FILENAME}")
         if(NOT EXISTS "${ONNXRUNTIME_ROOT}/${VALIDATE_FILE}")
             message(FATAL_ERROR "安装验证失败，请检查下载文件完整性")
         endif()
     endif()
-
-    # 导出路径到父作用域
     set(onnxruntime_DIR "${ONNXRUNTIME_ROOT}/lib/cmake/onnxruntime" PARENT_SCOPE)
 endfunction()
