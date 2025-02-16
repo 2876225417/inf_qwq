@@ -1,22 +1,21 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
   
-find_package(onnxruntime REQUIRED)
-
+add_subdirectory(windows)
+add_subdirectory(utils)
 
 add_executable(inf_qwq
-    main.cpp 
-    utils/ort_inf.cpp
+    main.cpp
 )
 
 target_include_directories(inf_qwq
-    PUBLIC
+    PRIVATE
     ${CMAKE_SOURCE_DIR}/include
-    ${ONNXRUNTIME_INCLUDE_DIR}
 )
 
- 
-target_link_libraries(inf_qwq  
-    PUBLIC
-    onnxruntime::onnxruntime
-)  
+# sub_module
+target_link_libraries(inf_qwq
+    PRIVATE
+    windows
+    utils
+)
