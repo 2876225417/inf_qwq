@@ -17,8 +17,8 @@ class mainwindow: public QMainWindow {
 public:
     explicit mainwindow(QWidget* parent = nullptr);
     ~mainwindow();
-
-    QHBoxLayout* mainwindow_layout;
+    QWidget* m_mainwindow_layout;
+    QHBoxLayout* m_mainwindow_layout_wrapper;
 private:
 
     camera_wrapper* m_camera;
