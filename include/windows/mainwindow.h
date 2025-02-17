@@ -19,6 +19,8 @@ public:
     ~mainwindow();
     QWidget* m_mainwindow_layout;
     QHBoxLayout* m_mainwindow_layout_wrapper;
+    QGroupBox* m_mainwindow_camera_layout;
+    QHBoxLayout* m_mainwindow_camera_layout_wrapper;
 private:
 
     camera_wrapper* m_camera;

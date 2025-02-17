@@ -21,13 +21,14 @@ void video_capturer::run() {
     while (!m_stop) {
         cv::Mat frame;
         m_capturer >> frame;
+        if (frame.empty()) break;
 
         QImage cap_frame = QImage ( frame.data
                                   , frame.cols
                                   , frame.rows
                                   , frame.step
-                                  , QImage::Format_RGB888
-                                  ) ;
+                                  , QImage::Format_BGR888
+                                  ) ; 
         emit frame_captured(cap_frame);
     }
 }
