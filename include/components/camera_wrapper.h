@@ -16,8 +16,12 @@ public:
     explicit camera_wrapper(QWidget* parent = nullptr);
     ~camera_wrapper();
 
+
+signals:
+    void img_cropped(QImage&);
 protected:
     bool eventFilter(QObject*, QEvent*) override;
+
 private slots: 
     QRect rect2coords(const QRect&);
 private:
@@ -27,4 +31,5 @@ private:
     video_capturer* m_video_capturer;
     draw_overlay* m_draw_overlay;
     QImage m_current_frame;
+
 };

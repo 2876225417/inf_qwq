@@ -21,10 +21,13 @@ camera_wrapper::camera_wrapper(QWidget* parent)
     connect ( m_draw_overlay
             , &draw_overlay::selected
             , [this](const QRect& rect) {
+                
                 QRect video_rect = rect2coords(rect);
+                
                 QImage cropped = m_current_frame.copy(video_rect);
                 // debug
                 // qDebug() << "video rect coords: " << video_rect;
+                emit img_cropped(cropped);
             });
     connect( m_video_capturer 
            , &video_capturer::frame_captured
@@ -61,6 +64,7 @@ bool camera_wrapper::eventFilter(QObject* watched, QEvent* event) {
     }
     return QWidget::eventFilter(watched, event);
 }
+
 
 
 camera_wrapper::~camera_wrapper() {
