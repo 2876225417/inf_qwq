@@ -23,9 +23,11 @@ QVector<QRect> draw_overlay::selections() const {  }
 
 void draw_overlay::handle_rect_number_changed(int index) {
     if (m_edit_index >= 0 && m_edit_index < m_rects.size()) {
-        m_rects[m_drag_idx].number = index + 1;
+        m_rects[m_edit_index].number = index + 1;
         update();
         qDebug() << "idx changed: " << m_rects[m_drag_idx].number;
+        for(const auto& rd: m_rects)
+            qDebug() << "number: " << rd.number;
     }
     m_number_combobox->hide();
     m_edit_index = -1;
@@ -143,7 +145,7 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
         painter.setPen(Qt::white);
         painter.setFont(QFont("Arial", 10, QFont::Bold));
 
-            qDebug() << "rd_number: " << rd.number;
+            // qDebug() << "rd_number: " << rd.number;
             painter.drawText(rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft | Qt::AlignTop, QString::number(rd.number));
         
     }
