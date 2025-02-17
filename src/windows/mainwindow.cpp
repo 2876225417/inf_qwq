@@ -11,6 +11,12 @@ mainwindow::mainwindow(QWidget* parent)
     { 
     m_camera = new camera_wrapper();
 
+    m_tool_bar = new tool_bar();
+    addToolBar(Qt::TopToolBarArea, m_tool_bar);
+
+    m_status_bar = new status_bar();
+    setStatusBar(m_status_bar);
+
     m_mainwindow_camera_layout_wrapper->addWidget(m_camera);
     m_mainwindow_camera_layout_wrapper->setAlignment(m_camera, Qt::AlignLeft | Qt::AlignTop);
     m_mainwindow_camera_layout_wrapper->setContentsMargins(0, 0, 0, 0);

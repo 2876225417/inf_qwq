@@ -25,9 +25,7 @@ camera_wrapper::camera_wrapper(QWidget* parent)
                 QImage cropped = m_current_frame.copy(video_rect);
                 // debug
                 // qDebug() << "video rect coords: " << video_rect;
-
             });
-    
     connect( m_video_capturer 
            , &video_capturer::frame_captured
            , this
@@ -35,12 +33,10 @@ camera_wrapper::camera_wrapper(QWidget* parent)
                 m_video_stream->setPixmap(QPixmap::fromImage(frame));
                 m_current_frame = frame.copy();
            });
-    
     m_camera_layout->addWidget(m_video_stream);
     m_video_capturer->start(); 
     setLayout(m_camera_layout);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
 }
 
 

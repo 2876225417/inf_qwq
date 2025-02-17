@@ -10,6 +10,10 @@
 #include <QWidget>
 
 #include <components/camera_wrapper.h>
+#include <components/tool_bar.h>
+#include <components/status_bar.h>
+
+
 #include <QHBoxLayout>
 
 class mainwindow: public QMainWindow {
@@ -24,4 +28,8 @@ public:
 private:
 
     camera_wrapper* m_camera;
+
+
+    tool_bar* m_tool_bar;
+    status_bar* m_status_bar;
 };

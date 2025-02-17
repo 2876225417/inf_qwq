@@ -13,9 +13,14 @@ add_library(windows
 target_include_directories(windows
     PUBLIC
     ${OpenCV_INCLUDE_DIRS}
-
 )
 
+target_link_libraries(windows
+    PUBLIC
+    components
+)
+
+#3rdparty
 target_link_libraries(windows
     PUBLIC
     Qt6::Core
