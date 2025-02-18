@@ -20,15 +20,21 @@ camera_wrapper::camera_wrapper(QWidget* parent)
 
     connect ( m_draw_overlay
             , &draw_overlay::selected
-            , [this](const QRect& rect) {
-                
-                QRect video_rect = rect2coords(rect);
-                
-                QImage cropped = m_current_frame.copy(video_rect);
-                // debug
-                // qDebug() << "video rect coords: " << video_rect;
-                emit img_cropped(cropped);
+            , [this](QVector<rect_data>& rects) {
+                for (auto& rect: rects) {
+                    QRect video_rect = rect2coords(rect.rect);                
+                    QImage cropped = m_current_frame.copy(video_rect);
+
+                    cropped_image tmp{rect.number, cropped};
+                    cropped_images.append(tmp);
+
+                    // debug
+                    qDebug() << "video rect number: " << rect.number << "and coords: " << video_rect;
+                }
+                emit img_cropped(cropped_images);
             });
+
+    
     connect( m_video_capturer 
            , &video_capturer::frame_captured
            , this

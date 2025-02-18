@@ -4,14 +4,15 @@
 
 draw_overlay::draw_overlay(QWidget* parent)
     : QWidget{parent}
-    , m_number_combobox{new QComboBox()}
+    , m_number_combobox{new QComboBox(this)}
     {
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
     setAttribute(Qt::WA_TranslucentBackground);
 
-    m_number_combobox->addItems({"1", "2", "3"});
+    m_number_combobox->addItems({"1", "2", "3", "4"});
     m_number_combobox->hide();
     m_number_combobox->setWindowFlags(Qt::Popup);
+    m_number_combobox->installEventFilter(this);
     connect ( m_number_combobox
             , QOverload<int>::of(&QComboBox::activated)
             , this
@@ -64,7 +65,11 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
             m_edit_index = m_hover_idx;
             QRect target_rect = m_rects[m_hover_idx].rect;
             QPoint pos = mapToGlobal(target_rect.topRight() + QPoint(-50, 5));
-            m_number_combobox->move(pos);
+            
+            QPoint center_pos = mapToGlobal(target_rect.center());
+            QSize combobox_size = m_number_combobox->sizeHint();
+            m_number_combobox->move(center_pos - QPoint(combobox_size.width() / 2, combobox_size.height()));
+            m_number_combobox->raise();
             m_number_combobox->show();
             m_number_combobox->setCurrentIndex(m_rects[m_hover_idx].number - 1);
         }
@@ -115,7 +120,7 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
             qDebug() << "Rect added, count of rects: " 
                      << m_rects.size()
                      << "rect: " << new_rect.rect;
-            
+            emit selected(m_rects);
             m_current_rect = QRect();
         }
         m_is_dragging = false;
@@ -156,11 +161,25 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
     }
 }
 
+bool draw_overlay::eventFilter(QObject* obj, QEvent* e) {
+    if (obj == m_number_combobox && e->type() == QEvent::Hide) {
+        m_edit_index = -1;
+    }
+    return QWidget::eventFilter(obj, e);
+}
+
 bool draw_overlay::event(QEvent* e) {
-    if (e->type() == QEvent::MouseButtonPress && m_number_combobox->isVisible()) {
+    if (e->type() == QEvent::MouseButtonPress) {
         QMouseEvent* me = static_cast<QMouseEvent*>(e);
-        if (!m_number_combobox->geometry().contains(me->globalPos())) {
-            m_number_combobox->hide();
+
+        if (m_number_combobox->isVisible()) {
+            QPoint click_pos = me->globalPos();
+            QRect combobox_geo = m_number_combobox->geometry();
+
+            if (!combobox_geo.contains(click_pos)) {
+                m_number_combobox->hide();
+                update();
+            }
         }
     }
     return QWidget::event(e);

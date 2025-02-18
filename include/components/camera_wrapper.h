@@ -10,6 +10,11 @@
 #include <utils/video_capturer.h>
 #include <components/draw_overlay.h>
 
+struct cropped_image{
+    int number;
+    QImage image;
+};
+
 class camera_wrapper: public QWidget {
     Q_OBJECT
 public:
@@ -18,7 +23,7 @@ public:
 
 
 signals:
-    void img_cropped(QImage&);
+    void img_cropped(QVector<cropped_image>&);
 protected:
     bool eventFilter(QObject*, QEvent*) override;
 
@@ -32,4 +37,5 @@ private:
     draw_overlay* m_draw_overlay;
     QImage m_current_frame;
 
+    QVector<cropped_image> cropped_images;
 };

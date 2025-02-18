@@ -7,7 +7,7 @@ cropped_img_wrapper::cropped_img_wrapper(QWidget* parent)
     {
 
     m_cropped_image = new QLabel("Test");
-    m_cropped_image->setFixedSize(400, 300);
+    m_cropped_image->setFixedSize(300, 200);
     m_inferred_result = new QLabel("Test Label");
     m_cropped_layout_wrapper->addWidget(m_cropped_image);
     m_cropped_layout_wrapper->addWidget(m_inferred_result);

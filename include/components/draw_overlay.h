@@ -22,7 +22,7 @@ public:
     QVector<QRect> selections() const; 
 
 signals:
-    void selected(const QRect&);
+    void selected(QVector<rect_data>&);
 
 private slots:
     void handle_rect_number_changed(int index);
@@ -33,6 +33,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent*) override;
     void paintEvent(QPaintEvent*) override;
     bool event(QEvent*) override;
+    bool eventFilter(QObject*, QEvent*) override;
 private:
     QRect paint_close_btn(const QRect& rect) const;
     void update_hover_state(const QPoint& pos);
