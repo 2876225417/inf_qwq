@@ -21,18 +21,20 @@ camera_wrapper::camera_wrapper(QWidget* parent)
     connect ( m_draw_overlay
             , &draw_overlay::selected
             , [this](QVector<rect_data>& rects) {
-                for (auto& rect: rects) {
-                    QRect video_rect = rect2coords(rect.rect);                
-                    QImage cropped = m_current_frame.copy(video_rect);
-
-                    cropped_image tmp{rect.number, cropped};
-                    cropped_images.append(tmp);
-
-                    // debug
-                    qDebug() << "video rect number: " << rect.number << "and coords: " << video_rect;
-                }
-                emit img_cropped(cropped_images);
+                rect2image(rects);
+                emit img_cropped(m_cropped_images);
             });
+
+        connect ( m_draw_overlay
+                , &draw_overlay::update_frame_moving
+                , [this](QVector<rect_data>& rects) {
+                    rect2image(rects);
+    
+                        // debug
+                        // qDebug() << "video rect number: " << rect.number << "and coords: " << video_rect;
+                    
+                    emit img_cropped(m_cropped_images);
+                });
 
     
     connect( m_video_capturer 
@@ -62,6 +64,17 @@ QRect camera_wrapper::rect2coords(const QRect& rect) {
         rect.width() * x_scale,
         rect.height() * y_scale
     );
+}
+
+void camera_wrapper::rect2image(QVector<rect_data>& rects) {
+    m_cropped_images.clear();
+    for (auto& rect: rects) {
+        QRect video_rect = rect2coords(rect.rect);                
+        QImage cropped = m_current_frame.copy(video_rect);
+
+        cropped_image tmp{rect.number, cropped};
+        m_cropped_images.append(tmp);
+    }
 }
 
 bool camera_wrapper::eventFilter(QObject* watched, QEvent* event) {

@@ -23,7 +23,7 @@ public:
 
 signals:
     void selected(QVector<rect_data>&);
-
+    void update_frame_moving(QVector<rect_data>&);
 private slots:
     void handle_rect_number_changed(int index);
 

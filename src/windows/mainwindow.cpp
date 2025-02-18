@@ -23,6 +23,7 @@ mainwindow::mainwindow(QWidget* parent)
     m_status_bar = new status_bar();
     setStatusBar(m_status_bar);
 
+    m_ort_infer = new ort_inferer();
 
     m_cropped_img_1 = new cropped_img_wrapper();
     m_cropped_img_2 = new cropped_img_wrapper();
@@ -39,8 +40,8 @@ mainwindow::mainwindow(QWidget* parent)
             , &camera_wrapper::img_cropped
             , this
             , [this](QVector<cropped_image>& cropped_images) {
+                qDebug() << "count of images: " << cropped_images.size();
                 for (auto& cropped: cropped_images){
-                    qDebug() << "Rect number: " << cropped.number;
                     switch(cropped.number){
                         case 1: m_cropped_img_1->set_cropped_image(cropped.image); break;
                         case 2: m_cropped_img_2->set_cropped_image(cropped.image); break;

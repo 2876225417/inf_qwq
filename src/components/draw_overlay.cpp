@@ -104,6 +104,8 @@ void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
         QPoint delta = e->pos() - m_drag_start_pos;
         m_rects[m_drag_idx].rect.translate(delta);
         m_drag_start_pos = e->pos();
+        qDebug() << "Moving";
+        emit update_frame_moving(m_rects);
         update();
     } else if (m_is_dragging) {
         m_current_rect = QRect(m_start, e->pos()).normalized();

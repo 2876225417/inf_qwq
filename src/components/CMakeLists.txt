@@ -13,6 +13,7 @@ add_library(components
 target_include_directories(components
     PUBLIC
     ${OpenCV_INCLUDE_DIRS}
+    ${ONNXRUNTIME_INCLUDE_DIR}
 )
 
 

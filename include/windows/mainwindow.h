@@ -15,6 +15,7 @@
 #include <components/status_bar.h>
 #include <components/cropped_img_wrapper.h>
 #include <components/actions_wrapper.h>
+#include <utils/ort_inf.h>
 
 #include <QHBoxLayout>
 
@@ -23,29 +24,31 @@ class mainwindow: public QMainWindow {
 public:
     explicit mainwindow(QWidget* parent = nullptr);
     ~mainwindow();
-    QWidget* m_mainwindow_layout;
-    QHBoxLayout* m_mainwindow_layout_wrapper;
+    QWidget*                m_mainwindow_layout;
+    QHBoxLayout*            m_mainwindow_layout_wrapper;
 
-    QVBoxLayout* m_camera_rel_layout;
-    QGroupBox* m_mainwindow_camera_layout;
-    QHBoxLayout* m_mainwindow_camera_layout_wrapper;
+    QVBoxLayout*            m_camera_rel_layout;
+    QGroupBox*              m_mainwindow_camera_layout;
+    QHBoxLayout*            m_mainwindow_camera_layout_wrapper;
 
-    actions_wrapper* m_actions_wrapper;
+    actions_wrapper*        m_actions_wrapper;
 
-    QGroupBox* m_camera_cropped_layout;
-    QVBoxLayout* m_camera_cropped_layout_wrapper;
+    QGroupBox*              m_camera_cropped_layout;
+    QVBoxLayout*            m_camera_cropped_layout_wrapper;
 private:
 
-    camera_wrapper* m_camera;
-    camera_config_wrapper* m_camera_config;
+    camera_wrapper*         m_camera;
+    camera_config_wrapper*  m_camera_config;
 
-    QHBoxLayout* m_cropped_img_1_and_2_wrapper;
-    cropped_img_wrapper* m_cropped_img_1;
-    cropped_img_wrapper* m_cropped_img_2;
-    QHBoxLayout* m_cropped_img_3_and_4_wrapper;
-    cropped_img_wrapper* m_cropped_img_3;
-    cropped_img_wrapper* m_cropped_img_4;
+    QHBoxLayout*            m_cropped_img_1_and_2_wrapper;
+    cropped_img_wrapper*    m_cropped_img_1;
+    cropped_img_wrapper*    m_cropped_img_2;
+    QHBoxLayout*            m_cropped_img_3_and_4_wrapper;
+    cropped_img_wrapper*    m_cropped_img_3;
+    cropped_img_wrapper*    m_cropped_img_4;
 
-    tool_bar* m_tool_bar;
-    status_bar* m_status_bar;
+    ort_inferer*             m_ort_infer;
+
+    tool_bar*               m_tool_bar;
+    status_bar*             m_status_bar;
 };

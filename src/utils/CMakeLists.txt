@@ -10,10 +10,16 @@ add_library(utils
     ${HEADER_FILES}
 )
 
+target_include_directories(utils
+    PUBLIC
+    ${ONNXRUNTIME_INCLUDE_DIR}
+)
+
+
 target_link_libraries(utils
     PUBLIC
     onnxruntime::onnxruntime
-    ${OpenCV_LIBS}
+    ${OpenCV_LIBS} 
     Qt6::Core
     Qt6::Widgets
     Qt6::Gui

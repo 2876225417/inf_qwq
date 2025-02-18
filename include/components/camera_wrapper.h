@@ -8,6 +8,7 @@
 
 
 #include <utils/video_capturer.h>
+
 #include <components/draw_overlay.h>
 
 struct cropped_image{
@@ -30,6 +31,8 @@ protected:
 private slots: 
     QRect rect2coords(const QRect&);
 private:
+    void rect2image(QVector<rect_data>&);
+
     QHBoxLayout* m_camera_layout;
     QLabel* m_video_stream;
   
@@ -37,5 +40,5 @@ private:
     draw_overlay* m_draw_overlay;
     QImage m_current_frame;
 
-    QVector<cropped_image> cropped_images;
+    QVector<cropped_image> m_cropped_images;
 };
