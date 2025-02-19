@@ -1,4 +1,5 @@
 
+#include "components/cropped_img_wrapper.h"
 #include <components/cropped_wrapper.h>
 
 template <int cropped_count>
@@ -28,6 +29,7 @@ void cropped_wrapper<cropped_count>::create_croppeds_wrapper() {
         m_croppeds.push_back(cropped_part);
         grid_layout->addWidget(cropped_part, i / cols, i % cols);
     }
+
 
     if (need_scroll) {
         m_croppeds_wrapper_gtr_4 = new QScrollArea(this);
