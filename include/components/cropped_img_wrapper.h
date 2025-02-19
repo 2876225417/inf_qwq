@@ -7,7 +7,7 @@
 #include <QVBoxLayout>
 
 class cropped_img_wrapper: public QWidget{ 
-    Q_OBJECT
+    Q_OBJECT 
 public:
     explicit cropped_img_wrapper(QWidget* parent = nullptr);
     ~cropped_img_wrapper() = default;

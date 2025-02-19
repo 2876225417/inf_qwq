@@ -23,17 +23,17 @@ mainwindow::mainwindow(QWidget* parent)
     m_status_bar = new status_bar();
     setStatusBar(m_status_bar);
 
-    m_ort_infer = new ort_inferer();
+    m_4_croppeds_img = new cropped_wrapper<4>(this); 
 
     m_cropped_img_1 = new cropped_img_wrapper();
     m_cropped_img_2 = new cropped_img_wrapper();
-    m_cropped_img_1_and_2_wrapper->addWidget(m_cropped_img_1);
-    m_cropped_img_1_and_2_wrapper->addWidget(m_cropped_img_2);
+    // m_cropped_img_1_and_2_wrapper->addWidget(m_cropped_img_1);
+    //m_cropped_img_1_and_2_wrapper->addWidget(m_cropped_img_2);
     m_cropped_img_3 = new cropped_img_wrapper();
     m_cropped_img_4 = new cropped_img_wrapper();
-    m_cropped_img_3_and_4_wrapper->addWidget(m_cropped_img_3);
-    m_cropped_img_3_and_4_wrapper->addWidget(m_cropped_img_4);
-    
+    //m_cropped_img_3_and_4_wrapper->addWidget(m_cropped_img_3);
+    // m_cropped_img_3_and_4_wrapper->addWidget(m_cropped_img_4);
+    m_cropped_img_1_and_2_wrapper->addWidget(m_4_croppeds_img);
     m_actions_wrapper = new actions_wrapper();
 
     connect ( m_camera

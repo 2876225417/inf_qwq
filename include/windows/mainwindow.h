@@ -17,7 +17,11 @@
 #include <components/actions_wrapper.h>
 #include <utils/ort_inf.h>
 
+#include <components/cropped_wrapper.h>
+
+
 #include <QHBoxLayout>
+
 
 class mainwindow: public QMainWindow {
     Q_OBJECT
@@ -46,6 +50,8 @@ private:
     QHBoxLayout*            m_cropped_img_3_and_4_wrapper;
     cropped_img_wrapper*    m_cropped_img_3;
     cropped_img_wrapper*    m_cropped_img_4;
+
+    cropped_wrapper<4>*     m_4_croppeds_img;
 
     ort_inferer*             m_ort_infer;
 
