@@ -52,6 +52,7 @@ private:
 
     cv::Mat preprocess_image(const cv::Mat& img) {
         cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
+        
         float scale = static_cast<float>(m_model_height) / img.rows;
         cv::resize(img, img, cv::Size(static_cast<int>(img.cols * scale), m_model_height));
 

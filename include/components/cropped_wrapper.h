@@ -25,10 +25,10 @@ public:
     void set_image(int, QImage&) override;
     void set_result(int, QString&) override;
 private:
+    QVector<cropped_img_wrapper*> m_croppeds;
     void create_croppeds_wrapper();
     QGridLayout* m_croppeds_wrapper_not_gtr_4;
     QScrollArea* m_croppeds_wrapper_gtr_4;
-    QVector<cropped_img_wrapper*> m_croppeds;
 };
 
 extern template class cropped_wrapper<2>;

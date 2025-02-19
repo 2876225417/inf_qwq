@@ -38,17 +38,8 @@ mainwindow::mainwindow(QWidget* parent)
             , this
             , [this](QVector<cropped_image>& cropped_images) {
                 qDebug() << "count of images: " << cropped_images.size();
-                for (auto& cropped: cropped_images){
-                    m_4_croppeds_img[cropped.number].set_image(cropped.number, cropped.image);
-                    // switch(cropped.number){
-                    //     case 1: m_4_croppeds_img[cropped.number - 1].set_image(cropped.image); 
-                    //     case 2: m_cropped_img_2->set_cropped_image(cropped.image); 
-                    //     case 3: m_cropped_img_3->set_cropped_image(cropped.image); 
-                    //     case 4: m_cropped_img_4->set_cropped_image(cropped.image); 
-                    //     case 5: 
-                    //     default: break;
-                    // }
-                }
+                for (auto& cropped: cropped_images)
+                    m_4_croppeds_img->set_image(cropped.number - 1, cropped.image);
             });
 
     m_camera_cropped_layout_wrapper->addLayout(m_cropped_img_1_and_2_wrapper);
