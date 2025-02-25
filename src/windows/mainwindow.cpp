@@ -1,6 +1,8 @@
 #include "components/camera_wrapper.h"
 #include <windows/mainwindow.h>
 
+
+
 mainwindow::mainwindow(QWidget* parent)
     : QMainWindow{parent}
     // mainwindow_layout
@@ -31,6 +33,9 @@ mainwindow::mainwindow(QWidget* parent)
     m_cropped_img_3 = new cropped_img_wrapper();
     m_cropped_img_4 = new cropped_img_wrapper();
     m_cropped_img_1_and_2_wrapper->addWidget(m_4_croppeds_img);
+    m_cus_button = new cus_button();
+    m_cropped_img_1_and_2_wrapper->addWidget(m_cus_button);
+
     m_actions_wrapper = new actions_wrapper();
 
     connect ( m_camera

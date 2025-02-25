@@ -30,4 +30,6 @@ target_link_libraries(components
     Qt6::Gui
     Qt6::Multimedia
     Qt6::MultimediaWidgets
+    Qt6::OpenGLWidgets
+    OpenGL::GL
 )
