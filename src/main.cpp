@@ -9,9 +9,13 @@
 #include <utils/ort_inf.h>
 
 int main(int argc, char* argv[]) {
-    QApplication app(argc, argv);
 
-    mainwindow main_mainwindow;
-    main_mainwindow.show();
-    return app.exec();
+    ort_inferer* ort = new ort_inferer();
+
+
+    // QApplication app(argc, argv);
+    //
+    // mainwindow main_mainwindow;
+    // main_mainwindow.show();
+    // return app.exec();
 }
