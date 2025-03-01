@@ -19,11 +19,12 @@
 class ort_inferer {
 public:
     ort_inferer() {
+        std::cout << "Start inf" << std::endl;
         Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "ort_inferer");
         Ort::SessionOptions session_options;
         session_options.SetIntraOpNumThreads(1);
 
-        const std::string model_path = "/* model path */ ";
+        const std::string model_path = "model.onnx";
         Ort::Session session(env, model_path.c_str(), session_options);
 
         const int MODEL_HEIGHT = 48;
@@ -34,7 +35,7 @@ public:
         }
 
         cv::Mat input_blob = preprocess_image(img, MODEL_HEIGHT);
-        
+        std::cout << "Processed Image" << std::endl; 
         Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(
             OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault
         );
@@ -42,6 +43,7 @@ public:
         std::vector<int64_t> input_shape = {
             1, 3, MODEL_HEIGHT, input_blob.size[3]
         };
+        std::cout << "Get input shape!" << std::endl;
 
         Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
             memory_info,
@@ -50,6 +52,7 @@ public:
             input_shape.data(),
             input_shape.size()
         );
+        std::cout << "Here" << std::endl;
 
         std::vector<const char*> input_names = {"x"};
         std::vector<const char*> output_names = {"save_infer_model/scale_0.tmp_0"};
@@ -102,17 +105,19 @@ public:
         }
     }
 private:
-    cv::Mat preprocess_image(const cv::Mat& frame, int target_height) {
+    cv::Mat preprocess_image(cv::Mat& frame, int target_height) {
         cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
 
         /** keep ratio
          *  get transformed scale -> target_height / rows
          */
+        std::cout << "Image processing!~ Target height: " << target_height << std::endl;
         float scale = static_cast<float>(target_height) / frame.rows;
         int target_width = static_cast<int>(frame.cols * scale);
         cv::resize(frame, frame, cv::Size(target_width, target_height));
         // normalize
-        frame.convertTo(frame, CV_32F, 1.f / 255.f);
+        std::cout << "Get frame height and width!" << std::endl; 
+        frame.convertTo(frame, CV_32F, 1.0 / 255.0);
         cv::Mat channels[3];
         cv::split(frame, channels);
 
@@ -122,6 +127,7 @@ private:
         return blob.reshape(1, {1, 3, target_height, target_width}).clone();
     }
 
+    // char_dict mapping
     const std::vector<char> char_dict = {
         '-',
         '.',
