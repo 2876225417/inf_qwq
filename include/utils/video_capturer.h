@@ -5,7 +5,7 @@
 #include <QThread>
 #include <opencv2/opencv.hpp>
 #include <qthread.h>
-
+#include <atomic>
 class video_capturer: public QThread {
     Q_OBJECT
 public:
@@ -22,6 +22,6 @@ private slots:
 private:
 
     cv::VideoCapture m_capturer;
-    volatile bool m_stop = false;
+    std::atomic_bool m_stop{false};
 };
 

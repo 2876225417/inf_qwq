@@ -11,6 +11,8 @@ video_capturer::video_capturer(QThread* parent)
 }
 
 video_capturer::~video_capturer() {
+    stop();
+    m_capturer.release();
 }
 
 void video_capturer::run() {
@@ -33,8 +35,16 @@ void video_capturer::run() {
         emit raw_frame_captured(frame);
         emit frame_captured(cap_frame);
     }
+    m_capturer.release();
 }
 
 void video_capturer::stop() {
+    m_stop = true;
+    if (isRunning()) {
+        wait(1000);
+        if (isRunning()) {
+            terminate();
+        }
+    }
     
 }
