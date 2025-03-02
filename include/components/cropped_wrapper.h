@@ -14,6 +14,7 @@ public:
         : QWidget{parent} { }
     virtual void set_image(int, QImage&) = 0;
     virtual void set_result(int, QString&) = 0;
+    virtual QString get_result(int, QImage&) = 0;
     virtual ~cropped_imgs_wrapper() = default;
 };
 
@@ -24,6 +25,7 @@ public:
     explicit cropped_wrapper(QWidget* parent = nullptr);
     void set_image(int, QImage&) override;
     void set_result(int, QString&) override;
+    QString get_result(int, QImage&) override;
 private:
     QVector<cropped_img_wrapper*> m_croppeds;
     void create_croppeds_wrapper();

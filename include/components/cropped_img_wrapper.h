@@ -1,5 +1,9 @@
 #pragma once
 
+
+// single cropped
+// image + inffered result
+
 #include <QWidget>
 #include <QLabel>
 #include <QGroupBox>

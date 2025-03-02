@@ -126,12 +126,16 @@ private:
 };
 
 
+#include <utils/ort_inf.h>
+
 class actions_wrapper: public QWidget {
     Q_OBJECT
 public:
     explicit actions_wrapper(QWidget* parent = nullptr);
-    
+    ~actions_wrapper() = default;
 private:
+    std::unique_ptr<ort_inferer> m_ort_inferer;
+
     QGroupBox* m_actions_layout;
     QHBoxLayout* m_actions_layout_wrapper;
 

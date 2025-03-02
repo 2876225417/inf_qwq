@@ -1,5 +1,6 @@
 
 
+#include "utils/video_capturer.h"
 #include <components/camera_wrapper.h>
 #include <qimage.h>
 #include <qpixmap.h>
@@ -44,6 +45,9 @@ camera_wrapper::camera_wrapper(QWidget* parent)
                 m_video_stream->setPixmap(QPixmap::fromImage(frame));
                 m_current_frame = frame.copy();
            });
+
+
+
     m_camera_layout->addWidget(m_video_stream);
     m_video_capturer->start(); 
     setLayout(m_camera_layout);

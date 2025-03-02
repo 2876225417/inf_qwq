@@ -16,6 +16,7 @@ public:
     void run() override;
 signals:
     void frame_captured(QImage frame);
+    void raw_frame_captured(cv::Mat frame);
 private slots:
     // void capture_frame();
 private:

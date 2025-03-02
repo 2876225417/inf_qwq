@@ -27,8 +27,10 @@ void video_capturer::run() {
                                   , frame.cols
                                   , frame.rows
                                   , frame.step
-                                  , QImage::Format_BGR888
-                                  ) ; 
+                                  , QImage::Format_RGB888
+                                  ) ;
+        cap_frame = cap_frame.rgbSwapped();
+        emit raw_frame_captured(frame);
         emit frame_captured(cap_frame);
     }
 }

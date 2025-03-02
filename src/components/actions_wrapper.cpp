@@ -3,6 +3,7 @@
 
 actions_wrapper::actions_wrapper(QWidget* parent)
     : QWidget{parent}
+    , m_ort_inferer{ std::make_unique<ort_inferer>() }
     , m_actions_layout{new QGroupBox(this)}
     , m_actions_layout_wrapper{new QHBoxLayout(m_actions_layout)}
     , m_col_1_layout_wrapper{new QVBoxLayout()}
@@ -29,6 +30,13 @@ actions_wrapper::actions_wrapper(QWidget* parent)
     {
     m_start_inf_button = new QPushButton("Inf");
     m_start_inf_wrapper->addWidget(m_start_inf_button);
+
+    connect( m_start_inf_button
+           , &QPushButton::clicked
+           , this, []() {
+                qDebug() << "Button clicked!\n"; 
+           });
+
 
     m_switch_camera_stream_button = new QPushButton("Pause");
     m_switch_camera_stream_wrapper->addWidget(m_switch_camera_stream_button);

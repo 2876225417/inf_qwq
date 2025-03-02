@@ -47,9 +47,19 @@ void cropped_wrapper<cropped_count>::create_croppeds_wrapper() {
 template <int cropped_count>
 void cropped_wrapper<cropped_count>::set_image(int index, QImage& img) {
    if (index >= 0 && index < m_croppeds.size()) {
-        m_croppeds[index]->set_cropped_image(img);   
+        m_croppeds[index]->set_cropped_image(img); 
    } 
 }
+
+template <int cropped_count>
+QString cropped_wrapper<cropped_count>::get_result(int index, QImage& image) {
+    if (index >= 0 && index < m_croppeds.size()) {
+
+
+    }
+}
+
+
 
 template <int cropped_count>
 void cropped_wrapper<cropped_count>::set_result(int index, QString& res) {
