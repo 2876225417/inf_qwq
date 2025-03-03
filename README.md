@@ -1,15 +1,26 @@
 # 数字智能识别系统
 
 
-基于`Linux`操作系统开发
 
-## 功能一览
-1. 支持自动跟踪和手动框选目标(数码管)
-2. 支持识别数码管内容
-3. 支持多相机(USB、RTSP协议相机)
-4. 支持跨平台(支持`Linux`和`Windows`)
-5. 支持本地存储数据
-6. 支持定时任务
+
+`CMake`构建
+```CMake
+mkdir build && cd build
+
+cmake -DCMAKE_BUILD_TYPE=Release ..
+
+# 或 Ninja 加速构建
+cmake -DCMAKE_BUILD_TYPE=Release -G Ninja ..
+
+# 构建
+cmake --build .
+
+# 运行
+./bin/inf_qwq
+```
+
+
+
 
 
 ### 有问题请提 **Issue** !!!

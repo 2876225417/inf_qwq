@@ -4,7 +4,7 @@ set(3RDPARTY "${CMAKE_SOURCE_DIR}/3rdparty")
 
 set(ONNXRUNTIME_INCLUDE_DIR "${3RDPARTY}/onnxruntime/include")
 if (NOT EXISTS "${ONNXRUNTIME_INCLUDE_DIR}/onnxruntime_c_api.h")
-    message(FATAL_ERROR "Headers of ONXRuntime is incomplete: ${ONNXRUNTIME_INCLUDE_DIR}")
+    message(FATAL_ERROR "Headers of ONNXRuntime is incomplete: ${ONNXRUNTIME_INCLUDE_DIR}")
 endif()
 
 set(ONNXRUNTIME_LIB "${3RDPARTY}/onnxruntime/lib")

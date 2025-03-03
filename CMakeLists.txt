@@ -18,7 +18,10 @@ add_compile_options(-mno-direct-extern-access)
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${ONNXRUNTIME_INCLUDE_DIR}
+    ${HKVISION_INCLUDE_DIR}
 ) 
+
+message(STATUS "hk_vision include dir: ${HKVISION_INCLUDE_DIR}")
 
 find_package(onnxruntime REQUIRED)
 find_package(OpenGL REQUIRED)
