@@ -1,10 +1,11 @@
 
 #include <components/draw_overlay.h>
-
+#include <QTimer>
 
 draw_overlay::draw_overlay(QWidget* parent)
     : QWidget{parent}
     , m_number_combobox{new QComboBox(this)}
+    , m_timer{new QTimer(this)}
     {
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -18,9 +19,12 @@ draw_overlay::draw_overlay(QWidget* parent)
             , this
             , &draw_overlay::handle_rect_number_changed
             ) ;
-}
 
-QVector<QRect> draw_overlay::selections() const {  }
+    connect ( m_timer, &QTimer::timeout, this, [this]() {
+               if (!m_rects.isEmpty()) emit timer_timeout_update(m_rects); 
+               else qDebug() << "No rects selected.";
+            } ); m_timer->start(5000);
+}
 
 void draw_overlay::handle_rect_number_changed(int index) {
     if (m_edit_index >= 0 && m_edit_index < m_rects.size()) {
@@ -151,10 +155,8 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
 
         painter.setPen(Qt::white);
         painter.setFont(QFont("Arial", 10, QFont::Bold));
-
-            // qDebug() << "rd_number: " << rd.number;
-            painter.drawText(rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft | Qt::AlignTop, QString::number(rd.number));
-        
+        painter.drawText( rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft 
+                        | Qt::AlignTop, QString::number(rd.number) ); 
     }
     if (m_is_dragging) {
         painter.setPen(QPen(Qt::blue, 2));

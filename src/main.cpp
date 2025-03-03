@@ -10,11 +10,6 @@
 
 int main(int argc, char* argv[]) {
 
-    // ort_inferer* ort = new ort_inferer();
-    // cv::Mat img = cv::imread("25.jpg");
-    // std::string res = ort->exec_inf(img);
-    // std::cout << "Inf res: " << res;
-    //
     QApplication app(argc, argv);
 
     mainwindow main_mainwindow;

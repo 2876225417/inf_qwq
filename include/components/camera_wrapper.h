@@ -21,13 +21,13 @@ class camera_wrapper: public QWidget {
 public:
     explicit camera_wrapper(QWidget* parent = nullptr);
     ~camera_wrapper();
-
-
 signals:
+    // send cropped img when selected and moving
     void img_cropped(QVector<cropped_image>&);
+    // send cropped img when start inferring
+    void img_cropped4inf(QVector<cropped_image>&);
 protected:
     bool eventFilter(QObject*, QEvent*) override;
-
 private slots: 
     QRect rect2coords(const QRect&);
 private:
@@ -41,4 +41,6 @@ private:
     QImage m_current_frame;
 
     QVector<cropped_image> m_cropped_images;
+
+    QTimer* m_timer;
 };

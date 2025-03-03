@@ -11,7 +11,8 @@ camera_wrapper::camera_wrapper(QWidget* parent)
     : QWidget{parent}
     , m_camera_layout{new QHBoxLayout()}
     , m_video_stream{new QLabel("Wait for streaming...", this)}
-    , m_draw_overlay{new draw_overlay} 
+    , m_draw_overlay{new draw_overlay}
+    , m_timer{new QTimer(this)}
     {
     m_video_capturer = new video_capturer();  
     m_video_stream->installEventFilter(this);
@@ -26,30 +27,35 @@ camera_wrapper::camera_wrapper(QWidget* parent)
                 emit img_cropped(m_cropped_images);
             });
 
-        connect ( m_draw_overlay
-                , &draw_overlay::update_frame_moving
-                , [this](QVector<rect_data>& rects) {
-                    rect2image(rects);
-    
-                        // debug
-                        // qDebug() << "video rect number: " << rect.number << "and coords: " << video_rect;
-                    
-                    emit img_cropped(m_cropped_images);
-                });
 
-    
+    connect ( m_draw_overlay
+            , &draw_overlay::update_frame_moving
+            , [this](QVector<rect_data>& rects) {
+                rect2image(rects); 
+                // debug
+                // qDebug() << "video rect number: " 
+                //          << rect.number 
+                //          << "and coords: " << video_rect;
+                emit img_cropped(m_cropped_images);
+            });
+
+    connect (m_draw_overlay, &draw_overlay::timer_timeout_update, [this](QVector<rect_data>& rects) {
+                qDebug() << "Frame updated";
+                rect2image(rects);
+                emit img_cropped4inf(m_cropped_images);
+            });
+
+    // camera stream  
     connect( m_video_capturer 
            , &video_capturer::frame_captured
            , this
            , [this](QImage frame) {
                 m_video_stream->setPixmap(QPixmap::fromImage(frame));
                 m_current_frame = frame.copy();
-           });
-
-
+           }); m_video_capturer->start(); 
 
     m_camera_layout->addWidget(m_video_stream);
-    m_video_capturer->start(); 
+    
     setLayout(m_camera_layout);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 }
@@ -75,7 +81,6 @@ void camera_wrapper::rect2image(QVector<rect_data>& rects) {
     for (auto& rect: rects) {
         QRect video_rect = rect2coords(rect.rect);                
         QImage cropped = m_current_frame.copy(video_rect);
-
         cropped_image tmp{rect.number, cropped};
         m_cropped_images.append(tmp);
     }
@@ -88,9 +93,5 @@ bool camera_wrapper::eventFilter(QObject* watched, QEvent* event) {
     return QWidget::eventFilter(watched, event);
 }
 
-
-
-camera_wrapper::~camera_wrapper() {
-
-}
+camera_wrapper::~camera_wrapper() { }
 

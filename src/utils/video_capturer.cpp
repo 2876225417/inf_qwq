@@ -5,10 +5,7 @@
 
 video_capturer::video_capturer(QThread* parent)
     : QThread{parent}
-    , m_capturer{0}
-    {
-
-}
+    , m_capturer{0} { }
 
 video_capturer::~video_capturer() {
     stop();
@@ -32,7 +29,6 @@ void video_capturer::run() {
                                   , QImage::Format_RGB888
                                   ) ;
         cap_frame = cap_frame.rgbSwapped();
-        emit raw_frame_captured(frame);
         emit frame_captured(cap_frame);
     }
     m_capturer.release();
@@ -45,6 +41,5 @@ void video_capturer::stop() {
         if (isRunning()) {
             terminate();
         }
-    }
-    
+    } 
 }

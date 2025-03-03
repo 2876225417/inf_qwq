@@ -22,6 +22,7 @@ public:
                         );
     ~ort_inferer();
     std::string exec_inf(QImage& qimage);
+    void set_intra_threads(int num);
 
     std::string exec_inf(cv::Mat frame); 
 private:
@@ -32,8 +33,6 @@ private:
     const std::vector<const char*> m_input_names    = { "x" };
     const std::vector<const char*> m_output_names   = { "save_infer_model/scale_0.tmp_0" };
 
-
-    void set_intra_threads(int num);
 
     std::vector<Ort::Value> run_inference(cv::Mat& input_blob); 
 
