@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <fstream>
 #include <onnxruntime_cxx_api.h>
 #include <opencv2/core/hal/interface.h>
 #include <opencv2/opencv.hpp>
@@ -20,17 +21,33 @@ ort_inferer::ort_inferer( const OrtLoggingLevel& logging_level
 ort_inferer::~ort_inferer() { }
 
 #include <QDebug>
-std::string ort_inferer::exec_inf(QImage& qimage) {
+#include <locale>
+#include <codecvt>
+
+
+void ort_inferer::read_class_from_source(const std::string& file_path) {
+    std::ifstream in_file(file_path);
+    if (!in_file.is_open()) {
+        throw std::runtime_error("Failed to open class file" + file_path);
+    }
     
-    cv::Mat mat;
-    try {
-        mat = qimage2mat(qimage);
-        cv::imwrite("test.jpg", mat);
-        std::string res = exec_inf(mat);
-    } catch (std::exception& e) { qDebug() << "Exception: " << e.what(); }
-    
-    return "23";
+    m_class_names.clear();
+
+    std::string line;
+
+    while (std::getline(in_file, line)) {
+        line.erase(line.find_last_not_of("\n\r") + 1);
+        if (!line.empty()) {
+            std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+            m_class_names.emplace_back(std::move(line));
+        }
+    }
+    in_file.close();
+    if (m_class_names.empty()) {
+        throw std::runtime_error("Empty class list in file: " + file_path);
+    }
 }
+
 
 std::string ort_inferer::exec_inf(cv::Mat frame) {
     const int MODEL_HEIGHT = 48;

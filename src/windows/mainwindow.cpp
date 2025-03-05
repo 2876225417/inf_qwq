@@ -1,8 +1,10 @@
 #include "components/camera_wrapper.h"
+#include "components/cropped_wrapper.h"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "utils/ort_inf.h"
 #include <qimage.h>
+#include <qnamespace.h>
 #include <qpushbutton.h>
 #include <windows/mainwindow.h>
 
@@ -26,8 +28,10 @@ mainwindow::mainwindow(QWidget* parent)
     m_camera = new camera_wrapper();
     m_actions_wrapper = new actions_wrapper();
     // croppeds
-    m_4_croppeds_img = new cropped_wrapper<4>(this); 
-    m_cropped_img_wrapper->addWidget(m_4_croppeds_img);
+    m_4_croppeds_img = new cropped_wrapper<4>(); 
+    m_1_cropped_img = new cropped_wrapper<1>(this);
+    m_cropped_img_wrapper->addWidget(m_1_cropped_img);
+    m_cropped_img_wrapper->addWidget(test_class);
     // tool bar and status bar
     m_tool_bar = new tool_bar();
     addToolBar(Qt::TopToolBarArea, m_tool_bar);
@@ -35,7 +39,9 @@ mainwindow::mainwindow(QWidget* parent)
     setStatusBar(m_status_bar);
 
     m_inferer = new ort_inferer();
-    m_inferer->set_intra_threads(1); 
+    m_inferer->set_intra_threads(1);
+    m_chars_inferer = new chars_det_inferer();
+    m_chars_rec_inferer = new chars_inferer();
     // test for ort inf
     connect(test_inf, &QPushButton::clicked, this, [this]() { 
         cv::Mat mat = qimage2mat(tmp);
@@ -48,6 +54,7 @@ mainwindow::mainwindow(QWidget* parent)
         // std::string res = inferer->exec_inf(tmp);
         // qDebug() << "";
     });
+
     connect ( m_camera
             , &camera_wrapper::img_cropped
             , this
@@ -56,14 +63,52 @@ mainwindow::mainwindow(QWidget* parent)
                 tmp = cropped_images[0].image;
                 cv::Mat mat = qimage2mat(tmp);
                 cv::imshow("tmp", mat);
+                
                 for (auto& cropped: cropped_images){
+                    m_1_cropped_img->set_image(0, cropped.image);
                     m_4_croppeds_img->set_image(cropped.number - 1, cropped.image);  qDebug() << "Images set"; }
              });
+    
+    // keyword
+    connect ( m_actions_wrapper, &actions_wrapper::keywords_changed
+            , this, [this](const QString& keywords) {
+                qDebug() << "Keywords: " << keywords;
+                m_1_cropped_img->set_keywords(keywords); 
+             });
+
+
+    connect (test_class, &QPushButton::clicked, this, [this]() {
+                auto start = std::chrono::high_resolution_clock::now();
+                
+                int idx = 0;
+                std::vector<cv::Mat> croppeds = m_chars_inferer->run_inf(for2);
+                QString result_set;
+                int box_idx = 0;
+                for (const auto& cropped: croppeds) {
+                    QString res = QString(m_chars_rec_inferer->infer(cropped).c_str());
+                    qDebug() << "Res result: " << res;
+                    result_set += res;
+                    // std::string cropped_name = "Text Box " +std::to_string(++box_idx);
+                    // cv::imshow(cropped_name, cropped);
+                    // cv::moveWindow(cropped_name, 100 + box_idx * 50, 100);
+                    // cv::waitKey(0);
+                }
+                qDebug() << "Result set: " << result_set;
+                m_1_cropped_img->set_inf_result(result_set);
+
+                auto end = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+                qDebug() << "推理总耗时： " << duration;
+    });
+
 
     connect ( m_camera, &camera_wrapper::img_cropped4inf
             , this, [this](QVector<cropped_image>& cropped_images) {
                 auto start = std::chrono::high_resolution_clock::now();
+                
                 int idx = 0;
+                m_1_cropped_img->set_image(cropped_images[0].image);
+                for2 = qimage2mat(cropped_images[0].image);
                 for (auto cropped: cropped_images) {
                     idx += 1;
                     qDebug() << "推理结果: " << m_inferer->exec_inf(qimage2mat(cropped.image));  

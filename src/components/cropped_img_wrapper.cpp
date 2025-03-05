@@ -7,16 +7,25 @@ cropped_img_wrapper::cropped_img_wrapper(QWidget* parent)
     {
 
     m_cropped_image = new QLabel("Test");
-    m_cropped_image->setFixedSize(300, 200);
+    m_cropped_image->setFixedSize(500, 400);
+    setFixedSize(500, 400);
     m_inferred_result = new QLabel("Test Label");
     m_cropped_layout_wrapper->addWidget(m_cropped_image);
     m_cropped_layout_wrapper->addWidget(m_inferred_result);
+}
+
+void cropped_img_wrapper::set_cropped_image_size(int width, int height) {
+    m_cropped_image->setFixedSize(width, height);
 }
 
 void cropped_img_wrapper::set_cropped_image(QImage& cropped) {
     m_cropped_image->setPixmap(QPixmap::fromImage(cropped));
 }
 
-void cropped_img_wrapper::set_inffered_result(QString& res) {
+void cropped_img_wrapper::set_inffered_result(const QString& res) {
     m_inferred_result->setText(res);
+}
+
+void cropped_img_wrapper::remove_inferred_result() {
+    m_inferred_result->deleteLater();
 }

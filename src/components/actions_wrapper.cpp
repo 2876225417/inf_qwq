@@ -1,4 +1,8 @@
 #include <components/actions_wrapper.h>
+#include <qabstractspinbox.h>
+#include <qboxlayout.h>
+#include <qlabel.h>
+#include <qlineedit.h>
 
 
 actions_wrapper::actions_wrapper(QWidget* parent)
@@ -6,91 +10,100 @@ actions_wrapper::actions_wrapper(QWidget* parent)
     , m_ort_inferer{ std::make_unique<ort_inferer>() }
     , m_actions_layout{new QGroupBox(this)}
     , m_actions_layout_wrapper{new QHBoxLayout(m_actions_layout)}
+    // col 1
     , m_col_1_layout_wrapper{new QVBoxLayout()}
-    , m_col_2_layout_wrapper{new QVBoxLayout()}
-    , m_col_3_layout_wrapper{new QVBoxLayout()}
-    // start_inf
+    // start inf
     , m_start_inf_wrapper{new QHBoxLayout()}
-    // switch_camera_stream
-    , m_switch_camera_stream_wrapper{new QHBoxLayout()}
-    // select_cropped_count
-    , m_select_cropped_count_wrapper{new QHBoxLayout()}
-    // adjust_inf_interval
-    , m_adjust_inf_interval_wrapper{new QHBoxLayout()}
-    // select_store_path
-    , m_select_store_path_wrapper{new QHBoxLayout()}
-    // auto_cropped
-    , m_switch_auto_crop_wrapper{new QHBoxLayout()}
-    // select_camera
-    , m_select_camera_index_wrapper{new QHBoxLayout()}
-    // switch_multi_cameras
-    , m_switch_multi_cameras_wrapper{new QHBoxLayout()}
-    // clear cropped
-    , m_clear_all_cropped_wrapper{new QHBoxLayout()}
+    // edit keywords
+    , m_edit_keywords_wrapper{new QHBoxLayout()}
+    // exit app
+    , m_exit_app_wrapper{new QHBoxLayout()}
+    // col 2
+    , m_col_2_layout_wrapper{new QVBoxLayout()}
+    // edit username
+    , m_edit_username_wrapper{new QHBoxLayout()}
+    // edit password
+    , m_edit_password_wrapper{new QHBoxLayout()}
+    // edit port
+    , m_edit_port_wrapper{new QHBoxLayout}
+    // col 3
+    , m_col_3_layout_wrapper{new QVBoxLayout()}
+    // edit ip
+    , m_edit_ip_wrapper{new QHBoxLayout()}
+    // edit channels
+    , m_edit_channels_wrapper{new QHBoxLayout()}
+    // edit sub_channels
+    , m_edit_sub_channels_wrapper{new QHBoxLayout()}
     {
-    m_start_inf_button = new QPushButton("Inf");
-    m_start_inf_wrapper->addWidget(m_start_inf_button);
+    // col_1
+    // start inf
+    m_start_inf = new QPushButton("Start");
+    m_start_inf_wrapper->addWidget(m_start_inf);
+    // edit keywords
+    m_edit_keywords_label = new QLabel("Keywords");
+    m_edit_keywords = new QLineEdit();
+    m_edit_keywords_wrapper->addWidget(m_edit_keywords_label);
+    m_edit_keywords_wrapper->addWidget(m_edit_keywords);
+    connect(m_edit_keywords, &QLineEdit::textChanged, this, [this]() {
+        // qDebug() << "keywords: " << m_edit_keywords->text();
+        emit keywords_changed(m_edit_keywords->text());
+    });
 
-    connect( m_start_inf_button
-           , &QPushButton::clicked
-           , this, []() {
-                qDebug() << "Button clicked!\n"; 
-           });
+    // exit app
+    m_exit_app = new QPushButton("Exit");
+    m_exit_app_wrapper->addWidget(m_exit_app);
 
+    m_col_1_layout_wrapper->addLayout(m_start_inf_wrapper);     // start inf
+    m_col_1_layout_wrapper->addLayout(m_edit_keywords_wrapper); // edit keywords
+    m_col_1_layout_wrapper->addLayout(m_exit_app_wrapper);      // exit app
+    
+    // col 2
+    // edit username
+    m_edit_username_label = new QLabel("Username");
+    m_edit_username = new QLineEdit();
+    m_edit_username_wrapper->addWidget(m_edit_username_label);
+    m_edit_username_wrapper->addWidget(m_edit_username);
 
-    m_switch_camera_stream_button = new QPushButton("Pause");
-    m_switch_camera_stream_wrapper->addWidget(m_switch_camera_stream_button);
+    // edit password
+    m_edit_password_label = new QLabel("Password");
+    m_edit_password = new QLineEdit();
+    m_edit_password_wrapper->addWidget(m_edit_password_label);
+    m_edit_password_wrapper->addWidget(m_edit_password);
 
-    m_select_cropped_count_label = new QLabel("Cropped Count");
-    m_select_cropped_count_combobox = new QComboBox();
-    m_select_cropped_count_combobox->addItem("2");
-    m_select_cropped_count_combobox->addItem("4");
-    m_select_cropped_count_combobox->addItem("6");
-    m_select_cropped_count_wrapper->addWidget(m_select_cropped_count_label);
-    m_select_cropped_count_wrapper->addWidget(m_select_cropped_count_combobox);
+    // edit port
+    m_edit_port_label = new QLabel("Port");
+    m_edit_port = new QLineEdit();
+    m_edit_port_wrapper->addWidget(m_edit_port_label);
+    m_edit_port_wrapper->addWidget(m_edit_port);
 
-    m_adjust_inf_interval_label = new QLabel("Inf Interval");
-    m_adjust_inf_interval_combobox = new QComboBox();
-    m_adjust_inf_interval_combobox->addItem("5");
-    m_adjust_inf_interval_combobox->addItem("15");
-    m_adjust_inf_interval_combobox->addItem("25");
-    m_adjust_inf_interval_wrapper->addWidget(m_adjust_inf_interval_label);
-    m_adjust_inf_interval_wrapper->addWidget(m_adjust_inf_interval_combobox);
+    m_col_2_layout_wrapper->addLayout(m_edit_username_wrapper);     // edit username
+    m_col_2_layout_wrapper->addLayout(m_edit_password_wrapper);     // edit password
+    m_col_2_layout_wrapper->addLayout(m_edit_port_wrapper);         // edit port
 
-    m_select_store_path_button = new QPushButton("Store Path");
-    m_select_store_path_wrapper->addWidget(m_select_store_path_button);
+    // col 3
+    // edit ip
+    m_edit_ip_label = new QLabel("IP");
+    m_edit_ip = new QLineEdit();
+    m_edit_ip_wrapper->addWidget(m_edit_ip_label);
+    m_edit_ip_wrapper->addWidget(m_edit_ip);
 
-    m_switch_auto_crop_button = new QPushButton("Auto Crop");
-    m_switch_auto_crop_wrapper->addWidget(m_switch_auto_crop_button);
+    // edit channels
+    m_edit_channels_label = new QLabel("Channels");
+    m_edit_channels = new QLineEdit();
+    m_edit_channels_wrapper->addWidget(m_edit_channels_label);
+    m_edit_channels_wrapper->addWidget(m_edit_channels);
 
-    m_select_camera_index_label = new QLabel("Camera");
-    m_select_camera_index_combobox = new QComboBox();
-    m_select_camera_index_wrapper->addWidget(m_select_camera_index_label);
-    m_select_camera_index_wrapper->addWidget(m_select_camera_index_combobox);
+    // edit sub_channels
+    m_edit_sub_channels_label = new QLabel("Sub Channels");
+    m_edit_sub_channels = new QLineEdit();
+    m_edit_sub_channels_wrapper->addWidget(m_edit_sub_channels_label);
+    m_edit_sub_channels_wrapper->addWidget(m_edit_sub_channels);
 
-    m_switch_multi_cameras_label = new QLabel("Multi Cameras");
-    m_switch_multi_cameras_checkbox = new QCheckBox();
-    m_switch_multi_cameras_wrapper->addWidget(m_switch_multi_cameras_label);
-    m_switch_multi_cameras_wrapper->addWidget(m_switch_multi_cameras_checkbox);
-
-    m_clear_all_cropped_button = new QPushButton("Clear Crops");
-    m_clear_all_cropped_wrapper->addWidget(m_clear_all_cropped_button);
-
-    m_col_1_layout_wrapper->addLayout(m_start_inf_wrapper);
-    m_col_1_layout_wrapper->addLayout(m_switch_camera_stream_wrapper);
-    m_col_1_layout_wrapper->addLayout(m_select_cropped_count_wrapper);
-
-    m_col_2_layout_wrapper->addLayout(m_adjust_inf_interval_wrapper);
-    m_col_2_layout_wrapper->addLayout(m_select_store_path_wrapper);
-    m_col_2_layout_wrapper->addLayout(m_switch_auto_crop_wrapper);
-
-    m_col_3_layout_wrapper->addLayout(m_select_camera_index_wrapper);
-    m_col_3_layout_wrapper->addLayout(m_switch_multi_cameras_wrapper);
-    m_col_3_layout_wrapper->addLayout(m_clear_all_cropped_wrapper);
-
+    m_col_3_layout_wrapper->addLayout(m_edit_ip_wrapper);
+    m_col_3_layout_wrapper->addLayout(m_edit_channels_wrapper);
+    m_col_3_layout_wrapper->addLayout(m_edit_sub_channels_wrapper);
 
     m_actions_layout_wrapper->addLayout(m_col_1_layout_wrapper);
     m_actions_layout_wrapper->addLayout(m_col_2_layout_wrapper);
     m_actions_layout_wrapper->addLayout(m_col_3_layout_wrapper);
-
 }

@@ -21,6 +21,7 @@
 #include <qevent.h>
 #include <qnamespace.h>
 #include <qopenglshaderprogram.h>
+#include <qpushbutton.h>
 #include <utils/ort_inf.h>
 
 #include <components/cropped_wrapper.h>
@@ -33,6 +34,9 @@ class mainwindow: public QMainWindow {
 public:
     explicit mainwindow(QWidget* parent = nullptr);
     ~mainwindow();
+signals:
+    void keywords_changed(const QString& keywords);
+
 private:
     // mainwindow layout
     QWidget*                m_mainwindow_layout;
@@ -54,14 +58,19 @@ private:
     QHBoxLayout*            m_cropped_img_wrapper;
     // camera croppeds layout
     cropped_wrapper<4>*     m_4_croppeds_img;
+    cropped_wrapper<1>*     m_1_cropped_img;
 
     QImage tmp;
     QPushButton* test_inf = new QPushButton("test_inf");
-    
+
+    QPushButton* test_class = new QPushButton("test_class");
+
     cv::Mat qimage2mat(QImage& qimage);
 
     ort_inferer* m_inferer;
-
+    chars_det_inferer* m_chars_inferer;
+    cv::Mat for2{};
+    chars_inferer* m_chars_rec_inferer;
     tool_bar*               m_tool_bar;
     status_bar*             m_status_bar;
 };

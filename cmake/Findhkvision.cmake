@@ -1,6 +1,6 @@
-
-
 cmake_minimum_required(VERSION 3.16)
+
+# Find HKVSION
 
 set(3RDPARTY "${CMAKE_SOURCE_DIR}/3rdparty")
 set(HKVISION_INCLUDE_DIR "${3RDPARTY}/hkvision/include")

@@ -1,6 +1,9 @@
 #pragma once
 
 #include <array>
+#include <qabstractspinbox.h>
+#include <qboxlayout.h>
+#include <qendian.h>
 #include <stdexcept>
 #include <string_view>
 
@@ -127,49 +130,64 @@ private:
 
 
 #include <utils/ort_inf.h>
+#include <QLineEdit>
+
 
 class actions_wrapper: public QWidget {
     Q_OBJECT
 public:
     explicit actions_wrapper(QWidget* parent = nullptr);
     ~actions_wrapper() = default;
+
+signals:
+    void keywords_changed(const QString& keywords);
+
 private:
     std::unique_ptr<ort_inferer> m_ort_inferer;
 
     QGroupBox* m_actions_layout;
     QHBoxLayout* m_actions_layout_wrapper;
 
+    // col 1
     QVBoxLayout* m_col_1_layout_wrapper;
+    // start inf
     QHBoxLayout* m_start_inf_wrapper;
-    QPushButton* m_start_inf_button;
-
-    QHBoxLayout* m_switch_camera_stream_wrapper;
-    QPushButton* m_switch_camera_stream_button;
-
-    QHBoxLayout* m_switch_auto_crop_wrapper;
-    QPushButton* m_switch_auto_crop_button;
-
-    QVBoxLayout* m_col_2_layout_wrapper;
-    QHBoxLayout* m_adjust_inf_interval_wrapper;
-    QLabel* m_adjust_inf_interval_label;
-    QComboBox* m_adjust_inf_interval_combobox;
-
-    QHBoxLayout* m_select_store_path_wrapper;
-    QPushButton* m_select_store_path_button;
-
-    QHBoxLayout* m_select_cropped_count_wrapper;
-    QLabel* m_select_cropped_count_label;
-    QComboBox* m_select_cropped_count_combobox;
-
-    QVBoxLayout* m_col_3_layout_wrapper;
-    QHBoxLayout* m_select_camera_index_wrapper;
-    QLabel* m_select_camera_index_label;
-    QComboBox* m_select_camera_index_combobox;
-
-    QHBoxLayout* m_switch_multi_cameras_wrapper;
-    QLabel* m_switch_multi_cameras_label;
-    QCheckBox* m_switch_multi_cameras_checkbox;   
+    QPushButton* m_start_inf;
+    // edit keywords
+    QHBoxLayout* m_edit_keywords_wrapper;
+    QLabel*      m_edit_keywords_label;
+    QLineEdit*   m_edit_keywords;
+    // exit app
+    QHBoxLayout* m_exit_app_wrapper;
+    QPushButton* m_exit_app;
     
-    QHBoxLayout* m_clear_all_cropped_wrapper;
-    QPushButton* m_clear_all_cropped_button;
+    // col 2
+    QVBoxLayout* m_col_2_layout_wrapper;
+    // edit username
+    QHBoxLayout* m_edit_username_wrapper;
+    QLabel*      m_edit_username_label;
+    QLineEdit*   m_edit_username;
+    // edit password
+    QHBoxLayout* m_edit_password_wrapper;
+    QLabel*      m_edit_password_label;
+    QLineEdit*   m_edit_password;
+    // edit port
+    QHBoxLayout* m_edit_port_wrapper;
+    QLabel*      m_edit_port_label;
+    QLineEdit*   m_edit_port;
+
+    // col 3
+    QVBoxLayout* m_col_3_layout_wrapper;
+    // edit ip 
+    QHBoxLayout* m_edit_ip_wrapper;
+    QLabel*      m_edit_ip_label;
+    QLineEdit*   m_edit_ip;
+    // edit channels
+    QHBoxLayout* m_edit_channels_wrapper;
+    QLabel*      m_edit_channels_label;
+    QLineEdit*   m_edit_channels;
+    // edit sub_channels
+    QHBoxLayout* m_edit_sub_channels_wrapper;
+    QLabel*      m_edit_sub_channels_label;
+    QLineEdit*   m_edit_sub_channels;
 };
