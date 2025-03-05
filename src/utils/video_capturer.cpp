@@ -22,6 +22,7 @@ void video_capturer::run() {
         cv::Mat frame;
         m_capturer >> frame;
         if (frame.empty()) break;
+        frame.resize(400, 300);
 
         QImage cap_frame = QImage ( frame.data
                                   , frame.cols

@@ -141,7 +141,7 @@ public:
 
 signals:
     void keywords_changed(const QString& keywords);
-
+    void start_inf();
 private:
     std::unique_ptr<ort_inferer> m_ort_inferer;
 

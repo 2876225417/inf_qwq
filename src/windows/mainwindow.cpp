@@ -31,7 +31,7 @@ mainwindow::mainwindow(QWidget* parent)
     m_4_croppeds_img = new cropped_wrapper<4>(); 
     m_1_cropped_img = new cropped_wrapper<1>(this);
     m_cropped_img_wrapper->addWidget(m_1_cropped_img);
-    m_cropped_img_wrapper->addWidget(test_class);
+    //m_cropped_img_wrapper->addWidget(test_class);
     // tool bar and status bar
     m_tool_bar = new tool_bar();
     addToolBar(Qt::TopToolBarArea, m_tool_bar);
@@ -55,6 +55,8 @@ mainwindow::mainwindow(QWidget* parent)
         // qDebug() << "";
     });
 
+
+
     connect ( m_camera
             , &camera_wrapper::img_cropped
             , this
@@ -62,7 +64,7 @@ mainwindow::mainwindow(QWidget* parent)
                 qDebug() << "count of images: " << cropped_images.size();
                 tmp = cropped_images[0].image;
                 cv::Mat mat = qimage2mat(tmp);
-                cv::imshow("tmp", mat);
+                // cv::imshow("tmp", mat);
                 
                 for (auto& cropped: cropped_images){
                     m_1_cropped_img->set_image(0, cropped.image);
@@ -77,7 +79,7 @@ mainwindow::mainwindow(QWidget* parent)
              });
 
 
-    connect (test_class, &QPushButton::clicked, this, [this]() {
+    connect (m_actions_wrapper, &actions_wrapper::start_inf, this, [this]() {
                 auto start = std::chrono::high_resolution_clock::now();
                 
                 int idx = 0;

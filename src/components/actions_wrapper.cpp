@@ -39,6 +39,11 @@ actions_wrapper::actions_wrapper(QWidget* parent)
     // start inf
     m_start_inf = new QPushButton("Start");
     m_start_inf_wrapper->addWidget(m_start_inf);
+    
+    connect (m_start_inf, &QPushButton::clicked, this, [this]() {
+        emit start_inf();
+    });
+
     // edit keywords
     m_edit_keywords_label = new QLabel("Keywords");
     m_edit_keywords = new QLineEdit();
