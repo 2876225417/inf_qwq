@@ -60,6 +60,14 @@ camera_wrapper::camera_wrapper(QWidget* parent)
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 }
 
+void camera_wrapper::set_scale_factor(double factor) {
+    m_video_capturer->set_scale_factor(factor);
+}
+
+void camera_wrapper::set_rtsp_stream(const QString& rtsp_url) {
+    qDebug() << "Try to switch to rtsp_url: " << rtsp_url;
+    m_video_capturer->switch_rtsp_stream(rtsp_url);
+}
 
 QRect camera_wrapper::rect2coords(const QRect& rect) {
     QSize video_size = m_video_stream->pixmap().size();

@@ -22,17 +22,18 @@ cropped_wrapper<cropped_count>::cropped_wrapper(QWidget* parent)
             m_image_layout = new QGroupBox();
             m_image_wrapper = new QHBoxLayout();
             m_image = new QLabel();
+            m_image->setMaximumSize(100, 100);
             m_image_wrapper->addWidget(m_image);
             m_image_layout->setLayout(m_image_wrapper);
             m_image->setStyleSheet("background: #333");
             // keywords
             m_keywords_layout = new QGroupBox();
             m_keywords_wrapper = new QHBoxLayout();
-            m_keywords_label = new QLabel("Keywords: ");
+            m_keywords_label = new QLabel("关键字： ");
             m_keywords_wrapper->addWidget(m_keywords_label);
             m_keywords_layout->setLayout(m_keywords_wrapper);
             // inf result
-            m_inf_result_layout = new QGroupBox();
+            m_inf_result_layout = new QGroupBox("识别结果：");
             m_inf_result_wrapper = new QHBoxLayout();
             m_inf_result = new QTextBrowser();
             m_inf_result_wrapper->addWidget(m_inf_result);

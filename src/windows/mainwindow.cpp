@@ -4,6 +4,7 @@
 #include "opencv2/imgcodecs.hpp"
 #include "utils/ort_inf.h"
 #include <qimage.h>
+#include <qlineedit.h>
 #include <qnamespace.h>
 #include <qpushbutton.h>
 #include <windows/mainwindow.h>
@@ -20,12 +21,16 @@ mainwindow::mainwindow(QWidget* parent)
     , m_mainwindow_camera_layout{new QGroupBox("Camera")}
     , m_mainwindow_camera_layout_wrapper{new QHBoxLayout()}
     // --camera_cropped_layout
-    , m_camera_cropped_layout{new QGroupBox("Cropped")}
+    , m_camera_cropped_layout{new QGroupBox("采集区")}
     , m_camera_cropped_layout_wrapper{new QVBoxLayout()}
     , m_cropped_img_wrapper{new QHBoxLayout()}
     {
     // camera and actions
     m_camera = new camera_wrapper();
+    m_camera->setMinimumWidth(650);
+
+
+
     m_actions_wrapper = new actions_wrapper();
     // croppeds
     m_4_croppeds_img = new cropped_wrapper<4>(); 
@@ -40,9 +45,9 @@ mainwindow::mainwindow(QWidget* parent)
 
     m_inferer = new ort_inferer();
     m_inferer->set_intra_threads(1);
-    m_chars_inferer = new chars_det_inferer();
+    m_chars_inferer = new chars_inf_det();
     m_chars_rec_inferer = new chars_inferer();
-    // test for ort inf
+    //test for ort inf
     connect(test_inf, &QPushButton::clicked, this, [this]() { 
         cv::Mat mat = qimage2mat(tmp);
         cv::imshow("ts", mat);
@@ -54,8 +59,21 @@ mainwindow::mainwindow(QWidget* parent)
         // std::string res = inferer->exec_inf(tmp);
         // qDebug() << "";
     });
+    
 
+    // rtsp stream
+    connect ( m_actions_wrapper, &actions_wrapper::connect_cam
+            , this, [this]() {
+                m_camera->set_rtsp_stream(m_config.comb());
+             });
 
+    // scale factor
+    connect ( m_actions_wrapper
+            , &actions_wrapper::scale_factor_changed
+            , this, [this](double factor) {
+                qDebug() << "factor in mainwindow: " << factor;
+                m_camera->set_scale_factor(factor);
+             });
 
     connect ( m_camera
             , &camera_wrapper::img_cropped
@@ -70,7 +88,45 @@ mainwindow::mainwindow(QWidget* parent)
                     m_1_cropped_img->set_image(0, cropped.image);
                     m_4_croppeds_img->set_image(cropped.number - 1, cropped.image);  qDebug() << "Images set"; }
              });
-    
+   
+    // username
+    connect ( m_actions_wrapper, &actions_wrapper::username_changed
+            , this, [this](const QString& username) {
+                qDebug() << "username: " << username;
+                m_config.username = username; 
+                qDebug() << "Comb: " << m_config.comb(); 
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb()));
+             });
+    // password
+    connect ( m_actions_wrapper, &actions_wrapper::password_changed
+            , this, [this](const QString& password) {
+                qDebug() << "password: " << password;
+                m_config.password = password;
+                qDebug() << "Comb: " << m_config.comb();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb()));
+             });
+    // ip
+    connect ( m_actions_wrapper, &actions_wrapper::ip_changed
+            , this, [this](const QString& ip) {
+                qDebug() << "ip: " << ip;
+                m_config.ip = ip;
+                qDebug() << "Comb: " << m_config.comb();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb()));
+             });
+   
+
+
+
+    // port
+    connect ( m_actions_wrapper, &actions_wrapper::port_changed
+            , this, [this](const QString& port) {
+                qDebug() << "port: " << port;
+                m_config.port = port;
+                qDebug() << "Comb: " << m_config.comb();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb()));
+             });
+
+
     // keyword
     connect ( m_actions_wrapper, &actions_wrapper::keywords_changed
             , this, [this](const QString& keywords) {

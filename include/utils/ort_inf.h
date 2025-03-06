@@ -6,8 +6,11 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <ios>
 #include <iterator>
 #include <onnxruntime_c_api.h>
+#include <opencv2/core/types.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <stdexcept>
 #include <string>
@@ -150,219 +153,304 @@ public:
     }
 };
 
+#include <fstream>
 
-class chars_det_inferer{
-public:
-    chars_det_inferer(const std::string& model_path = "det_server.onnx")
-        : m_env(ORT_LOGGING_LEVEL_WARNING)
-        #ifdef _WIN32
-        m_session(m_env, std::wstring(model_path.begin(), model_path.end()).c_str());
-        #else
-        , m_session(m_env,model_path.c_str(), Ort::SessionOptions{})
-        #endif 
-        { }
-
-        std::vector<cv::Mat> run_inf(cv::Mat& frame) {
-        
-        try {// preprocess image for text detection
-        auto [input_tensor, original_img] = preprocess_img(frame);
-        
-        std::vector<int64_t> input_shape = { 1, 3, original_img.rows, original_img.cols };
-        auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-
-        Ort::Value input_onnx_tensor = Ort::Value::CreateTensor<float>(
-            memory_info, input_tensor.data(), input_tensor.size(),
-            input_shape.data(), input_shape.size());
-
-        Ort::AllocatorWithDefaultOptions allocator;
-
-        std::vector<std::string> input_names;
-        std::vector<const char*> input_names_c_str;
-        size_t num_input_nodes = m_session.GetInputCount();
-        input_names.resize(num_input_nodes);
-        input_names_c_str.resize(num_input_nodes);
-
-        for (size_t i = 0; i < num_input_nodes; i++) {
-            Ort::AllocatedStringPtr input_name = m_session.GetInputNameAllocated(i, allocator);
-            input_names[i] = input_name.get();
-            input_names_c_str[i] = input_names[i].c_str();
-        }
-
-        std::vector<std::string> output_names;
-        std::vector<const char*> output_names_c_str;
-        size_t num_output_nodes = m_session.GetOutputCount();
-        output_names.resize(num_output_nodes);
-        output_names_c_str.resize(num_output_nodes);
-
-        for (size_t i = 0; i < num_output_nodes; i++) {
-            Ort::AllocatedStringPtr output_name = m_session.GetOutputNameAllocated(i, allocator);
-            output_names[i] = output_name.get();
-            output_names_c_str[i] = output_names[i].c_str();
-        }
-    
-        auto output_tensors = m_session.Run(
-            Ort::RunOptions{ nullptr },
-            input_names_c_str.data(),
-            &input_onnx_tensor,
-            1,
-            output_names_c_str.data(),
-            1);
-
-        float* output_data = output_tensors[0].GetTensorMutableData<float>();
-        std::vector<int64_t> output_shape = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
-
-        int height = output_shape[2];
-        int width = output_shape[3];
-        std::vector<float> score_map(output_data, output_data + (height * width));
-
-        auto boxes = process_detection_output(score_map, height, width);
-        qDebug() << "Detected " << boxes.size() << " text boxes";
-        
-        cv::Mat vis_img;
-        cv::cvtColor(original_img, vis_img, cv::COLOR_RGB2BGR);
-
-        int box_idx = 0;
-        std::vector<cv::Mat> chars_croppeds{};
-        for (const auto& box: boxes) {
-            cv::Mat cropped = warp_affine_crop(vis_img, box, chars_croppeds, 0.2f, 1.3f);
-            
-            if (cropped.empty()) continue;
-        }
-
-            return chars_croppeds;
-        // return boxes;
-        } catch (const Ort::Exception& e) {
-            return {};
-        } catch (const cv::Exception& e) {
-            return {};
-        } catch (const std::exception& e) {
-            return {};
-        }
-        return {};
-    }
+class chars_inf_det {
 private:
+    // must m_env then m_session
     Ort::Env m_env;
     Ort::Session m_session;
-
-    std::pair<std::vector<float>, cv::Mat> preprocess_img(cv::Mat& img) {
-        cv::Mat rgb_img;
-        cv::cvtColor(img, rgb_img, cv::COLOR_BGR2RGB);
+  
+public:
+    chars_inf_det(const std::string& model_path = "det_server.onnx")
+        : m_env(ORT_LOGGING_LEVEL_WARNING)
+        , m_session(m_env, model_path.c_str(), Ort::SessionOptions{})
+        {
+            qDebug() << "Try to initialize!";
         
-        float max_size = 1024.f;
-        float scale = std::min(max_size / rgb_img.cols, max_size / rgb_img.rows);
-        int scaled_w = static_cast<int>(rgb_img.cols * scale);
-        int scaled_h = static_cast<int>(rgb_img.rows * scale);
+        }
 
-        scaled_w = (scaled_w + 31) / 32 * 32;
-        scaled_h = (scaled_h + 31) / 32 * 32;
+//     inline std::vector<cv::Mat>
+//     run_inf(cv::Mat& frame) {
+//         cv::imshow("123", frame);
+//         std::vector<cv::Mat> det_croppeds{};
+//         try {
+//
+//             Ort::AllocatorWithDefaultOptions allocator;
+//             Ort::AllocatedStringPtr  input_name_ptr = m_session.GetInputNameAllocated(0, allocator);
+//             Ort::AllocatedStringPtr  output_name_ptr = m_session.GetOutputNameAllocated(0, allocator);
+//             const char* input_name = input_name_ptr.get();
+//             const char* output_name = output_name_ptr.get();
+//
+//             auto [input_tensor_values, original_img] = preprocess_image(frame);
+//
+//             std::vector<int64_t> input_shape = { 1, 3, original_img.rows, original_img.cols };
+//
+//             auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+//             Ort::Value input_tensor = Ort::Value::CreateTensor<float>( memory_info
+//                                                                      , input_tensor_values.data()
+//                                                                      , input_tensor_values.size()
+//                                                                      , input_shape.data()
+//                                                                      , input_shape.size()
+//                                                                      ) ;
+//             const char* input_names[] = {input_name};
+//             const char* output_names[] = {output_name};
+//
+//             std::vector<Ort::Value> outputs = m_session.Run(
+//                 Ort::RunOptions{nullptr},
+//                 input_names,
+//                 &input_tensor,
+//                 1,
+//                 output_names,
+//                 1
+//                 ) ;
+//
+//             auto output_tensor = outputs[0].GetTensorMutableData<float>();
+//             auto output_shape = outputs[0].GetTensorTypeAndShapeInfo().GetShape();
+//             int output_h = output_shape[2];
+//             int output_w = output_shape[3];
+//
+//             std::vector<float> output_data(output_tensor, output_tensor + output_h * output_w);
+//             auto boxes = process_detection_output(output_data, output_h, output_w);
+//
+//             qDebug() << "检测到 " << boxes.size() << " 个文本框";
+//
+//             cv::Mat vis_img;
+//             cv::cvtColor(original_img, vis_img, cv::COLOR_RGB2BGR);
+//
+//             for (size_t i = 0; i < boxes.size(); i++) {
+//                 float horizontal_ratio = 0.2;
+//                 float vertical_ratio = 0.5;
+//
+//                 cv::Rect expanded_rect = expand_box( boxes[i]
+//                                                    , horizontal_ratio, vertical_ratio
+//                                                    , vis_img.size()
+//                                                    ) ;
+//                 cv::Mat cropped = vis_img(expanded_rect).clone();
+//                 det_croppeds.push_back(cropped);
+//                 if (true) {
+//                     std::vector<std::vector<cv::Point>> contours = {boxes[i]};
+//                     cv::polylines(vis_img, contours, true, cv::Scalar(0, 255, 0), 2);
+//
+//                     std::string window_name = "文本区域" + std::to_string(i + 1);
+//                     cv::imshow(window_name, cropped);
+//
+//                     cv::moveWindow(window_name, 100 + (i % 5) * 200, 100 + (i / 5) * 150);
+//                 }
+//             }
+//             if (true) {
+//                 cv::imshow("文本检测: ", vis_img);
+//                 cv::waitKey(0);
+//                 cv::destroyAllWindows();
+//             }
+//
+//         } catch (const Ort::Exception& e) {
+//             qDebug() << "错误: " << e.what();
+//             return {};
+//         } catch (const std::exception& e) {
+//             qDebug() << "错误: " << e.what();
+//             return {};
+//         }
+//         return det_croppeds;
+//
+//     }
 
+inline std::vector<cv::Mat>
+run_inf(cv::Mat& frame) {
+    std::vector<cv::Mat> det_croppeds{};
+
+    try {
+        // 预处理图像 - 需要修改preprocess_image接受Mat而不是文件路径
+        cv::Mat rgb_img;
+        cv::cvtColor(frame, rgb_img, cv::COLOR_BGR2RGB);
+
+        // 保持长边为960并确保32的倍数
+        int max_size = 960;
+        float scale = max_size / static_cast<float>(std::max(rgb_img.cols, rgb_img.rows));
+        int new_w = static_cast<int>(rgb_img.cols * scale) / 32 * 32;
+        int new_h = static_cast<int>(rgb_img.rows * scale) / 32 * 32;
         cv::Mat resized_img;
-        cv::resize(rgb_img, resized_img, cv::Size(scaled_w, scaled_h), 0, 0, cv::INTER_LINEAR);
+        cv::resize(rgb_img, resized_img, cv::Size(new_w, new_h));
 
-        std::vector<float> input_tensor(3 * scaled_h * scaled_w);
+        // 转换为浮点型并归一化
+        cv::Mat float_img;
+        resized_img.convertTo(float_img, CV_32FC3, 1.0/255.0);
+
+        // 准备ONNX输入 (NCHW格式)
+        std::vector<float> input_tensor_values(1 * 3 * new_h * new_w);
+        // HWC -> CHW
         for (int c = 0; c < 3; c++) {
-            for (int h = 0; h < scaled_h; h++) {
-                for (int w = 0; w < scaled_w; w++) {
-                    input_tensor[c * scaled_h * scaled_w + h * scaled_w + w] = 
-                        (resized_img.at<cv::Vec3b>(h, w)[c] / 255.f - 0.5f) * 2.f;
+            for (int h = 0; h < new_h; h++) {
+                for (int w = 0; w < new_w; w++) {
+                    input_tensor_values[c * new_h * new_w + h * new_w + w] =
+                    float_img.at<cv::Vec3f>(h, w)[c];
                 }
             }
         }
+
+        // 获取输入输出名称
+        Ort::AllocatorWithDefaultOptions allocator;
+        Ort::AllocatedStringPtr input_name_ptr = m_session.GetInputNameAllocated(0, allocator);
+        Ort::AllocatedStringPtr output_name_ptr = m_session.GetOutputNameAllocated(0, allocator);
+        const char* input_name = input_name_ptr.get();
+        const char* output_name = output_name_ptr.get();
+
+        // 准备输入
+        std::vector<int64_t> input_shape = {1, 3, resized_img.rows, resized_img.cols};
+        auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+
+        Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
+            memory_info, input_tensor_values.data(), input_tensor_values.size(),
+                                                                  input_shape.data(), input_shape.size());
+
+        // 运行推理
+        const char* input_names[] = {input_name};
+        const char* output_names[] = {output_name};
+
+        std::vector<Ort::Value> outputs = m_session.Run(
+            Ort::RunOptions{nullptr},
+            input_names, &input_tensor, 1,
+            output_names, 1);
+
+        // 处理输出
+        auto output_tensor = outputs[0].GetTensorMutableData<float>();
+        auto output_shape = outputs[0].GetTensorTypeAndShapeInfo().GetShape();
+        int output_h = output_shape[2];
+        int output_w = output_shape[3];
+
+        std::vector<float> output_data(output_tensor, output_tensor + output_h * output_w);
+        auto boxes = process_detection_output(output_data, output_h, output_w);
+
+        qDebug() << "检测到 " << boxes.size() << " 个文本框";
+
+        // 准备可视化
+        cv::Mat vis_img;
+        cv::cvtColor(resized_img, vis_img, cv::COLOR_RGB2BGR);
+
+        // 遍历每个检测框
+        for (size_t i = 0; i < boxes.size(); i++) {
+            float horizontal_ratio = 0.2;
+            float vertical_ratio = 0.5;
+
+            cv::Rect expanded_rect = expand_box(boxes[i], horizontal_ratio, vertical_ratio, vis_img.size());
+            cv::Mat cropped = vis_img(expanded_rect).clone();
+            det_croppeds.push_back(cropped);
+
+            // 如果需要可视化调试
+            if (false) {  // 改为true开启可视化
+                std::vector<std::vector<cv::Point>> contours = {boxes[i]};
+                cv::polylines(vis_img, contours, true, cv::Scalar(0, 255, 0), 2);
+
+                std::string window_name = "文本区域" + std::to_string(i + 1);
+                cv::imshow(window_name, cropped);
+                cv::moveWindow(window_name, 100 + (i % 5) * 200, 100 + (i / 5) * 150);
+            }
+        }
+
+        // 调试可视化
+        if (false) {  // 改为true开启可视化
+            cv::imshow("文本检测", vis_img);
+            cv::waitKey(0);
+            cv::destroyAllWindows();
+        }
+
+    } catch (const Ort::Exception& e) {
+        qDebug() << "ONNX Runtime 错误: " << e.what();
+    } catch (const std::exception& e) {
+        qDebug() << "标准异常: " << e.what();
+    }
+
+    return det_croppeds;
+}
+
+private:
+    inline std::tuple<std::vector<float>, cv::Mat>
+    preprocess_image(cv::Mat& frame) {
+        if (frame.empty()) {
+            qDebug() << "Invalid input frame!";
+        }
+
+        cv::Mat rgb_img;
+        cv::cvtColor(frame, rgb_img, cv::COLOR_BGR2RGB);
+
+        int max_size = 960;
+        float scale = max_size / static_cast<float>(std::max(rgb_img.cols, rgb_img.rows));
+
+        int new_w = static_cast<int>(rgb_img.cols * scale) / 32 * 32;
+        int new_h = static_cast<int>(rgb_img.rows * scale) / 32 * 32;
+        cv::Mat resized_img;
+        cv::resize(rgb_img, resized_img, cv::Size(new_w, new_h));
+
+        cv::Mat float_img;
+        resized_img.convertTo(float_img, CV_32FC3, 1.0 / 255.0);
+
+        std::vector<float> input_tensor(1 * 3 * new_h * new_w);
+
+        for (int c = 0; c < 3; c++) {
+            for (int h = 0; h < new_h; h++) {
+                for (int w = 0; w < new_w; w++) {
+                    input_tensor[c * new_h * new_w + h * new_w + w] = 
+                        float_img.at<cv::Vec3f>(h, w)[c];
+                }
+            }
+        }
+
         return { input_tensor, resized_img };
     }
 
-    std::vector<std::vector<cv::Point>>
+    inline std::vector<std::vector<cv::Point>> 
     process_detection_output( const std::vector<float>& output
-                            , int height
-                            , int width
-                            , float threshold = 0.1f
+                            , int height, int width
+                            , float threshold = 0.3f
                             ) {
-        cv::Mat score_map(height, width, CV_32F);
-        for (int h = 0; h < height; h++) {
-            for (int w = 0; w < width; w++) {
-                score_map.at<float>(h, w) = output[h * width + w];
-            }
-        }
+        cv::Mat score_map( height, width
+                         , CV_32F
+                         , const_cast<float*>(output.data())
+                         ) ;
 
         cv::Mat binary_map;
         cv::threshold(score_map, binary_map, threshold, 255, cv::THRESH_BINARY);
         binary_map.convertTo(binary_map, CV_8UC1);
 
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-        cv::dilate(binary_map, binary_map, kernel, cv::Point(-1, -1), 2);
-
         std::vector<std::vector<cv::Point>> contours;
         cv::findContours(binary_map, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-
+        
         std::vector<std::vector<cv::Point>> boxes;
-        // 旋转判断有问题
-        for (const auto& contour: contours) {
-            if (contour.size() < 4) continue;
-            
-            std::vector<cv::Point> hull;
-            cv::convexHull(contour, hull);
-
-            cv::RotatedRect rect = cv::minAreaRect(hull);
-            cv::Point2f box_points[4];
-            rect.points(box_points);
+        for (const auto& cnt: contours) {
+            cv::RotatedRect rect = cv::minAreaRect(cnt);
+            cv::Point2f vertices[4];
+            rect.points(vertices);
 
             std::vector<cv::Point> box;
             for (int i = 0; i < 4; i++) {
-               box.push_back(cv::Point( static_cast<int>(box_points[i].x)
-                                      , static_cast<int>(box_points[i].y))); 
+                box.push_back(cv::Point( static_cast<int>(vertices[i].x)
+                                       , static_cast<int>(vertices[i].y))
+                                       ) ;
             }
             boxes.push_back(box);
         }
         return boxes;
     }
 
-    cv::Mat 
-    warp_affine_crop( const cv::Mat& img
-                    , const std::vector<cv::Point>& box
-                    , std::vector<cv::Mat>& chars_croppeds
-                    , float horizontal_stretch = 1.f
-                    , float vertical_stretch = 1.f
-                    ) {
-        try {
-            cv::RotatedRect rect = cv::minAreaRect(box);
-            cv::Point2f center = rect.center;
-            cv::Size2f size = rect.size;
-            float angle = rect.angle;
+    inline cv::Rect
+    expand_box( const std::vector<cv::Point>& box
+              , float horizontal_ratio, float vertical_ratio
+              , const cv::Size& img_shape
+              ) {
+        cv::Rect rect = cv::boundingRect(box);
+        
+        int dx = static_cast<int>(rect.width * horizontal_ratio);
+        int dy = static_cast<int>(rect.height * vertical_ratio);
 
-            if (size.width < size.height) {
-                angle += 90;
-                std::swap(size.width, size.height);
-            }
+        int new_x = std::max(0, rect.x - dx);
+        int new_y = std::max(0, rect.y - dy);
+        int new_w = std::min(img_shape.width - new_x, rect.width + 2 * dx);
+        int new_h = std::min(img_shape.height - new_y, rect.height + 2 * dy);
 
-            size.width *= (1.f + horizontal_stretch);
-            size.height *= (1.f + vertical_stretch);
-
-            size.width = std::max(std::abs(size.width), 10.f);
-            size.height = std::max(std::abs(size.height), 10.f);
-
-            cv::Mat M = cv::getRotationMatrix2D(center, angle, 1.0);
-            cv::Mat rotated;
-            cv::warpAffine(img, rotated, M, img.size(), cv::INTER_LINEAR);
-
-            cv::Mat cropped;
-            cv::getRectSubPix( rotated
-                             , cv::Size(static_cast<int>(size.width)
-                                       , static_cast<int>(size.height)
-                                       )
-                             , center
-                             , cropped
-                             ) ;
-            chars_croppeds.push_back(cropped); 
-            return cropped;
-        } catch (const std::exception& e) {
-            qDebug() << "Exception: " << e.what();
-            return cv::Mat();
-        }
+        return cv::Rect{new_x, new_y, new_w, new_h};
     }
+
 };
-
-
-
 
 class ort_inferer {
 public:

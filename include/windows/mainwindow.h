@@ -67,8 +67,19 @@ private:
 
     cv::Mat qimage2mat(QImage& qimage);
 
+    struct {
+        QString username;
+        QString password;
+        QString ip;
+        QString port;
+        
+        QString comb() {
+            return "rtsp://" + username + ":" + password +"@" + ip + ":" + port + "/Streaming/Channels/101";
+        }
+    } m_config;
+
     ort_inferer* m_inferer;
-    chars_det_inferer* m_chars_inferer;
+    chars_inf_det* m_chars_inferer;
     cv::Mat for2{};
     chars_inferer* m_chars_rec_inferer;
     tool_bar*               m_tool_bar;

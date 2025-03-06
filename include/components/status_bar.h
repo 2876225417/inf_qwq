@@ -13,6 +13,7 @@ class status_bar: public QStatusBar {
     Q_OBJECT
 public:
     explicit status_bar(QWidget* parent = nullptr);
+    void update_conn_info(const QString& conn_info);
 
 public slots:
     void showMessage(const QString& msg, int timeout = 0);
@@ -20,5 +21,6 @@ public slots:
 private:
     QTimer* m_timer;
     QLabel* m_time_label;
-
+    QLabel* m_conn_info;
+    
 };

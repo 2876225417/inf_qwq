@@ -141,7 +141,16 @@ public:
 
 signals:
     void keywords_changed(const QString& keywords);
+    void username_changed(const QString& username);
+    void password_changed(const QString& password);
+    void ip_changed(const QString& ip);
+    void port_changed(const QString& port);
+    void scale_factor_changed(double factor);
+
+
     void start_inf();
+    void connect_cam();
+    void exit_app();
 private:
     std::unique_ptr<ort_inferer> m_ort_inferer;
 
@@ -152,17 +161,19 @@ private:
     QVBoxLayout* m_col_1_layout_wrapper;
     // start inf
     QHBoxLayout* m_start_inf_wrapper;
-    QPushButton* m_start_inf;
-    // edit keywords
-    QHBoxLayout* m_edit_keywords_wrapper;
-    QLabel*      m_edit_keywords_label;
-    QLineEdit*   m_edit_keywords;
+    QPushButton* m_start_inf; 
+    // placeholder
+    QHBoxLayout* m_connector_wrapper;
+    QPushButton* m_connector;
     // exit app
     QHBoxLayout* m_exit_app_wrapper;
     QPushButton* m_exit_app;
     
     // col 2
     QVBoxLayout* m_col_2_layout_wrapper;
+    
+    // row_1
+    QHBoxLayout* m_col_2_row_1_layout_wrapper;
     // edit username
     QHBoxLayout* m_edit_username_wrapper;
     QLabel*      m_edit_username_label;
@@ -171,23 +182,27 @@ private:
     QHBoxLayout* m_edit_password_wrapper;
     QLabel*      m_edit_password_label;
     QLineEdit*   m_edit_password;
+    
+    // row 2
+    QHBoxLayout* m_col_2_row_2_layout_wrapper;
     // edit port
     QHBoxLayout* m_edit_port_wrapper;
     QLabel*      m_edit_port_label;
     QLineEdit*   m_edit_port;
-
-    // col 3
-    QVBoxLayout* m_col_3_layout_wrapper;
     // edit ip 
     QHBoxLayout* m_edit_ip_wrapper;
     QLabel*      m_edit_ip_label;
     QLineEdit*   m_edit_ip;
-    // edit channels
-    QHBoxLayout* m_edit_channels_wrapper;
-    QLabel*      m_edit_channels_label;
-    QLineEdit*   m_edit_channels;
-    // edit sub_channels
-    QHBoxLayout* m_edit_sub_channels_wrapper;
-    QLabel*      m_edit_sub_channels_label;
-    QLineEdit*   m_edit_sub_channels;
+    // change camera scale
+    QHBoxLayout* m_adjust_camera_scale_wrapper;
+    QLabel*      m_camera_scale_label;
+    QComboBox*   m_adjust_camera_scale; 
+    
+    // row 3
+    QHBoxLayout* m_col_2_row_3_layout_wrapper;
+    // edit keywords
+    QHBoxLayout* m_edit_keywords_wrapper;
+    QLabel*      m_edit_keywords_label;
+    QLineEdit*   m_edit_keywords;
+
 };

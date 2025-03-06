@@ -21,6 +21,8 @@ class camera_wrapper: public QWidget {
 public:
     explicit camera_wrapper(QWidget* parent = nullptr);
     ~camera_wrapper();
+    void set_rtsp_stream(const QString& rtsp_url);
+    void set_scale_factor(double factor);
 signals:
     // send cropped img when selected and moving
     void img_cropped(QVector<cropped_image>&);
