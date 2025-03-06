@@ -1,3 +1,6 @@
 build
-
 .cache
+tags
+
+inf_src/paddle/*
+inf_src/onnx/*
