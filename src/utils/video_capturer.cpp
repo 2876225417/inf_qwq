@@ -11,7 +11,7 @@
 
 video_capturer::video_capturer(QThread* parent)
     : QThread{parent}
-    , m_capturer{1} 
+    , m_capturer{0} 
     , m_current_camera_index{0}
     , m_scale_factor{1.0} { }
     // , m_capturer{"rtsp://admin:w12345678@169.254.36.138:554/Streaming/Channels/101"} { }

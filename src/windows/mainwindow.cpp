@@ -3,6 +3,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "utils/ort_inf.h"
+#include "utils/ort_inf.hpp"
 #include <qimage.h>
 #include <qlineedit.h>
 #include <qnamespace.h>
@@ -47,6 +48,7 @@ mainwindow::mainwindow(QWidget* parent)
     m_inferer->set_intra_threads(1);
     m_chars_inferer = new chars_inf_det();
     m_chars_rec_inferer = new chars_inferer();
+    m_chars_det_inferer = new det_inferer();
     //test for ort inf
     connect(test_inf, &QPushButton::clicked, this, [this]() { 
         cv::Mat mat = qimage2mat(tmp);
@@ -139,7 +141,7 @@ mainwindow::mainwindow(QWidget* parent)
                 auto start = std::chrono::high_resolution_clock::now();
                 
                 int idx = 0;
-                std::vector<cv::Mat> croppeds = m_chars_inferer->run_inf(for2);
+                std::vector<cv::Mat> croppeds = m_chars_det_inferer->run_inf(for2);
                 QString result_set;
                 int box_idx = 0;
                 for (const auto& cropped: croppeds) {

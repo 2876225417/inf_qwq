@@ -22,6 +22,9 @@
 #include <iostream>
 #include <fstream>
 
+
+
+
 class chars_inferer {
 private:
     Ort::Env env;
@@ -169,91 +172,6 @@ public:
             qDebug() << "Try to initialize!";
         
         }
-
-//     inline std::vector<cv::Mat>
-//     run_inf(cv::Mat& frame) {
-//         cv::imshow("123", frame);
-//         std::vector<cv::Mat> det_croppeds{};
-//         try {
-//
-//             Ort::AllocatorWithDefaultOptions allocator;
-//             Ort::AllocatedStringPtr  input_name_ptr = m_session.GetInputNameAllocated(0, allocator);
-//             Ort::AllocatedStringPtr  output_name_ptr = m_session.GetOutputNameAllocated(0, allocator);
-//             const char* input_name = input_name_ptr.get();
-//             const char* output_name = output_name_ptr.get();
-//
-//             auto [input_tensor_values, original_img] = preprocess_image(frame);
-//
-//             std::vector<int64_t> input_shape = { 1, 3, original_img.rows, original_img.cols };
-//
-//             auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-//             Ort::Value input_tensor = Ort::Value::CreateTensor<float>( memory_info
-//                                                                      , input_tensor_values.data()
-//                                                                      , input_tensor_values.size()
-//                                                                      , input_shape.data()
-//                                                                      , input_shape.size()
-//                                                                      ) ;
-//             const char* input_names[] = {input_name};
-//             const char* output_names[] = {output_name};
-//
-//             std::vector<Ort::Value> outputs = m_session.Run(
-//                 Ort::RunOptions{nullptr},
-//                 input_names,
-//                 &input_tensor,
-//                 1,
-//                 output_names,
-//                 1
-//                 ) ;
-//
-//             auto output_tensor = outputs[0].GetTensorMutableData<float>();
-//             auto output_shape = outputs[0].GetTensorTypeAndShapeInfo().GetShape();
-//             int output_h = output_shape[2];
-//             int output_w = output_shape[3];
-//
-//             std::vector<float> output_data(output_tensor, output_tensor + output_h * output_w);
-//             auto boxes = process_detection_output(output_data, output_h, output_w);
-//
-//             qDebug() << "检测到 " << boxes.size() << " 个文本框";
-//
-//             cv::Mat vis_img;
-//             cv::cvtColor(original_img, vis_img, cv::COLOR_RGB2BGR);
-//
-//             for (size_t i = 0; i < boxes.size(); i++) {
-//                 float horizontal_ratio = 0.2;
-//                 float vertical_ratio = 0.5;
-//
-//                 cv::Rect expanded_rect = expand_box( boxes[i]
-//                                                    , horizontal_ratio, vertical_ratio
-//                                                    , vis_img.size()
-//                                                    ) ;
-//                 cv::Mat cropped = vis_img(expanded_rect).clone();
-//                 det_croppeds.push_back(cropped);
-//                 if (true) {
-//                     std::vector<std::vector<cv::Point>> contours = {boxes[i]};
-//                     cv::polylines(vis_img, contours, true, cv::Scalar(0, 255, 0), 2);
-//
-//                     std::string window_name = "文本区域" + std::to_string(i + 1);
-//                     cv::imshow(window_name, cropped);
-//
-//                     cv::moveWindow(window_name, 100 + (i % 5) * 200, 100 + (i / 5) * 150);
-//                 }
-//             }
-//             if (true) {
-//                 cv::imshow("文本检测: ", vis_img);
-//                 cv::waitKey(0);
-//                 cv::destroyAllWindows();
-//             }
-//
-//         } catch (const Ort::Exception& e) {
-//             qDebug() << "错误: " << e.what();
-//             return {};
-//         } catch (const std::exception& e) {
-//             qDebug() << "错误: " << e.what();
-//             return {};
-//         }
-//         return det_croppeds;
-//
-//     }
 
 inline std::vector<cv::Mat>
 run_inf(cv::Mat& frame) {
@@ -452,6 +370,10 @@ private:
 
 };
 
+
+/** designed for digits rec
+ *  it seems deprecated, probably......
+ */
 class ort_inferer {
 public:
     explicit ort_inferer( const OrtLoggingLevel& logging_level = OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING,

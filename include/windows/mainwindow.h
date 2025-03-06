@@ -24,6 +24,8 @@
 #include <qpushbutton.h>
 #include <utils/ort_inf.h>
 
+#include <utils/ort_inf.hpp>
+
 #include <components/cropped_wrapper.h>
 
 
@@ -82,6 +84,7 @@ private:
     chars_inf_det* m_chars_inferer;
     cv::Mat for2{};
     chars_inferer* m_chars_rec_inferer;
+    det_inferer* m_chars_det_inferer;
     tool_bar*               m_tool_bar;
     status_bar*             m_status_bar;
 };

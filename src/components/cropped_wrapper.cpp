@@ -22,7 +22,7 @@ cropped_wrapper<cropped_count>::cropped_wrapper(QWidget* parent)
             m_image_layout = new QGroupBox();
             m_image_wrapper = new QHBoxLayout();
             m_image = new QLabel();
-            m_image->setMaximumSize(100, 100);
+            //m_image->setMaximumSize(100, 100);
             m_image_wrapper->addWidget(m_image);
             m_image_layout->setLayout(m_image_wrapper);
             m_image->setStyleSheet("background: #333");

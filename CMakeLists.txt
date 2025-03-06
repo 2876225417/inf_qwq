@@ -22,6 +22,7 @@ find_package(hkvision REQUIRED)
 find_package(onnxruntime REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS
     Core
     Gui
