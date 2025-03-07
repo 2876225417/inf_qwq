@@ -252,26 +252,113 @@ private:
         cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
 
         int width = static_cast<int>(img.cols * (static_cast<float>(TARGET_HEIGHT) / img.rows));
-
-        img.convertTo(img, CV_32F, 1.f / 255.f);
         
-        return { {}, img};
+        cv::Mat resized_img;
+        cv::resize(img, resized_img, cv::Size(width, TARGET_HEIGHT));
+
+        resized_img.convertTo(resized_img, CV_32F, 1.f / 255.f);
+
+        std::vector<float> input_tensor_values;
+        input_tensor_values.reserve(TARGET_HEIGHT * width * 3);
+
+        for (int c = 0; c < 3; c++) {
+            for (int h = 0; h < resized_img.rows; h++) {
+                for (int w = 0; w < resized_img.cols; w++) {
+                    input_tensor_values.push_back(resized_img.at<cv::Vec3f>(h, w)[c]);
+                }
+            }
+        }
+    
+   
+        return { input_tensor_values, resized_img};
     }
 
     inline std::string
-    run_inf(const cv::Mat& frame) {
-        auto [nm,input_tensor] = preprocess(frame);
-        
-        std::vector<float> input_data;
-        for (int c = 0; c < input_tensor.channels())
+    infer(cv::Mat& frame) override {
+        try {
+            auto [input_tensor_values, resized_img] = preprocess(frame);  
+
+            Ort::AllocatorWithDefaultOptions allocator;
+            Ort::AllocatedStringPtr input_name_ptr = m_session.GetInputNameAllocated(0, allocator);
+            Ort::AllocatedStringPtr output_name_ptr = m_session.GetOutputNameAllocated(0, allocator);
+            const char* input_name = input_name_ptr.get();
+            const char* output_name = output_name_ptr.get();
+
+            std::vector<int64_t> input_shape = {1, 3, resized_img.rows, resized_img.cols};
+            auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+
+            Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
+                memory_info, input_tensor_values.data(), input_tensor_values.size(),
+                input_shape.data(), input_shape.size()
+            );
+
+            const char* input_names[] = {input_name};
+            const char* output_names[] = {output_name};
+
+            std::vector<Ort::Value> outputs = m_session.Run(
+                Ort::RunOptions{nullptr},
+                input_names, &input_tensor, 1,
+                output_names, 1
+            );
+
+            float* output_tensor = outputs[0].GetTensorMutableData<float>();
+            std::vector<int64_t> output_shape = outputs[0].GetTensorTypeAndShapeInfo().GetShape();
+
+        std::vector<int> sequence_preds;
+        int sequence_length = output_shape[1];
+        int num_classes = output_shape[2];
+
+        for (int t = 0; t < sequence_length; ++t) {
+            float max_prob = -1;
+            int max_idx = -1;
+
+            for (int c = 0; c < num_classes; ++c) {
+                float prob = output_tensor[t * num_classes + c];
+                if (prob > max_prob) {
+                    max_prob = prob;
+                    max_idx = c;
+                }
+            }
+            sequence_preds.push_back(max_idx);
+        }
+
+        std::vector<std::string> result;
+        int last_char_idx = -1;
+
+        for (int idx: sequence_preds) {
+            if (idx != last_char_idx) {
+                int adjusted_idx = idx - 1;
+                if (adjusted_idx >= 0 &&adjusted_idx < m_char_dict.size()) {
+                    std::string current_char = m_char_dict[adjusted_idx];
+                    
+                    if (current_char != "■" && current_char != "<blank>" && current_char != " ") {
+                        result.push_back(current_char);
+                    }
+                    last_char_idx = idx;
+                }
+            }
+        }
+
+        std::string final_str;
+        for (const auto& c: result) {
+            final_str += c;
+        }
+
+        return final_str;
+        } catch (const Ort::Exception& e) {
+            qDebug() << "Ort::Excetion: " << e.what();
+        } catch (const std::exception& e) {
+            qDebug() << "Exception: " << e.what();
+        }
+        return {};
     }
     
 public:
-    rec_inferer(const std::string& model_path)
+    rec_inferer(const std::string& model_path = "rec_server.onnx")
         : common_inferer<cv::Mat, std::string>(model_path)
         { load_chars("inf_src/classes/chars.txt"); }
 
-    std::string run_inf(cv::Mat& frame) { }
+    std::string run_inf(cv::Mat& frame) { return infer(frame); }
     void set_char_dict(const std::string& char_dict_path) { }
 
 };

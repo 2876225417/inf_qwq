@@ -47,7 +47,7 @@ mainwindow::mainwindow(QWidget* parent)
     m_inferer = new ort_inferer();
     m_inferer->set_intra_threads(1);
     m_chars_inferer = new chars_inf_det();
-    m_chars_rec_inferer = new chars_inferer();
+    m_chars_rec_inferer = new rec_inferer();
     m_chars_det_inferer = new det_inferer();
     //test for ort inf
     connect(test_inf, &QPushButton::clicked, this, [this]() { 
@@ -144,8 +144,8 @@ mainwindow::mainwindow(QWidget* parent)
                 std::vector<cv::Mat> croppeds = m_chars_det_inferer->run_inf(for2);
                 QString result_set;
                 int box_idx = 0;
-                for (const auto& cropped: croppeds) {
-                    QString res = QString(m_chars_rec_inferer->infer(cropped).c_str());
+                for (auto& cropped: croppeds) {
+                    QString res = QString(m_chars_rec_inferer->run_inf(cropped).c_str());
                     qDebug() << "Res result: " << res;
                     result_set += res;
                     // std::string cropped_name = "Text Box " +std::to_string(++box_idx);
