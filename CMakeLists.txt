@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
-project(inf_qwq)
+
+project(inf_qwq LANGUAGES CXX)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -13,14 +14,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+add_compile_options(
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Werror=return-type
+    -Wno-unused-parameter
+    -Wno-sign-compare
+    -mno-direct-extern-access
+)
 
 
 
-add_compile_options(-mno-direct-extern-access)
+
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Requred CXX standard: ${CMAKE_CXX_STANDARD}")
-
 
 option(ENABLE_EIGEN "Eigen support for accelarating mat calculating" OFF)
 message(STATUS "ENABLE_EIGEN: ${ENABLE_EIGEN}")
@@ -32,11 +41,11 @@ else()
     add_definitions(-DENABLE_EIGEN=0)
 endif()
 
+find_package(OpenMP REQUIRED)
 find_package(hkvision REQUIRED)
 find_package(onnxruntime REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED)
-
 find_package(Qt6 REQUIRED COMPONENTS
     Core
     Gui
@@ -45,6 +54,22 @@ find_package(Qt6 REQUIRED COMPONENTS
     MultimediaWidgets
     OpenGLWidgets
 )
+
+
+
+if(CMAKE_BUILD_TYPE MATCHES "Release|RelWithDebInfo")
+    add_compile_options(
+        $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CMAKE_CXX_COMPILER_ID:Clang>>:-O3>
+        $<$<CXX_COMPILER_ID:MSVC>:/O2>
+        -march=native
+        -flto=auto
+    )
+    add_link_options($<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-flto=auto>)
+else()
+    add_compile_options(-O0 -g3)
+endif()
+
+
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/include

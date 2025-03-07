@@ -5,7 +5,6 @@ file(GLOB HEADER_FILES ${CMAKE_SOURCE_DIR}/include/utils/*.h)
 file(GLOB TEMPLATE_FILES ${CMAKE_SOURCE_DIR}/include/utils/*.hpp)
 
 
-
 add_library(utils
     SHARED
     ${SRC_FILES}
@@ -27,4 +26,11 @@ target_link_libraries(utils
     Qt6::Gui
 )
 
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(utils PRIVATE OpenMP::OpenMP_CXX)
 
+    target_compile_options(utils PRIVATE
+        $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fopenmp>
+        $<$<CXX_COMPILER_ID:MSVC>:/openmp>
+    )
+endif()

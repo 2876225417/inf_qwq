@@ -10,9 +10,15 @@
 #include <onnxruntime_cxx_api.h>
 #include <QDebug>
 #include <sstream>
+#include <stdexcept>
 #include <string>
-#include <eigen3/Eigen/Dense>
 
+#ifdef ENABLE_EIGEN
+#include <eigen3/Eigen/Dense>
+#endif
+
+#include <chrono>
+#include <omp.h>
 
 template <typename InputType, typename OutputType>
 class common_inferer {
@@ -20,9 +26,14 @@ protected:
     Ort::Env m_env;
     Ort::Session m_session;
 
+    #ifdef ENABLE_EIGEN
+    virtual std::tuple<std::vector<float>, cv::Mat>
+    preprocess_eigen(InputType&) = 0;
+    #else
     virtual std::tuple<std::vector<float>, cv::Mat>
     preprocess(InputType&) = 0;
-    
+    #endif
+
     virtual OutputType infer(InputType&) = 0;
 
     // virtual OutputType 
@@ -45,15 +56,18 @@ public:
     
         try {
 
-            #include <chrono>
             auto start_preprocess_det = std::chrono::high_resolution_clock::now(); 
             
             #ifdef ENABLE_EIGEN
             auto [input_tensor_values, resized_img] = preprocess_eigen(frame);
-            qDebug() << "Eigen preprocess";
+                #ifdef DEBUG_MODE
+                qDebug() << "Eigen preprocess";
+                #endif
             #else
             auto [input_tensor_values, resized_img] = preprocess(frame);
-            qDebug() << "OpenCV preprocess!";
+                #ifdef DEBUG_MODE
+                qDebug() << "OpenCV preprocess!";
+                #endif
             #endif
 
             auto end_process_det = std::chrono::high_resolution_clock::now();
@@ -133,9 +147,9 @@ public:
         return det_croppeds;
     }
 
-
+    #ifdef ENABLE_EIGEN
     std::tuple<std::vector<float>, cv::Mat>
-    preprocess_eigen(cv::Mat& frame) {
+    preprocess_eigen(cv::Mat& frame)  override {
         if (frame.empty()) { qDebug() << "Invalid input frame"; }
 
         cv::Mat rgb_img;
@@ -157,9 +171,10 @@ public:
         Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
             eigen_img((float*)float_img.data, new_h, new_w * 3);
 
-        #pragma omp parallel for
+        #pragma omp parallel for collapse(2)
         for (int c = 0; c < 3; c++) {
             for (int h =0; h < new_h; h++) {
+                #pragma omp simd
                 for (int w = 0; w < new_w; w++) {
                     input_tensor[c * new_h * new_w + h * new_w + w] = eigen_img(h, w * 3 + c);
                 }
@@ -167,8 +182,7 @@ public:
         }
         return {input_tensor, resized_img};
     }
-
-
+    #else
     std::tuple<std::vector<float>, cv::Mat>
     preprocess(cv::Mat& frame) override {
         if (frame.empty()) { qDebug() << "Invalid input frame"; }
@@ -199,7 +213,7 @@ public:
         }
         return  { input_tensor, resized_img };
     }
-
+    #endif
 
     inline std::vector<std::vector<cv::Point>>
     process_detection_output( const std::vector<float>& output
@@ -229,6 +243,41 @@ public:
                 box.push_back(cv::Point( static_cast<int>(vertices[i].x)
                                        , static_cast<int>(vertices[i].y))
                                        ) ;
+            }
+            boxes.push_back(box);
+        }
+        return boxes;
+    }
+
+    inline std::vector<std::vector<cv::Point>>
+    process_detection_output_eigen( const std::vector<float>& output
+                                  , int height, int width
+                                  , float threshold = 0.3f
+                                  ) {
+        Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+            score_eigen(output.data(), height, width);
+
+        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>
+            binary_eigen = (score_eigen.array() > threshold).cast<unsigned char>() * 255;
+
+        cv::Mat binary_map(height, width, CV_8UC1);
+        Eigen::Map<Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+            binary_map_eigen((unsigned char*)binary_map.data, height, width);
+        binary_map_eigen = binary_eigen;
+
+        std::vector<std::vector<cv::Point>> contours;
+        cv::findContours(binary_map, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+        std::vector<std::vector<cv::Point>> boxes;
+        for (const auto& cnt: contours) {
+            cv::RotatedRect rect = cv::minAreaRect(cnt);
+            cv::Point2f vertices[4];
+            rect.points(vertices);
+
+            std::vector<cv::Point> box;
+            for (int i = 0; i < 4; i++) {
+                box.push_back(cv::Point( static_cast<int>(vertices[i].x)
+                                       , static_cast<int>(vertices[i].y)));
             }
             boxes.push_back(box);
         }
@@ -296,6 +345,39 @@ private:
         #endif
     }
 
+    #ifdef ENABLE_EIGEN
+    inline std::tuple<std::vector<float>, cv::Mat>
+    preprocess_eigen(cv::Mat& frame) override {
+        cv::Mat img = frame.clone();
+        if (img.empty()) throw std::runtime_error("Invalid input frame");
+
+        cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
+        
+        int width = static_cast<int>(img.cols * (static_cast<float>(TARGET_HEIGHT) / img.rows));
+
+        cv::Mat resized_img;
+        cv::resize(img, resized_img, cv::Size(width, TARGET_HEIGHT));
+
+        resized_img.convertTo(resized_img, CV_32F, 1.f / 255.f);
+
+        std::vector<float> input_tensor_values;
+        input_tensor_values.resize(TARGET_HEIGHT * width * 3);
+
+        Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+            eigen_img((float*)resized_img.data, TARGET_HEIGHT, width * 3);
+
+        #pragma omp parallel for collapse(2) 
+        for (int c = 0; c < 3; c++) {
+            for (int h = 0; h < TARGET_HEIGHT; h++) {
+                #pragma omp simd
+                for (int w = 0; w < width; w++) {
+                    input_tensor_values[c * TARGET_HEIGHT * width + h * width + w] = eigen_img(h, w * 3 + c);
+                }
+            }
+        }
+        return {input_tensor_values, resized_img};
+    }
+    #else
     inline std::tuple<std::vector<float>, cv::Mat>
     preprocess(cv::Mat& frame) override {
         cv::Mat img = frame.clone();
@@ -319,16 +401,30 @@ private:
                     input_tensor_values.push_back(resized_img.at<cv::Vec3f>(h, w)[c]);
                 }
             }
-        }
-    
-   
+        } 
         return { input_tensor_values, resized_img};
     }
+    #endif
+
+
 
     inline std::string
     infer(cv::Mat& frame) override {
         try {
-            auto [input_tensor_values, resized_img] = preprocess(frame);  
+
+            auto start_preprocess = std::chrono::high_resolution_clock::now();
+
+            #ifdef ENABLE_EIGEN
+            auto [input_tensor_values, resized_img] = preprocess_eigen(frame);  
+            #else
+            auto [input_tenosr_values, resized_img] = preprocess(frame);
+            #endif
+
+            auto end_preprocess = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_preprocess - start_preprocess);
+            
+            qDebug() << "Rec inferer preprocess time cost: " << duration;
+
 
             Ort::AllocatorWithDefaultOptions allocator;
             Ort::AllocatedStringPtr input_name_ptr = m_session.GetInputNameAllocated(0, allocator);
@@ -360,18 +456,13 @@ private:
         int sequence_length = output_shape[1];
         int num_classes = output_shape[2];
 
-        for (int t = 0; t < sequence_length; ++t) {
-            float max_prob = -1;
-            int max_idx = -1;
+        Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+            output_eigen(output_tensor, sequence_length, num_classes);
 
-            for (int c = 0; c < num_classes; ++c) {
-                float prob = output_tensor[t * num_classes + c];
-                if (prob > max_prob) {
-                    max_prob = prob;
-                    max_idx = c;
-                }
-            }
-            sequence_preds.push_back(max_idx);
+        for (int t = 0; t < sequence_length; ++t) {
+            Eigen::Index max_idx;
+            output_eigen.row(t).maxCoeff(&max_idx);
+            sequence_preds.push_back(static_cast<int>(max_idx));
         }
 
         std::vector<std::string> result;
