@@ -6,6 +6,7 @@
 
 #include "onnxruntime_c_api.h"
 #include "opencv2/core/types.hpp"
+#include <cstdint>
 #include <opencv2/opencv.hpp>
 #include <onnxruntime_cxx_api.h>
 #include <QDebug>
@@ -19,11 +20,23 @@
 
 #include <chrono>
 #include <omp.h>
+#include <thread>
+#include <any>
+
+
+struct det_post_args{ cv::Mat resized_img; };
+struct rec_post_args{};
+
+struct output_values{
+    float* output_tensor;
+    std::vector<int64_t> output_shape;
+};
 
 template <typename InputType, typename OutputType>
 class common_inferer {
 protected:
     Ort::Env m_env;
+    Ort::SessionOptions m_session_options;
     Ort::Session m_session;
 
     #ifdef ENABLE_EIGEN
@@ -36,26 +49,84 @@ protected:
 
     virtual OutputType infer(InputType&) = 0;
 
-    // virtual OutputType 
-    // postprocess( const std::vector<float>& output_data
-    //            , const std::vector<int64_t>& output_shape) = 0;
+    virtual OutputType 
+    postprocess( float*& output_tensor
+               , std::vector<int64_t>& output_shape
+               , const std::any& additional_args) = 0;
 public:
     common_inferer(const std::string& model_path)
         : m_env(ORT_LOGGING_LEVEL_WARNING)
-        , m_session(m_env, model_path.c_str(), Ort::SessionOptions{})
-        { qDebug() << "Inferer initialized with mode: " << model_path.c_str(); }
+        , m_session_options{}
+        , m_session{nullptr}
+        {
 
+        const int num_cpu_cores = std::thread::hardware_concurrency();
+        m_session_options.SetIntraOpNumThreads(num_cpu_cores);
+        m_session_options.SetInterOpNumThreads(1);
+        m_session_options.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
+        m_session_options.EnableCpuMemArena();
+        m_session_options.EnableMemPattern();
+        m_session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+        m_session_options.AddConfigEntry("session.use_device_allocator_for_initializers", "1"); 
+        m_session = Ort::Session(m_env, model_path.c_str(), m_session_options);
+
+        qDebug() << "Inferer initialized with model: " << model_path.c_str(); 
+    }
     ~common_inferer() = default;
 };
 
 class det_inferer: public common_inferer<cv::Mat, std::vector<cv::Mat>> {
 public:
+    
+    inline std::vector<cv::Mat>
+    postprocess( float*& output_tensor
+               , std::vector<int64_t>& output_shape
+               , const std::any& additional_args) override {
+        const auto& args = std::any_cast<det_post_args>(additional_args);
+        cv::Mat resized_img = args.resized_img;
+        std::vector<cv::Mat> croppeds{};
+        int output_h = output_shape[2];
+        int output_w = output_shape[3];
+
+        std::vector<float> output_data(output_tensor, output_tensor + output_w * output_h);
+        auto boxes = process_detection_output(output_data, output_h, output_w);
+
+        #ifdef DEBUG_MODE
+        qDebug() << "";
+
+        #endif
+
+        cv::Mat vis_img;
+        cv::cvtColor(resized_img, vis_img, cv::COLOR_RGB2BGR);
+        
+        for (size_t i = 0; i < boxes.size(); i++) {
+            float horizontal_ratio = 0.2;
+            float vertical_ratio = 0.5;
+
+            cv::Rect expanded_rect = expand_box(boxes[i], horizontal_ratio, vertical_ratio, vis_img.size());
+            cv::Mat cropped = vis_img(expanded_rect).clone();
+            croppeds.push_back(cropped);
+
+            #ifdef DEBUG_MODE
+            std::vector<std::vector<cv::Point> contours = {boxes[i]};
+            cv::polylines(vis_img, contours, true, cv::Scalar(0, 255, 0), 2);
+            std::string window_name = "Detected text: " + std::to_string(i + 1);
+            cv::imshow(window_name, cropped);
+            cv::movewindow(window_name, 100 + (i % 5) * 200, 100 + (i / 5) * 150);
+            #endif
+        }
+        #ifdef DEBUG_MODE
+        cv::imshow("Detected Text", vis_img);
+        cv::waitKey(0);
+        cv::destroyAllwindows();
+        #endif
+        return croppeds;
+    }
+
     inline std::vector<cv::Mat>
     infer(cv::Mat& frame) override {
-        std::vector<cv::Mat> det_croppeds{};
-    
+        std::vector<cv::Mat> det_croppeds{}; 
         try {
-
             auto start_preprocess_det = std::chrono::high_resolution_clock::now(); 
             
             #ifdef ENABLE_EIGEN
@@ -100,11 +171,16 @@ public:
             // process output
             auto output_tensor = outputs[0].GetTensorMutableData<float>();
             auto output_shape = outputs[0].GetTensorTypeAndShapeInfo().GetShape();
+            det_post_args args{resized_img}; 
+            return postprocess(output_tensor, output_shape, args);
+
             int output_h = output_shape[2];
             int output_w = output_shape[3];
 
             std::vector<float> output_data(output_tensor, output_tensor + output_h * output_w);
             auto boxes = process_detection_output(output_data, output_h, output_w);
+
+    
 
             qDebug() << "检测到 " << boxes.size() << " 个文本框";
 
@@ -345,6 +421,7 @@ private:
         #endif
     }
 
+    // preprocess
     #ifdef ENABLE_EIGEN
     inline std::tuple<std::vector<float>, cv::Mat>
     preprocess_eigen(cv::Mat& frame) override {
@@ -406,7 +483,60 @@ private:
     }
     #endif
 
+    // postprocess
+    inline std::string  
+    postprocess( float*& output_tensor
+               , std::vector<int64_t>& output_shape
+               , const std::any& additional_args) override {
+        std::vector<int> sequence_preds;
+        int sequence_length = output_shape[1];
+        int num_classes = output_shape[2];
 
+        #ifdef ENABLE_EIGEN
+        Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+            output_eigen(output_tensor, sequence_length, num_classes);
+
+        for(int t = 0; t < sequence_length; ++t) {
+            Eigen::Index max_idx;
+            output_eigen.row(t).maxCoeff(&max_idx);
+            sequence_preds.push_back(static_cast<int>(max_idx));
+        } 
+        #else
+        for (int t = 0; t < sequence_length; ++t) {
+            float max_prob = -1.f;
+            int max_idx = -1;
+
+            for (int c = 0; c < num_classes; ++c) {
+                float prob = output_tensor[t * num_classes + c];
+                if (prob > max_prob) {
+                    max_prob = prob;
+                    max_idx = c;
+                }
+            }
+            sequence_preds.push_back(max_idx);
+        }
+        #endif
+
+        std::vector<std::string> result;
+        int last_char_idx = -1;
+        
+        for (int idx: sequence_preds) {
+            if (idx != last_char_idx) {
+                int adjusted_idx = idx - 1;
+                if (adjusted_idx >= 0 && adjusted_idx < m_char_dict.size()) {
+                    std::string current_char = m_char_dict[adjusted_idx];
+                    if (current_char != "■" && current_char != "<blank>" && current_char != " ") {
+                        result.push_back(current_char);
+                    }
+                    last_char_idx = idx;
+                }
+            }
+        }
+
+        std::string final_str;
+        for (const auto& c: result) final_str += c;
+        return final_str;
+   }
 
     inline std::string
     infer(cv::Mat& frame) override {
@@ -449,13 +579,18 @@ private:
                 output_names, 1
             );
 
-            float* output_tensor = outputs[0].GetTensorMutableData<float>();
-            std::vector<int64_t> output_shape = outputs[0].GetTensorTypeAndShapeInfo().GetShape();
+        auto output_tensor = outputs[0].GetTensorMutableData<float>();
+        auto output_shape = outputs[0].GetTensorTypeAndShapeInfo().GetShape();
+    
+        //std::string final_result = postprocess(output_tensor, output_shape);
 
+        return postprocess(output_tensor, output_shape, {});
         std::vector<int> sequence_preds;
         int sequence_length = output_shape[1];
         int num_classes = output_shape[2];
+        
 
+        #ifdef ENABLE_EIGEN
         Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
             output_eigen(output_tensor, sequence_length, num_classes);
 
@@ -464,6 +599,21 @@ private:
             output_eigen.row(t).maxCoeff(&max_idx);
             sequence_preds.push_back(static_cast<int>(max_idx));
         }
+        #else
+        for (int t = 0; t < sequence_length; ++t) {
+            float max_prob = -1;
+            int max_idx = -1;
+
+            for (int c = 0; c < num_classes; ++c) {
+                float prob = output_tensor[t * num_classes + c];
+                if (prob > max_prob) {
+                    max_prob = prob;
+                    max_idx = c;
+                }
+            }
+            sequence_preds.push_back(max_idx);
+        }
+        #endif
 
         std::vector<std::string> result;
         int last_char_idx = -1;
@@ -513,8 +663,6 @@ public:
 //     std::unique_ptr<det_inferer> m_chars_det_inferer;
 //     std::unique_ptr<rec_inferer> m_chars_rec_inferer;
 // };
-
-
 
 
 

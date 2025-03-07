@@ -80,7 +80,7 @@ private:
         }
     } m_config;
 
-    ort_inferer* m_inferer;
+    //ort_inferer* m_inferer;
     chars_inf_det* m_chars_inferer;
     cv::Mat for2{};
     det_inferer* m_chars_det_inferer;

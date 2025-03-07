@@ -44,8 +44,8 @@ mainwindow::mainwindow(QWidget* parent)
     m_status_bar = new status_bar();
     setStatusBar(m_status_bar);
 
-    m_inferer = new ort_inferer();
-    m_inferer->set_intra_threads(1);
+    //m_inferer = new ort_inferer();
+    //m_inferer->set_intra_threads(1);
     m_chars_inferer = new chars_inf_det();
     m_chars_rec_inferer = new rec_inferer();
     m_chars_det_inferer = new det_inferer();
@@ -55,8 +55,8 @@ mainwindow::mainwindow(QWidget* parent)
         cv::imshow("ts", mat);
         cv::imwrite("123.jpg", mat);
         cv::Mat local = cv::imread("123.jpg");
-        std::string res = m_inferer->exec_inf(mat);
-        qDebug() << "res: " << res;
+       // std::string res = m_inferer->exec_inf(mat);
+       // qDebug() << "res: " << res;
         // if (mat.empty()) { qDebug() << "Mat is empty!"; return; }
         // std::string res = inferer->exec_inf(tmp);
         // qDebug() << "";
@@ -171,7 +171,7 @@ mainwindow::mainwindow(QWidget* parent)
                 for2 = qimage2mat(cropped_images[0].image);
                 for (auto cropped: cropped_images) {
                     idx += 1;
-                    qDebug() << "推理结果: " << m_inferer->exec_inf(qimage2mat(cropped.image));  
+                    //qDebug() << "推理结果: " << m_inferer->exec_inf(qimage2mat(cropped.image));  
                }
                 auto end = std::chrono::high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
