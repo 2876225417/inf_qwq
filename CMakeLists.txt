@@ -13,16 +13,30 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+
+
+
 add_compile_options(-mno-direct-extern-access)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Requred CXX standard: ${CMAKE_CXX_STANDARD}")
 
+
+option(ENABLE_EIGEN "Eigen support for accelarating mat calculating" OFF)
+message(STATUS "ENABLE_EIGEN: ${ENABLE_EIGEN}")
+
+if(ENABLE_EIGEN)
+    find_package(Eigen3 REQUIRED)
+    add_definitions(-DENABLE_EIGEN=1)
+else()
+    add_definitions(-DENABLE_EIGEN=0)
+endif()
+
 find_package(hkvision REQUIRED)
 find_package(onnxruntime REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(Eigen3 REQUIRED)
+
 find_package(Qt6 REQUIRED COMPONENTS
     Core
     Gui

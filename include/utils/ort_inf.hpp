@@ -11,6 +11,8 @@
 #include <QDebug>
 #include <sstream>
 #include <string>
+#include <eigen3/Eigen/Dense>
+
 
 template <typename InputType, typename OutputType>
 class common_inferer {
@@ -42,7 +44,21 @@ public:
         std::vector<cv::Mat> det_croppeds{};
     
         try {
+
+            #include <chrono>
+            auto start_preprocess_det = std::chrono::high_resolution_clock::now(); 
+            
+            #ifdef ENABLE_EIGEN
+            auto [input_tensor_values, resized_img] = preprocess_eigen(frame);
+            qDebug() << "Eigen preprocess";
+            #else
             auto [input_tensor_values, resized_img] = preprocess(frame);
+            qDebug() << "OpenCV preprocess!";
+            #endif
+
+            auto end_process_det = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_process_det - start_preprocess_det);
+            qDebug() << "图片预处理耗时: " << duration;
 
             Ort::AllocatorWithDefaultOptions allocator;
             Ort::AllocatedStringPtr input_name_ptr = m_session.GetInputNameAllocated(0, allocator);
@@ -113,8 +129,43 @@ public:
         } catch (const std::exception& e) {
             qDebug() << "标准异常: " << e.what();
         }
-
+        
         return det_croppeds;
+    }
+
+
+    std::tuple<std::vector<float>, cv::Mat>
+    preprocess_eigen(cv::Mat& frame) {
+        if (frame.empty()) { qDebug() << "Invalid input frame"; }
+
+        cv::Mat rgb_img;
+        cv::cvtColor(frame, rgb_img, cv::COLOR_BGR2RGB);
+
+        int max_size = 960;
+        float scale = max_size / static_cast<float>(std::max(rgb_img.cols, rgb_img.rows));
+
+        int new_w = static_cast<int>(rgb_img.cols * scale) / 32 * 32;
+        int new_h = static_cast<int>(rgb_img.rows * scale) / 32 * 32;
+        cv::Mat resized_img;
+        cv::resize(rgb_img, resized_img, cv::Size(new_w, new_h));
+
+        cv::Mat float_img;
+        resized_img.convertTo(float_img, CV_32FC3, 1.f / 255.f);
+
+        std::vector<float> input_tensor(1 * 3 * new_h * new_w);
+
+        Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+            eigen_img((float*)float_img.data, new_h, new_w * 3);
+
+        #pragma omp parallel for
+        for (int c = 0; c < 3; c++) {
+            for (int h =0; h < new_h; h++) {
+                for (int w = 0; w < new_w; w++) {
+                    input_tensor[c * new_h * new_w + h * new_w + w] = eigen_img(h, w * 3 + c);
+                }
+            }
+        }
+        return {input_tensor, resized_img};
     }
 
 
@@ -148,6 +199,7 @@ public:
         }
         return  { input_tensor, resized_img };
     }
+
 
     inline std::vector<std::vector<cv::Point>>
     process_detection_output( const std::vector<float>& output
@@ -362,145 +414,15 @@ public:
     void set_char_dict(const std::string& char_dict_path) { }
 
 };
-//
+
+
+
 // class ort_inferer {
 // private:
 //     std::unique_ptr<det_inferer> m_chars_det_inferer;
 //     std::unique_ptr<rec_inferer> m_chars_rec_inferer;
 // };
 
-#include <fstream>
-
-// class chars_inferer {
-// private:
-//     Ort::Env env;
-//     Ort::Session session;
-//     std::vector<std::string> char_dict;
-//
-//     void loadCharDict(const std::string& dict_path) {
-//         std::ifstream file(dict_path);
-//         std::string line;
-//         
-//         if (!file.is_open()) {
-//             throw std::runtime_error("无法打开字典文件: " + dict_path);
-//         }
-//
-//         while (std::getline(file, line)) {
-//             // 去除行首尾空白
-//             line.erase(0, line.find_first_not_of(" \t"));
-//             line.erase(line.find_last_not_of(" \t") + 1);
-//             
-//             if (!line.empty()) {
-//                 char_dict.push_back(line);
-//             }
-//         }
-//     }
-//
-//     cv::Mat preprocessImage(const cv::Mat& input_img, int target_height = 48) {
-//         cv::Mat img = input_img.clone();
-//         if (img.empty()) {
-//             throw std::runtime_error("输入图像为空");
-//         }
-//
-//         cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
-//         
-//         int width = static_cast<int>(img.cols * (static_cast<float>(target_height) / img.rows));
-//         cv::resize(img, img, cv::Size(width, target_height));
-//
-//         img.convertTo(img, CV_32F, 1.0 / 255.0);
-//
-//         return img;
-//     }
-//
-// public:
-//     chars_inferer(const std::string& model_path = "rec_server.onnx", const std::string& dict_path = "inf_src/classes/chars.txt") 
-//         : env(ORT_LOGGING_LEVEL_WARNING), 
-//           session(env, model_path.c_str(), Ort::SessionOptions{}) 
-//     {
-//         loadCharDict(dict_path);
-//     }
-//
-//     std::string infer(const cv::Mat& input_image) {
-//         cv::Mat input_tensor = preprocessImage(input_image);
-//         
-//         std::vector<float> input_data;
-//         for (int c = 0; c < input_tensor.channels(); ++c) {
-//             for (int h = 0; h < input_tensor.rows; ++h) {
-//                 for (int w = 0; w < input_tensor.cols; ++w) {
-//                     input_data.push_back(input_tensor.at<cv::Vec3f>(h, w)[c]);
-//                 }
-//             }
-//         }
-//
-//         std::vector<int64_t> input_shape = {1, 3, input_tensor.rows, input_tensor.cols};
-//
-//         auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
-//         Ort::Value input_tensor_ort = Ort::Value::CreateTensor<float>(
-//             memory_info, input_data.data(), input_data.size(), input_shape.data(), input_shape.size()
-//         );
-//
-//         // 准备输出
-//         std::vector<Ort::Value> outputs;
-//         const char* input_names[] = {"x"};
-//         const char* output_names[] = {"softmax_2.tmp_0"};
-//
-//         outputs = session.Run(
-//             Ort::RunOptions{}, 
-//             input_names, &input_tensor_ort, 1, 
-//             output_names, 1
-//         );
-//
-//         // 解析输出
-//         float* output_tensor = outputs[0].GetTensorMutableData<float>();
-//         std::vector<int64_t> output_shape = outputs[0].GetTensorTypeAndShapeInfo().GetShape();
-//
-//         // 找到每个时间步的最大概率索引
-//         std::vector<int> sequence_preds;
-//         int sequence_length = output_shape[1];
-//         int num_classes = output_shape[2];
-//
-//         for (int t = 0; t < sequence_length; ++t) {
-//             float max_prob = -1;
-//             int max_idx = -1;
-//             
-//             for (int c = 0; c < num_classes; ++c) {
-//                 float prob = output_tensor[t * num_classes + c];
-//                 if (prob > max_prob) {
-//                     max_prob = prob;
-//                     max_idx = c;
-//                 }
-//             }
-//             sequence_preds.push_back(max_idx);
-//         }
-//
-//         std::vector<std::string> result;
-//         int last_char_idx = -1;
-//
-//         for (int idx : sequence_preds) {
-//             if (idx != last_char_idx) {
-//                 int adjusted_idx = idx - 1;
-//                 
-//                 if (adjusted_idx >= 0 && adjusted_idx < char_dict.size()) {
-//                     std::string current_char = char_dict[adjusted_idx];
-//                     
-//                     if (current_char != "■" && current_char != "<blank>" && current_char != " ") {
-//                         result.push_back(current_char);
-//                     }
-//                     
-//                     last_char_idx = idx;
-//                 }
-//             }
-//         }
-//
-//         // 合并结果
-//         std::string final_str;
-//         for (const auto& c : result) {
-//             final_str += c;
-//         }
-//
-//         return final_str;
-//     }
-// };
 
 
 
