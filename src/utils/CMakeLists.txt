@@ -6,7 +6,7 @@ file(GLOB TEMPLATE_FILES ${CMAKE_SOURCE_DIR}/include/utils/*.hpp)
 
 
 add_library(utils
-    SHARED
+    STATIC
     ${SRC_FILES}
     ${HEADER_FILES}
     ${TEMPLATE_FILES}

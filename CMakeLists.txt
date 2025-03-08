@@ -89,4 +89,18 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 #     hkvision::AudioRender
 #     hkvision::HCCore
 # )
- 
+
+
+install(TARGETS inf_qwq
+    RUNTIME DESTINATION bin
+    BUNDLE  DESTINATION bin
+)
+
+
+install(TARGETS utils windows components
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+
+
