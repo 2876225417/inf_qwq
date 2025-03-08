@@ -19,7 +19,10 @@
 #endif
 
 #include <chrono>
+#ifdef ENABLE_OMP
 #include <omp.h>
+#endif
+
 #include <thread>
 #include <any>
 

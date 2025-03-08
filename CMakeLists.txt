@@ -41,7 +41,7 @@ else()
     add_definitions(-DENABLE_EIGEN=0)
 endif()
 
-find_package(OpenMP REQUIRED)
+#find_package(OpenMP REQUIRED)
 find_package(hkvision REQUIRED)
 find_package(onnxruntime REQUIRED)
 find_package(OpenGL REQUIRED)
