@@ -75,13 +75,25 @@ private:
         QString ip;
         QString port;
         
+        rtsp_protocal_type rtp;
+        
+        QString comb_rtsp_url() {
+            switch(rtp) {
+                case rtsp_protocal_type::HIKVISION: return comb_hk();
+                case rtsp_protocal_type::ALHUA:     return comb_ah();
+                default: return "";
+            }
+        }
+    private:
         QString comb_hk() {
             return "rtsp://" + username + ":" + password + "@" + ip + ":" + port + "/Streaming/Channels/101";
         }
-        QString comb_dl() {
+        QString comb_ah() {
             return "rtsp://" + username + ":" + password + "@" + ip + ":" + port + "/cam/realmonitor?channel=1&subtype=0";
         }
     } m_config;
+
+    
 
     //ort_inferer* m_inferer;
     chars_inf_det* m_chars_inferer;

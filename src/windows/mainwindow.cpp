@@ -1,3 +1,4 @@
+#include "components/actions_wrapper.h"
 #include "components/camera_wrapper.h"
 #include "components/cropped_wrapper.h"
 #include "opencv2/highgui.hpp"
@@ -66,7 +67,7 @@ mainwindow::mainwindow(QWidget* parent)
     // rtsp stream
     connect ( m_actions_wrapper, &actions_wrapper::connect_cam
             , this, [this]() {
-                m_camera->set_rtsp_stream(m_config.comb_dl());
+                m_camera->set_rtsp_stream(m_config.comb_rtsp_url());
              });
 
     // scale factor
@@ -96,36 +97,43 @@ mainwindow::mainwindow(QWidget* parent)
             , this, [this](const QString& username) {
                 qDebug() << "username: " << username;
                 m_config.username = username; 
-                qDebug() << "Comb: " << m_config.comb_dl(); 
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_dl()));
+                qDebug() << "Comb: " << m_config.comb_rtsp_url(); 
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
              });
     // password
     connect ( m_actions_wrapper, &actions_wrapper::password_changed
             , this, [this](const QString& password) {
                 qDebug() << "password: " << password;
                 m_config.password = password;
-                qDebug() << "Comb: " << m_config.comb_dl();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_dl()));
+                qDebug() << "Comb: " << m_config.comb_rtsp_url();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
              });
     // ip
     connect ( m_actions_wrapper, &actions_wrapper::ip_changed
             , this, [this](const QString& ip) {
                 qDebug() << "ip: " << ip;
                 m_config.ip = ip;
-                qDebug() << "Comb: " << m_config.comb_dl();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_dl()));
-             });
-   
-
-
+                qDebug() << "Comb: " << m_config.comb_rtsp_url();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
+             }); 
 
     // port
     connect ( m_actions_wrapper, &actions_wrapper::port_changed
             , this, [this](const QString& port) {
                 qDebug() << "port: " << port;
                 m_config.port = port;
-                qDebug() << "Comb: " << m_config.comb_dl();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_dl()));
+                qDebug() << "Comb: " << m_config.comb_rtsp_url();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
+             });
+
+    // rtp
+    connect ( m_actions_wrapper
+            , &actions_wrapper::rtsp_protocal_type_changed
+            , this, [this](rtsp_protocal_type rtp) {
+                QString rtp_str = rtp == rtsp_protocal_type::ALHUA ? "ALHUA" : "HIKVISION";
+                qDebug() << "rtp: " <<  rtp_str;   
+                m_config.rtp = rtp;
+                m_status_bar->update_conn_info(QString("连接信息：" + m_config.comb_rtsp_url()));
              });
 
 

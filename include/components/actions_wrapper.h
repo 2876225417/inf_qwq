@@ -3,6 +3,7 @@
 #include <array>
 #include <qabstractspinbox.h>
 #include <qboxlayout.h>
+#include <qcombobox.h>
 #include <qendian.h>
 #include <stdexcept>
 #include <string_view>
@@ -132,6 +133,11 @@ private:
 #include <utils/ort_inf.h>
 #include <QLineEdit>
 
+enum class rtsp_protocal_type {
+    HIKVISION,
+    ALHUA
+};
+
 
 class actions_wrapper: public QWidget {
     Q_OBJECT
@@ -143,10 +149,11 @@ signals:
     void keywords_changed(const QString& keywords);
     void username_changed(const QString& username);
     void password_changed(const QString& password);
+
     void ip_changed(const QString& ip);
     void port_changed(const QString& port);
     void scale_factor_changed(double factor);
-
+    void rtsp_protocal_type_changed(rtsp_protocal_type rpt);
 
     void start_inf();
     void connect_cam();
@@ -197,7 +204,12 @@ private:
     QHBoxLayout* m_adjust_camera_scale_wrapper;
     QLabel*      m_camera_scale_label;
     QComboBox*   m_adjust_camera_scale; 
-    
+    // change rtsp protocal
+    QHBoxLayout* m_switch_rtsp_wrapper;
+    QLabel*      m_swtich_rtsp_label;
+    QComboBox*   m_switch_rtsp;
+
+
     // row 3
     QHBoxLayout* m_col_2_row_3_layout_wrapper;
     // edit keywords

@@ -4,6 +4,7 @@
 #include <qcombobox.h>
 #include <qlabel.h>
 #include <qlineedit.h>
+#include <qoverload.h>
 
 
 actions_wrapper::actions_wrapper(QWidget* parent)
@@ -31,12 +32,14 @@ actions_wrapper::actions_wrapper(QWidget* parent)
     
     // col_2_row_2
     , m_col_2_row_2_layout_wrapper{new QHBoxLayout()}
-    // edit ip
-    , m_edit_ip_wrapper{new QHBoxLayout()}
     // edit port
     , m_edit_port_wrapper{new QHBoxLayout} 
+    // edit ip
+    , m_edit_ip_wrapper{new QHBoxLayout()}
     // adjust_scale 
     , m_adjust_camera_scale_wrapper{new QHBoxLayout()}
+    // switch rstp_protocal
+    , m_switch_rtsp_wrapper{new QHBoxLayout()}
     // col_2_row_3
     , m_col_2_row_3_layout_wrapper{new QHBoxLayout()}
     // edit keywords
@@ -124,18 +127,14 @@ actions_wrapper::actions_wrapper(QWidget* parent)
     // adjust camera scale
     m_camera_scale_label = new QLabel("缩放倍率");
     m_adjust_camera_scale = new QComboBox();
-
-    m_adjust_camera_scale->addItem("50%", 0.5);
-    m_adjust_camera_scale->addItem("75%", 0.75);
-    m_adjust_camera_scale->addItem("100%", 1.0);
-    m_adjust_camera_scale->addItem("125%", 1.25);
-    m_adjust_camera_scale->addItem("150%", 1.5);
-    m_adjust_camera_scale->addItem("175%", 1.75);
-    m_adjust_camera_scale->addItem("200%", 2.0);
-    m_adjust_camera_scale->addItem("250%", 2.5);
-    m_adjust_camera_scale->addItem("300%", 3.0);
     
-    m_adjust_camera_scale->setCurrentIndex(2);
+    m_adjust_camera_scale->addItem("10%", 0.10f);
+    m_adjust_camera_scale->addItem("25%", 0.25f); 
+    m_adjust_camera_scale->addItem("50%", 0.50f);
+    m_adjust_camera_scale->addItem("75%", 0.75f);
+    m_adjust_camera_scale->addItem("100%", 1.00f);
+
+    m_adjust_camera_scale->setCurrentIndex(0);
 
     connect ( m_adjust_camera_scale
             , QOverload<int>::of(&QComboBox::currentIndexChanged)
@@ -148,10 +147,28 @@ actions_wrapper::actions_wrapper(QWidget* parent)
     m_adjust_camera_scale_wrapper->addWidget(m_camera_scale_label);
     m_adjust_camera_scale_wrapper->addWidget(m_adjust_camera_scale);
     
+    // switch rtsp protocal
+    m_swtich_rtsp_label = new QLabel("RTSP");
+    m_switch_rtsp = new QComboBox();
+
+    m_switch_rtsp->addItem("海康", static_cast<int>(rtsp_protocal_type::HIKVISION));
+    m_switch_rtsp->addItem("大华", static_cast<int>(rtsp_protocal_type::ALHUA)); 
+
+    connect ( m_switch_rtsp
+            , QOverload<int>::of(&QComboBox::currentIndexChanged)
+            , this, [this](int index) {
+              rtsp_protocal_type rtp 
+                = static_cast<rtsp_protocal_type>(m_switch_rtsp->itemData(index).toInt());
+              emit rtsp_protocal_type_changed(rtp);
+            });
+
+    m_switch_rtsp_wrapper->addWidget(m_swtich_rtsp_label);
+    m_switch_rtsp_wrapper->addWidget(m_switch_rtsp);
 
     m_col_2_row_2_layout_wrapper->addLayout(m_edit_ip_wrapper);         // ip
     m_col_2_row_2_layout_wrapper->addLayout(m_edit_port_wrapper);       // port
     m_col_2_row_2_layout_wrapper->addLayout(m_adjust_camera_scale_wrapper);     // scale
+    m_col_2_row_2_layout_wrapper->addLayout(m_switch_rtsp_wrapper);     // rtsp
 
     // col_2_row_3
     // edit keywords
