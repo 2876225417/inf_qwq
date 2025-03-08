@@ -66,7 +66,7 @@ mainwindow::mainwindow(QWidget* parent)
     // rtsp stream
     connect ( m_actions_wrapper, &actions_wrapper::connect_cam
             , this, [this]() {
-                m_camera->set_rtsp_stream(m_config.comb());
+                m_camera->set_rtsp_stream(m_config.comb_dl());
              });
 
     // scale factor
@@ -96,24 +96,24 @@ mainwindow::mainwindow(QWidget* parent)
             , this, [this](const QString& username) {
                 qDebug() << "username: " << username;
                 m_config.username = username; 
-                qDebug() << "Comb: " << m_config.comb(); 
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb()));
+                qDebug() << "Comb: " << m_config.comb_dl(); 
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_dl()));
              });
     // password
     connect ( m_actions_wrapper, &actions_wrapper::password_changed
             , this, [this](const QString& password) {
                 qDebug() << "password: " << password;
                 m_config.password = password;
-                qDebug() << "Comb: " << m_config.comb();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb()));
+                qDebug() << "Comb: " << m_config.comb_dl();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_dl()));
              });
     // ip
     connect ( m_actions_wrapper, &actions_wrapper::ip_changed
             , this, [this](const QString& ip) {
                 qDebug() << "ip: " << ip;
                 m_config.ip = ip;
-                qDebug() << "Comb: " << m_config.comb();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb()));
+                qDebug() << "Comb: " << m_config.comb_dl();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_dl()));
              });
    
 
@@ -124,8 +124,8 @@ mainwindow::mainwindow(QWidget* parent)
             , this, [this](const QString& port) {
                 qDebug() << "port: " << port;
                 m_config.port = port;
-                qDebug() << "Comb: " << m_config.comb();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb()));
+                qDebug() << "Comb: " << m_config.comb_dl();
+                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_dl()));
              });
 
 

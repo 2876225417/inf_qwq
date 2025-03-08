@@ -75,8 +75,11 @@ private:
         QString ip;
         QString port;
         
-        QString comb() {
-            return "rtsp://" + username + ":" + password +"@" + ip + ":" + port + "/Streaming/Channels/101";
+        QString comb_hk() {
+            return "rtsp://" + username + ":" + password + "@" + ip + ":" + port + "/Streaming/Channels/101";
+        }
+        QString comb_dl() {
+            return "rtsp://" + username + ":" + password + "@" + ip + ":" + port + "/cam/realmonitor?channel=1&subtype=0";
         }
     } m_config;
 
