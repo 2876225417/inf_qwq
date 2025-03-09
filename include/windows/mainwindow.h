@@ -19,6 +19,7 @@
 #include <components/actions_wrapper.h>
 
 #include <qevent.h>
+#include <qgridlayout.h>
 #include <qnamespace.h>
 #include <qopenglshaderprogram.h>
 #include <qpushbutton.h>
@@ -45,6 +46,7 @@ private:
     QHBoxLayout*            m_mainwindow_layout_wrapper;
     // camera layout
     QVBoxLayout*            m_camera_rel_layout;
+    QGridLayout*            m_camera_rel_layout_grid;
     QGroupBox*              m_mainwindow_camera_layout;
     QHBoxLayout*            m_mainwindow_camera_layout_wrapper;
     // actions relatives 
@@ -96,7 +98,6 @@ private:
     
 
     //ort_inferer* m_inferer;
-    chars_inf_det* m_chars_inferer;
     cv::Mat for2{};
     det_inferer* m_chars_det_inferer;
     rec_inferer* m_chars_rec_inferer;

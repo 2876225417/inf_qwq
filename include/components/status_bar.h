@@ -22,5 +22,5 @@ private:
     QTimer* m_timer;
     QLabel* m_time_label;
     QLabel* m_conn_info;
-    
+    QLabel* m_conn_cnts;
 };

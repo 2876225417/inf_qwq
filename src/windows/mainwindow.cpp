@@ -5,6 +5,7 @@
 #include "opencv2/imgcodecs.hpp"
 #include "utils/ort_inf.h"
 #include "utils/ort_inf.hpp"
+#include <qgridlayout.h>
 #include <qimage.h>
 #include <qlineedit.h>
 #include <qnamespace.h>
@@ -19,6 +20,7 @@ mainwindow::mainwindow(QWidget* parent)
     , m_mainwindow_layout{new QWidget()}
     , m_mainwindow_layout_wrapper{new QHBoxLayout()}
     , m_camera_rel_layout{new QVBoxLayout()}
+    , m_camera_rel_layout_grid{new QGridLayout()}
     // camera_layout
     , m_mainwindow_camera_layout{new QGroupBox("Camera")}
     , m_mainwindow_camera_layout_wrapper{new QHBoxLayout()}
@@ -30,8 +32,6 @@ mainwindow::mainwindow(QWidget* parent)
     // camera and actions
     m_camera = new camera_wrapper();
     m_camera->setMinimumWidth(650);
-
-
 
     m_actions_wrapper = new actions_wrapper();
     // croppeds
@@ -45,29 +45,15 @@ mainwindow::mainwindow(QWidget* parent)
     m_status_bar = new status_bar();
     setStatusBar(m_status_bar);
 
-    //m_inferer = new ort_inferer();
-    //m_inferer->set_intra_threads(1);
-    m_chars_inferer = new chars_inf_det();
     m_chars_rec_inferer = new rec_inferer();
     m_chars_det_inferer = new det_inferer();
-    //test for ort inf
-    connect(test_inf, &QPushButton::clicked, this, [this]() { 
-        cv::Mat mat = qimage2mat(tmp);
-        cv::imshow("ts", mat);
-        cv::imwrite("123.jpg", mat);
-        cv::Mat local = cv::imread("123.jpg");
-       // std::string res = m_inferer->exec_inf(mat);
-       // qDebug() << "res: " << res;
-        // if (mat.empty()) { qDebug() << "Mat is empty!"; return; }
-        // std::string res = inferer->exec_inf(tmp);
-        // qDebug() << "";
-    });
-    
+
 
     // rtsp stream
     connect ( m_actions_wrapper, &actions_wrapper::connect_cam
             , this, [this]() {
                 m_camera->set_rtsp_stream(m_config.comb_rtsp_url());
+                qDebug() << "rtsp url: " << m_config.comb_rtsp_url();
              });
 
     // scale factor
@@ -77,7 +63,7 @@ mainwindow::mainwindow(QWidget* parent)
                 qDebug() << "factor in mainwindow: " << factor;
                 m_camera->set_scale_factor(factor);
              });
-
+    // update cropped img 
     connect ( m_camera
             , &camera_wrapper::img_cropped
             , this
@@ -85,11 +71,10 @@ mainwindow::mainwindow(QWidget* parent)
                 qDebug() << "count of images: " << cropped_images.size();
                 tmp = cropped_images[0].image;
                 cv::Mat mat = qimage2mat(tmp);
-                // cv::imshow("tmp", mat);
                 
                 for (auto& cropped: cropped_images){
                     m_1_cropped_img->set_image(0, cropped.image);
-                    m_4_croppeds_img->set_image(cropped.number - 1, cropped.image);  qDebug() << "Images set"; }
+                    m_4_croppeds_img->set_image(cropped.number - 1, cropped.image); }
              });
    
     // username
@@ -198,7 +183,8 @@ mainwindow::mainwindow(QWidget* parent)
     m_camera_rel_layout->addWidget(m_actions_wrapper);              // actions
     m_mainwindow_layout_wrapper->addLayout(m_camera_rel_layout);    // (camera + actions) wrapper
     m_mainwindow_layout_wrapper->addWidget(m_camera_cropped_layout);// camera croppeds
-    
+   
+
     m_mainwindow_layout->setLayout(m_mainwindow_layout_wrapper);    // mainwindow  
     resize(1400, 700);  // windows size w: 1400 h: 700
     setCentralWidget(m_mainwindow_layout);
