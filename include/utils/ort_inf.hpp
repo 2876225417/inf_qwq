@@ -327,7 +327,7 @@ public:
         }
         return boxes;
     }
-
+    #ifdef ENABLE_EIGEN
     inline std::vector<std::vector<cv::Point>>
     process_detection_output_eigen( const std::vector<float>& output
                                   , int height, int width
@@ -362,6 +362,7 @@ public:
         }
         return boxes;
     }
+    #endif
 
     inline cv::Rect 
     expand_box( const std::vector<cv::Point>& box
@@ -550,7 +551,7 @@ private:
             #ifdef ENABLE_EIGEN
             auto [input_tensor_values, resized_img] = preprocess_eigen(frame);  
             #else
-            auto [input_tenosr_values, resized_img] = preprocess(frame);
+            auto [input_tensor_values, resized_img] = preprocess(frame);
             #endif
 
             auto end_preprocess = std::chrono::high_resolution_clock::now();

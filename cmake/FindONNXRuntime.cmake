@@ -5,15 +5,19 @@ cmake_minimum_required(VERSION 3.16)
 
 set(3RDPARTY "${CMAKE_SOURCE_DIR}/3rdparty")
 
-if(ENABLE_GPU)
-    set(ONNXRUNTIME_INCLUDE_DIR "${3RDPARTY}/onnxruntime_gpu/include")
-    set(ONNXRUNTIME_LIB "${3RDPARTY}/onnxruntime_gpu/lib")
-    set(ONNXRUNTIME_TYPE "GPU")
-else()
-    set(ONNXRUNTIME_INCLUDE_DIR "${3RDPARTY}/onnxruntime/include")
-    set(ONNXRUNTIME_LIB "${3RDPARTY}/onnxruntime/lib")
-    set(ONNXRUNTIME_TYPE "CPU")
-endif()
+# if(ENABLE_GPU)
+#     set(ONNXRUNTIME_INCLUDE_DIR "${3RDPARTY}/onnxruntime_gpu/include")
+#     set(ONNXRUNTIME_LIB "${3RDPARTY}/onnxruntime_gpu/lib")
+#     set(ONNXRUNTIME_TYPE "GPU")
+# else()
+#     set(ONNXRUNTIME_INCLUDE_DIR "${3RDPARTY}/onnxruntime/include")
+#     set(ONNXRUNTIME_LIB "${3RDPARTY}/onnxruntime/lib")
+#     set(ONNXRUNTIME_TYPE "CPU")
+# endif()
+
+set(ONNXRUNTIME_INCLUDE_DIR "${3RDPARTY}/onnxruntime/include")
+set(ONNXRUNTIME_LIB "${3RDPARTY}/onnxruntime/lib")
+set(ONNXRUNTIME_TYPE "CPU")
 
 if (NOT EXISTS "${ONNXRUNTIME_INCLUDE_DIR}/onnxruntime_c_api.h")
     message(FATAL_ERROR "Headers of ONNXRuntime ${ONNXRUNTIME_TYPE} is incomplete: ${ONNXRUNTIME_INCLUDE_DIR}")
@@ -32,6 +36,12 @@ find_package_handle_standard_args(ONNXRuntime
         ONNXRUNTIME_INCLUDE_DIR
         ONNXRUNTIME_LIBRARY
 )
+
+if(ONNXRuntime_FOUND)
+    message(STATUS "Found ONNXRuntime")
+    message(STATUS "- Include path: ${ONNXRUNTIME_INCLUDE_DIR}")
+    message(STATUS "- Libraries: ${ONNXRUNTIME_LIBRARY}")
+endif()
 
 mark_as_advanced(
     ONNXRUNTIME_INCLUDE_DIR

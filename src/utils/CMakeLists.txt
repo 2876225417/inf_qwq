@@ -17,7 +17,23 @@ target_include_directories(utils
     ${ONNXRUNTIME_INCLUDE_DIR}
 )
 
-message(STATUS "ONNXRUNTIME_INCLUDE_DIR: ${ONNXRUNTIME_INCLUDE_DIR}")
+if(ENABLE_GPU)
+    target_include_directories(utils
+        PUBLIC
+        ${CUDNN_INCLUDE_DIR}
+        ${TensorRT_INCLUDE_DIR}
+        ${CUDA_INCLUDE_DIR}
+    )
+    target_link_libraries(utils
+        PUBLIC
+        ${CUDA_LIBRARY}
+        ${CUDNN_LIBRARY}
+        ${TensorRT_LIBRARY}
+        cudnn
+        nvinfer
+        nvonnxparser
+    )
+endif()
 
 target_link_libraries(utils
     PUBLIC
@@ -26,6 +42,7 @@ target_link_libraries(utils
     Qt6::Core
     Qt6::Widgets
     Qt6::Gui
+    cudart
 )
 
 if(OpenMP_CXX_FOUND)

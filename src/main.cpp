@@ -16,6 +16,7 @@
 #include <utils/ort_inf.h>
 #include <onnxruntime_cxx_api.h>
 
+#include <utils/trt_inf.hpp>
 
 #include <iostream>
 #include <vector>
@@ -23,6 +24,8 @@
 #include <opencv2/opencv.hpp>
 
 int main(int argc, char* argv[]) {
+    trt_inf::TRT_det_inferer* _trt_inferer = new trt_inf::TRT_det_inferer(); 
+    
 
     // cv::Mat img = cv::imread("c1.jpg");
     //
@@ -32,11 +35,11 @@ int main(int argc, char* argv[]) {
     // std::vector<cv::Mat> croppeds = det->run_inf(img);
     //
     // for (auto& cropped: croppeds) rec->run_inf(cropped);
-    QApplication app(argc, argv);
-
-    mainwindow main_mainwindow;
-    main_mainwindow.show();
-    return app.exec();
+    // QApplication app(argc, argv);
+    //
+    // mainwindow main_mainwindow;
+    // main_mainwindow.show();
+    // return app.exec();
 }
 
 

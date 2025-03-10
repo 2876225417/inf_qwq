@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-project(inf_qwq LANGUAGES CXX)
+project(inf_qwq LANGUAGES CXX CUDA)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -41,16 +41,18 @@ include(${CMAKE_SOURCE_DIR}/cmake/DownloadONNXRuntime.cmake)
 if(ENABLE_EIGEN)
     find_package(Eigen3 REQUIRED)
     add_definitions(-DENABLE_EIGEN=1)
-else()
-    add_definitions(-DENABLE_EIGEN=0)
 endif()
 
 if(ENABLE_MP)
     find_package(OpenMP REQUIRED)
 endif()
 
-find_package(CUDNN REQUIRED)
-find_package(TensorRT REQUIRED)
+if(ENABLE_GPU)
+    set(CUDA_INCLUDE_DIR "/opt/cuda/include")
+    find_package(CUDNN REQUIRED)
+    find_package(TensorRT REQUIRED)
+    find_package(CUDA REQUIRED)
+endif()
 
 find_package(hkvision REQUIRED)
 find_package(ONNXRuntime REQUIRED)
