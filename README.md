@@ -1,21 +1,30 @@
 # 数字智能识别系统
 
+<div style="margin-left:50px; font-size: 30px;">CMAKE Valid Variants</div>
+
+| OPTIONS          | TYPE   | DEFAULT | DESCRIPTION|
+| ----             | ----   | ----  | ---                                        |
+| CMAKE_BUILD_TYPE | STRING | DEBUG | BUILD TYPE                                 |
+| ENABLE_GPU       | BOOL   | ON    | ENABLE CUDA(ONLY SUPPORT CUDA)             |
+| ENABLE_MP        | BOOL   | ON    | ENABLE Multiple Process                    | 
+| ENABLE_EIGEN     | BOOL   | ON    | ENABLE Eigen To Accelerate Mat Calucalting |
 
 
 
-`CMake`构建
+`CMake` Configure & Build
 ```CMake
 mkdir build && cd build
 
+# Configure
 cmake -DCMAKE_BUILD_TYPE=Release ..
 
-# 或 Ninja 加速构建
+# Ninja Generator 
 cmake -DCMAKE_BUILD_TYPE=Release -G Ninja ..
 
-# 构建
+# Build
 cmake --build .
 
-# 运行
+# Run
 ./bin/inf_qwq
 ```
 
