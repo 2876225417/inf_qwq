@@ -1,6 +1,9 @@
 #include "components/actions_wrapper.h"
 #include "components/camera_wrapper.h"
 #include "components/cropped_wrapper.h"
+#include "components/grouping_rtsp_stream.h"
+#include "components/tool_bar.h"
+#include "opencv2/core.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "utils/ort_inf.h"
@@ -10,9 +13,18 @@
 #include <qlineedit.h>
 #include <qnamespace.h>
 #include <qpushbutton.h>
+#include <qsharedpointer.h>
+#include <qsplitter.h>
+#include <qstackedwidget.h>
 #include <windows/mainwindow.h>
 
 #include <chrono>
+
+#include <components/grouping_sidebar.h>
+#include <QStackedWidget>
+
+#include <QSplitter>
+
 
 mainwindow::mainwindow(QWidget* parent)
     : QMainWindow{parent}
@@ -30,161 +42,233 @@ mainwindow::mainwindow(QWidget* parent)
     , m_cropped_img_wrapper{new QHBoxLayout()}
     {
     // camera and actions
-    m_camera = new camera_wrapper();
-    m_camera->setMinimumWidth(650);
+   //  m_camera = new camera_wrapper();
+   //  m_camera->setMinimumWidth(650);
+   //
+   //  m_actions_wrapper = new actions_wrapper();
+   //  // croppeds
+   //  m_4_croppeds_img = new cropped_wrapper<4>(); 
+   //  m_1_cropped_img = new cropped_wrapper<1>(this);
+   //  m_cropped_img_wrapper->addWidget(m_1_cropped_img);
+   //  //m_cropped_img_wrapper->addWidget(test_class);
 
-    m_actions_wrapper = new actions_wrapper();
-    // croppeds
-    m_4_croppeds_img = new cropped_wrapper<4>(); 
-    m_1_cropped_img = new cropped_wrapper<1>(this);
-    m_cropped_img_wrapper->addWidget(m_1_cropped_img);
-    //m_cropped_img_wrapper->addWidget(test_class);
+   //
+   //  m_chars_rec_inferer = new rec_inferer();
+   //  m_chars_det_inferer = new det_inferer();
+   //
+   //
+   //  // rtsp stream
+   //  connect ( m_actions_wrapper, &actions_wrapper::connect_cam
+   //          , this, [this]() {
+   //              m_camera->set_rtsp_stream(m_config.comb_rtsp_url());
+   //              qDebug() << "rtsp url: " << m_config.comb_rtsp_url();
+   //           });
+   //
+   //  // scale factor
+   //  connect ( m_actions_wrapper
+   //          , &actions_wrapper::scale_factor_changed
+   //          , this, [this](double factor) {
+   //              qDebug() << "factor in mainwindow: " << factor;
+   //              m_camera->set_scale_factor(factor);
+   //           });
+   //  // update cropped img 
+   //  connect ( m_camera
+   //          , &camera_wrapper::img_cropped
+   //          , this
+   //          , [this](QVector<cropped_image>& cropped_images) {
+   //              qDebug() << "count of images: " << cropped_images.size();
+   //              tmp = cropped_images[0].image;
+   //              cv::Mat mat = qimage2mat(tmp);
+   //              
+   //              for (auto& cropped: cropped_images){
+   //                  m_1_cropped_img->set_image(0, cropped.image);
+   //                  m_4_croppeds_img->set_image(cropped.number - 1, cropped.image); }
+   //           });
+   // 
+   //  // username
+   //  connect ( m_actions_wrapper, &actions_wrapper::username_changed
+   //          , this, [this](const QString& username) {
+   //              qDebug() << "username: " << username;
+   //              m_config.username = username; 
+   //              qDebug() << "Comb: " << m_config.comb_rtsp_url(); 
+   //              m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
+   //           });
+   //  // password
+   //  connect ( m_actions_wrapper, &actions_wrapper::password_changed
+   //          , this, [this](const QString& password) {
+   //              qDebug() << "password: " << password;
+   //              m_config.password = password;
+   //              qDebug() << "Comb: " << m_config.comb_rtsp_url();
+   //              m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
+   //           });
+   //  // ip
+   //  connect ( m_actions_wrapper, &actions_wrapper::ip_changed
+   //          , this, [this](const QString& ip) {
+   //              qDebug() << "ip: " << ip;
+   //              m_config.ip = ip;
+   //              qDebug() << "Comb: " << m_config.comb_rtsp_url();
+   //              m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
+   //           }); 
+   //
+   //  // port
+   //  connect ( m_actions_wrapper, &actions_wrapper::port_changed
+   //          , this, [this](const QString& port) {
+   //              qDebug() << "port: " << port;
+   //              m_config.port = port;
+   //              qDebug() << "Comb: " << m_config.comb_rtsp_url();
+   //              m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
+   //           });
+   //
+   //  // rtp
+   //  connect ( m_actions_wrapper
+   //          , &actions_wrapper::rtsp_protocal_type_changed
+   //          , this, [this](rtsp_protocal_type rtp) {
+   //              QString rtp_str = rtp == rtsp_protocal_type::ALHUA ? "ALHUA" : "HIKVISION";
+   //              qDebug() << "rtp: " <<  rtp_str;   
+   //              m_config.rtp = rtp;
+   //              m_status_bar->update_conn_info(QString("连接信息：" + m_config.comb_rtsp_url()));
+   //           });
+   //
+   //
+   //  // keyword
+   //  connect ( m_actions_wrapper, &actions_wrapper::keywords_changed
+   //          , this, [this](const QString& keywords) {
+   //              qDebug() << "Keywords: " << keywords;
+   //              m_1_cropped_img->set_keywords(keywords); 
+   //           });
+   //
+   //
+   //  connect (m_actions_wrapper, &actions_wrapper::start_inf, this, [this]() {
+   //              auto start = std::chrono::high_resolution_clock::now();
+   //              
+   //              int idx = 0;
+   //              std::vector<cv::Mat> croppeds = m_chars_det_inferer->run_inf(for2);
+   //              QString result_set;
+   //              int box_idx = 0;
+   //              for (auto& cropped: croppeds) {
+   //                  QString res = QString(m_chars_rec_inferer->run_inf(cropped).c_str());
+   //                  qDebug() << "Res result: " << res;
+   //                  result_set += res;
+   //                  // std::string cropped_name = "Text Box " +std::to_string(++box_idx);
+   //                  // cv::imshow(cropped_name, cropped);
+   //                  // cv::moveWindow(cropped_name, 100 + box_idx * 50, 100);
+   //                  // cv::waitKey(0);
+   //              }
+   //              qDebug() << "Result set: " << result_set;
+   //              m_1_cropped_img->set_inf_result(result_set);
+   //
+   //              auto end = std::chrono::high_resolution_clock::now();
+   //              auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+   //              qDebug() << "推理总耗时： " << duration;
+   //  });
+   //
+   //
+   //  connect ( m_camera, &camera_wrapper::img_cropped4inf
+   //          , this, [this](QVector<cropped_image>& cropped_images) {
+   //              auto start = std::chrono::high_resolution_clock::now();
+   //              
+   //              int idx = 0;
+   //              m_1_cropped_img->set_image(cropped_images[0].image);
+   //              for2 = qimage2mat(cropped_images[0].image);
+   //              for (auto cropped: cropped_images) {
+   //                  idx += 1;
+   //                  //qDebug() << "推理结果: " << m_inferer->exec_inf(qimage2mat(cropped.image));  
+   //             }
+   //              auto end = std::chrono::high_resolution_clock::now();
+   //              auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+   //              qDebug() << "推理总耗时： " << duration;
+   //       });
+   //
+   //  m_camera_cropped_layout->setLayout(m_cropped_img_wrapper);
+
+    // m_mainwindow_camera_layout_wrapper->addWidget(m_camera);
+    // m_mainwindow_camera_layout_wrapper->setAlignment(m_camera, Qt::AlignLeft | Qt::AlignTop);
+    // m_mainwindow_camera_layout_wrapper->setContentsMargins(0, 0, 0, 0);
+    // m_mainwindow_camera_layout->setLayout(m_mainwindow_camera_layout_wrapper);
+    // m_mainwindow_camera_layout->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    //
+    // m_camera_rel_layout->addWidget(m_mainwindow_camera_layout);     // camera
+    // m_camera_rel_layout->addWidget(m_actions_wrapper);              // actions
+    // Sidebar* m_sidebar = new Sidebar();
+    // m_mainwindow_layout_wrapper->addWidget(m_sidebar);
+    // m_mainwindow_layout_wrapper->addLayout(m_camera_rel_layout);    // (camera + actions) wrapper
+    // m_mainwindow_layout_wrapper->addWidget(m_camera_cropped_layout);// camera croppeds
+   
+        
+    m_mainwindow_layout_wrapper->setContentsMargins(0, 0, 0, 0);
+    m_mainwindow_layout_wrapper->setSpacing(0);
+
     // tool bar and status bar
     m_tool_bar = new tool_bar();
     addToolBar(Qt::TopToolBarArea, m_tool_bar);
     m_status_bar = new status_bar();
     setStatusBar(m_status_bar);
+    QSplitter* splitter = new QSplitter(Qt::Horizontal);
+    splitter->setHandleWidth(1);
+    splitter->setStyleSheet("QSplitter::handle { background: #404040; }");
 
-    m_chars_rec_inferer = new rec_inferer();
-    m_chars_det_inferer = new det_inferer();
-
-
-    // rtsp stream
-    connect ( m_actions_wrapper, &actions_wrapper::connect_cam
-            , this, [this]() {
-                m_camera->set_rtsp_stream(m_config.comb_rtsp_url());
-                qDebug() << "rtsp url: " << m_config.comb_rtsp_url();
-             });
-
-    // scale factor
-    connect ( m_actions_wrapper
-            , &actions_wrapper::scale_factor_changed
-            , this, [this](double factor) {
-                qDebug() << "factor in mainwindow: " << factor;
-                m_camera->set_scale_factor(factor);
-             });
-    // update cropped img 
-    connect ( m_camera
-            , &camera_wrapper::img_cropped
-            , this
-            , [this](QVector<cropped_image>& cropped_images) {
-                qDebug() << "count of images: " << cropped_images.size();
-                tmp = cropped_images[0].image;
-                cv::Mat mat = qimage2mat(tmp);
+    connect ( m_tool_bar
+            , &tool_bar::send_rtsp_url
+            , this, [this](const QString& rtsp_url) {
+                int stream_group_current_idx = m_stream_group->currentIndex();
                 
-                for (auto& cropped: cropped_images){
-                    m_1_cropped_img->set_image(0, cropped.image);
-                    m_4_croppeds_img->set_image(cropped.number - 1, cropped.image); }
-             });
-   
-    // username
-    connect ( m_actions_wrapper, &actions_wrapper::username_changed
-            , this, [this](const QString& username) {
-                qDebug() << "username: " << username;
-                m_config.username = username; 
-                qDebug() << "Comb: " << m_config.comb_rtsp_url(); 
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
-             });
-    // password
-    connect ( m_actions_wrapper, &actions_wrapper::password_changed
-            , this, [this](const QString& password) {
-                qDebug() << "password: " << password;
-                m_config.password = password;
-                qDebug() << "Comb: " << m_config.comb_rtsp_url();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
-             });
-    // ip
-    connect ( m_actions_wrapper, &actions_wrapper::ip_changed
-            , this, [this](const QString& ip) {
-                qDebug() << "ip: " << ip;
-                m_config.ip = ip;
-                qDebug() << "Comb: " << m_config.comb_rtsp_url();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
-             }); 
+                grouping_rtsp_stream* current_grid 
+                    = qobject_cast<grouping_rtsp_stream*>(m_stream_group->currentWidget());
 
-    // port
-    connect ( m_actions_wrapper, &actions_wrapper::port_changed
-            , this, [this](const QString& port) {
-                qDebug() << "port: " << port;
-                m_config.port = port;
-                qDebug() << "Comb: " << m_config.comb_rtsp_url();
-                m_status_bar->update_conn_info(QString("连接信息: " + m_config.comb_rtsp_url()));
-             });
-
-    // rtp
-    connect ( m_actions_wrapper
-            , &actions_wrapper::rtsp_protocal_type_changed
-            , this, [this](rtsp_protocal_type rtp) {
-                QString rtp_str = rtp == rtsp_protocal_type::ALHUA ? "ALHUA" : "HIKVISION";
-                qDebug() << "rtp: " <<  rtp_str;   
-                m_config.rtp = rtp;
-                m_status_bar->update_conn_info(QString("连接信息：" + m_config.comb_rtsp_url()));
-             });
-
-
-    // keyword
-    connect ( m_actions_wrapper, &actions_wrapper::keywords_changed
-            , this, [this](const QString& keywords) {
-                qDebug() << "Keywords: " << keywords;
-                m_1_cropped_img->set_keywords(keywords); 
-             });
-
-
-    connect (m_actions_wrapper, &actions_wrapper::start_inf, this, [this]() {
-                auto start = std::chrono::high_resolution_clock::now();
-                
-                int idx = 0;
-                std::vector<cv::Mat> croppeds = m_chars_det_inferer->run_inf(for2);
-                QString result_set;
-                int box_idx = 0;
-                for (auto& cropped: croppeds) {
-                    QString res = QString(m_chars_rec_inferer->run_inf(cropped).c_str());
-                    qDebug() << "Res result: " << res;
-                    result_set += res;
-                    // std::string cropped_name = "Text Box " +std::to_string(++box_idx);
-                    // cv::imshow(cropped_name, cropped);
-                    // cv::moveWindow(cropped_name, 100 + box_idx * 50, 100);
-                    // cv::waitKey(0);
-                }
-                qDebug() << "Result set: " << result_set;
-                m_1_cropped_img->set_inf_result(result_set);
-
-                auto end = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-                qDebug() << "推理总耗时： " << duration;
-    });
-
-
-    connect ( m_camera, &camera_wrapper::img_cropped4inf
-            , this, [this](QVector<cropped_image>& cropped_images) {
-                auto start = std::chrono::high_resolution_clock::now();
-                
-                int idx = 0;
-                m_1_cropped_img->set_image(cropped_images[0].image);
-                for2 = qimage2mat(cropped_images[0].image);
-                for (auto cropped: cropped_images) {
-                    idx += 1;
-                    //qDebug() << "推理结果: " << m_inferer->exec_inf(qimage2mat(cropped.image));  
-               }
-                auto end = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-                qDebug() << "推理总耗时： " << duration;
+                 
+                qDebug() << "Selected id: " << current_grid->get_cam_by_id(3)->get_cam_id(); 
+                for (int i = 0; i < current_grid->get_MAX_PER_PAGE(); ++i)  
+                    current_grid->get_cam_by_id(i)->set_rtsp_stream(rtsp_url);
+             
             });
 
-    m_camera_cropped_layout->setLayout(m_cropped_img_wrapper);
+    connect ( m_tool_bar
+            , &tool_bar::send_scale_factor
+            , this, [this](float factor) {
+                int stream_group_current_idx = m_stream_group->currentIndex();
+                
+                grouping_rtsp_stream* current_grid
+                     = qobject_cast<grouping_rtsp_stream*>(m_stream_group->currentWidget());
 
-    m_mainwindow_camera_layout_wrapper->addWidget(m_camera);
-    m_mainwindow_camera_layout_wrapper->setAlignment(m_camera, Qt::AlignLeft | Qt::AlignTop);
-    m_mainwindow_camera_layout_wrapper->setContentsMargins(0, 0, 0, 0);
-    m_mainwindow_camera_layout->setLayout(m_mainwindow_camera_layout_wrapper);
-    m_mainwindow_camera_layout->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+                for (int i = 0; i < current_grid->get_MAX_PER_PAGE(); ++i)
+                    current_grid->get_cam_by_id(i)->set_scale_factor(factor);
+            });
+    
 
-    m_camera_rel_layout->addWidget(m_mainwindow_camera_layout);     // camera
-    m_camera_rel_layout->addWidget(m_actions_wrapper);              // actions
-    m_mainwindow_layout_wrapper->addLayout(m_camera_rel_layout);    // (camera + actions) wrapper
-    m_mainwindow_layout_wrapper->addWidget(m_camera_cropped_layout);// camera croppeds
-   
+    m_sidebar = new grouping_sidebar(4);
 
+    m_stream_group = new QStackedWidget();
+    
+    int m_totalCams = 50;
+    
+    const int perPage = grouping_rtsp_stream::get_MAX_PER_PAGE();
+
+    int totalPages = ceil(static_cast<float>(m_totalCams) / perPage);
+    
+    for(int page=0; page<totalPages; ++page){
+        int startCam = page * perPage;
+        bool isLastPage = (page == totalPages-1);
+       int currentTotal = isLastPage ? m_totalCams : (startCam + perPage);
+        
+        //auto grid = new VideoGridPage(startCam, currentTotal);
+        auto grid = new grouping_rtsp_stream(startCam,  currentTotal);
+        m_stream_group->addWidget(grid);
+    }
+
+
+
+    splitter->addWidget(m_sidebar);
+    splitter->addWidget(m_stream_group);
+    
+    QList<int> sizes = {
+        static_cast<int>(width() * 0.15),
+        static_cast<int>(width() * 0.85)
+    };
+    splitter->setSizes(sizes);
+
+    m_mainwindow_layout_wrapper->addWidget(splitter);
+
+    setWindowTitle("Detector");
     m_mainwindow_layout->setLayout(m_mainwindow_layout_wrapper);    // mainwindow  
     resize(1400, 700);  // windows size w: 1400 h: 700
     setCentralWidget(m_mainwindow_layout);

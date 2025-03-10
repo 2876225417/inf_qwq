@@ -19,10 +19,11 @@ struct cropped_image{
 class camera_wrapper: public QWidget {
     Q_OBJECT
 public:
-    explicit camera_wrapper(QWidget* parent = nullptr);
+    explicit camera_wrapper(int cam_id, QWidget* parent = nullptr);
     ~camera_wrapper();
     void set_rtsp_stream(const QString& rtsp_url);
     void set_scale_factor(double factor);
+    int get_cam_id() const;
 signals:
     // send cropped img when selected and moving
     void img_cropped(QVector<cropped_image>&);
@@ -45,4 +46,6 @@ private:
     QVector<cropped_image> m_cropped_images;
 
     QTimer* m_timer;
+    
+    int m_cam_id;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/grouping_sidebar.h"
 #include <GL/gl.h>
 #include <QMainWindow>
 #include <QCamera>
@@ -23,6 +24,7 @@
 #include <qnamespace.h>
 #include <qopenglshaderprogram.h>
 #include <qpushbutton.h>
+#include <qstackedwidget.h>
 #include <utils/ort_inf.h>
 
 #include <utils/ort_inf.hpp>
@@ -30,7 +32,13 @@
 #include <components/cropped_wrapper.h>
 
 
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QListWidget>
+
 #include <QHBoxLayout>
+
+#include <QObject>
 
 class mainwindow: public QMainWindow {
     Q_OBJECT
@@ -103,4 +111,10 @@ private:
     rec_inferer* m_chars_rec_inferer;
     tool_bar*               m_tool_bar;
     status_bar*             m_status_bar;
+
+    // sidebar
+    grouping_sidebar* m_sidebar; 
+
+    // rtsp stream group
+    QStackedWidget* m_stream_group;  
 };

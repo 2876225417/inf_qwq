@@ -3,22 +3,39 @@
 #include "utils/video_capturer.h"
 #include <components/camera_wrapper.h>
 #include <qimage.h>
+#include <qnamespace.h>
 #include <qpixmap.h>
 
+#include <QResizeEvent>
 
+#include <QLabel>
 
-camera_wrapper::camera_wrapper(QWidget* parent)
+camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
     : QWidget{parent}
     , m_camera_layout{new QHBoxLayout()}
     , m_video_stream{new QLabel("Wait for streaming...", this)}
     , m_draw_overlay{new draw_overlay}
     , m_timer{new QTimer(this)}
+    , m_cam_id{cam_id}
     {
+    m_camera_layout->setContentsMargins(0, 0, 0, 0);
+    m_video_stream->setAlignment(Qt::AlignCenter);
     m_video_capturer = new video_capturer();  
     m_video_stream->installEventFilter(this);
-    m_video_stream->setStyleSheet("QLabel { border: 2px solid #808080; }"); 
+    m_video_stream->setStyleSheet("QLabel { background: #1A1A1A; }"); 
     m_draw_overlay->setParent(m_video_stream); 
+    
+    // connect(m_video_stream, &QLabel::resize, [=]{
+    //     m_draw_overlay->resize(m_video_stream->size());
+    // });
     m_draw_overlay->resize(m_video_stream->size());
+    
+    m_camera_layout->addWidget(m_video_stream);
+    
+    
+
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setLayout(m_camera_layout);
 
     connect ( m_draw_overlay
             , &draw_overlay::selected
@@ -53,11 +70,6 @@ camera_wrapper::camera_wrapper(QWidget* parent)
                 m_video_stream->setPixmap(QPixmap::fromImage(frame));
                 m_current_frame = frame.copy();
            }); m_video_capturer->start(); 
-
-    m_camera_layout->addWidget(m_video_stream);
-    
-    setLayout(m_camera_layout);
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 }
 
 void camera_wrapper::set_scale_factor(double factor) {
@@ -67,6 +79,10 @@ void camera_wrapper::set_scale_factor(double factor) {
 void camera_wrapper::set_rtsp_stream(const QString& rtsp_url) {
     qDebug() << "Try to switch to rtsp_url: " << rtsp_url;
     m_video_capturer->switch_rtsp_stream(rtsp_url);
+}
+
+int camera_wrapper::get_cam_id() const {
+    return this->m_cam_id;
 }
 
 QRect camera_wrapper::rect2coords(const QRect& rect) {

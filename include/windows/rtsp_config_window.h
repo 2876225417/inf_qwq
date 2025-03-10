@@ -26,8 +26,7 @@ public:
     explicit rtsp_config_window(QWidget* parent = nullptr);
 
 signals:
-    
-
+    void send_rtsp_url(const QString& rtsp_url);
 
 private:
     QVBoxLayout* m_rtsp_config_main_layout; 
