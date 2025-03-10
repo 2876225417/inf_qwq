@@ -1,5 +1,6 @@
 
 
+// @deprecated ......
 
 #include <iostream>
 #include <HCNetSDK.h>

@@ -72,7 +72,8 @@ if(NOT EXISTS "${ONNXRUNTIME_EXTRACT_DIR}/include/onnxruntime_c_api.h")
         list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
         message(FATAL_ERROR "Failed to download ONNX Runtime: ${ERROR_MESSAGE}")
     endif()
-
+    # todo: Extract error
+    # description: Extacting with an extra folder wrapped
     message(STATUS "Extracting ONNX Runtime to ${ONNXRUNTIME_EXTRACT_DIR}")
 
     set(TEMP_EXTRACT_DIR "${ONNXRUNTIME_DOWNLOAD_DIR}/temp_extract")

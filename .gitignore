@@ -5,3 +5,5 @@ tags
 inf_src/paddle/*
 inf_src/onnx/*
 onnxruntime_gpu
+tmp.*
+/src/tmp.md

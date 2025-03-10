@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.16)
 file(GLOB SRC_FILES *.cpp)
 file(GLOB HEADER_FILES ${CMAKE_SOURCE_DIR}/include/windows/*.h)
 
+
+
 add_library(windows
     STATIC
     ${SRC_FILES}
