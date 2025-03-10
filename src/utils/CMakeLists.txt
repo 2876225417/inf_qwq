@@ -17,6 +17,8 @@ target_include_directories(utils
     ${ONNXRUNTIME_INCLUDE_DIR}
 )
 
+message(STATUS "ONNXRUNTIME_INCLUDE_DIR: ${ONNXRUNTIME_INCLUDE_DIR}")
+
 target_link_libraries(utils
     PUBLIC
     onnxruntime::onnxruntime
@@ -28,7 +30,6 @@ target_link_libraries(utils
 
 if(OpenMP_CXX_FOUND)
     target_link_libraries(utils PRIVATE OpenMP::OpenMP_CXX)
-
     target_compile_options(utils PRIVATE
         $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fopenmp>
         $<$<CXX_COMPILER_ID:MSVC>:/openmp>

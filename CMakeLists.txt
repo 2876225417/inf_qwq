@@ -25,14 +25,18 @@ add_compile_options(
 )
 
 
-
-
-
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Requred CXX standard: ${CMAKE_CXX_STANDARD}")
 
-option(ENABLE_EIGEN "Eigen support for accelarating mat calculating" OFF)
+option(ENABLE_EIGEN "Eigen support for accelerating mat calculating" OFF)
 message(STATUS "ENABLE_EIGEN: ${ENABLE_EIGEN}")
+
+option(ENABLE_GPU "Enable GPU(CUDA) for 3rdparty's support" OFF)
+message(STATUS "ENABLE_GPU: ${ENABLE_GPU}")
+
+option(ENABLE_MP "Enable OpenMP paralle calculating" OFF)
+
+include(${CMAKE_SOURCE_DIR}/cmake/DownloadONNXRuntime.cmake)
 
 if(ENABLE_EIGEN)
     find_package(Eigen3 REQUIRED)
@@ -41,9 +45,15 @@ else()
     add_definitions(-DENABLE_EIGEN=0)
 endif()
 
-#find_package(OpenMP REQUIRED)
+if(ENABLE_MP)
+    find_package(OpenMP REQUIRED)
+endif()
+
+find_package(CUDNN REQUIRED)
+find_package(TensorRT REQUIRED)
+
 find_package(hkvision REQUIRED)
-find_package(onnxruntime REQUIRED)
+find_package(ONNXRuntime REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS
@@ -77,7 +87,6 @@ include_directories(
     ${HKVISION_INCLUDE_DIR}
 ) 
 
-message(STATUS "onnxruntime include dir: ${ONNXRUNTIME_INCLUDE_DIR}")
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 
 # hk test
@@ -90,17 +99,6 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 #     hkvision::HCCore
 # )
 
-
-install(TARGETS inf_qwq
-    RUNTIME DESTINATION bin
-    BUNDLE  DESTINATION bin
-)
-
-
-install(TARGETS utils windows components
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-)
 
 
 
