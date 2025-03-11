@@ -21,10 +21,11 @@ class camera_wrapper: public QWidget {
 public:
     explicit camera_wrapper(int cam_id, QWidget* parent = nullptr);
     ~camera_wrapper();
-    void set_rtsp_stream(const QString& rtsp_url);
+    bool set_rtsp_stream(const QString& rtsp_url);
     void set_scale_factor(double factor);
     int get_cam_id() const;
     QString get_rtsp_url() const;
+    QString get_rtsp_config() const;
 signals:
     // send cropped img when selected and moving
     void img_cropped(QVector<cropped_image>&);
@@ -32,6 +33,7 @@ signals:
     void img_cropped4inf(QVector<cropped_image>&);
     // send cameram expanding request
     void cam_expand_req(int cam_id);
+    
 protected:
     bool eventFilter(QObject*, QEvent*) override;
 private slots: 

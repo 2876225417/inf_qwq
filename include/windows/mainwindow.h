@@ -119,4 +119,9 @@ private:
 
     // rtsp stream group
     QStackedWidget* m_stream_group;  
+
+    static int cam_nums;
 };
+
+inline int mainwindow::cam_nums = 0;
+

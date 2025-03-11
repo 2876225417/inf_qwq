@@ -1,5 +1,7 @@
 
 #include "components/actions_wrapper.h"
+#include <format>
+#include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
 #include <qmutex.h>
@@ -9,9 +11,10 @@
 #include <QMutexLocker>
 
 
-video_capturer::video_capturer(QThread* parent)
+video_capturer::video_capturer(int cam_id, QThread* parent)
     : QThread{parent}
-    //, m_capturer{0} 
+    //, m_capturer{0}
+    , m_cam_id{cam_id}
     , m_current_camera_index{0}
     , m_scale_factor{0.5f} { }
 video_capturer::~video_capturer() {
@@ -113,6 +116,44 @@ void video_capturer::run() {
         }
             
         cv::resize(frame, frame, cv::Size(), scale, scale, cv::INTER_LINEAR);
+    
+        std::string cam_id_text = "Camera ID: " + std::to_string(m_cam_id + 1);
+
+        int font_face = cv::FONT_HERSHEY_SIMPLEX;
+        double font_scale = 0.7;
+        int thickness = 2;
+        cv::Scalar text_color(0, 255, 0);
+
+
+        cv::Size text_size = cv::getTextSize(cam_id_text, font_face, font_scale, thickness, nullptr);
+        
+        int padding = 10;
+        int rect_x = frame.cols - text_size.width - padding * 2;
+        int rect_y = frame.rows - text_size.height - padding * 2;
+        int text_x = rect_x + padding;
+        int text_y = rect_y + text_size.height + padding;
+
+        cv::Rect bg_rect(rect_x, rect_y, text_size.width + padding * 2, text_size.height + padding * 2);
+
+        cv::Mat overlay;
+        frame.copyTo(overlay);
+
+        //cv::rectangle(frame, bg_rect, cv::Scalar(0, 0, 0), -1);
+       
+        double alpha = 0.0;
+        
+        cv::addWeighted( overlay(bg_rect)
+                       , alpha
+                       , frame(bg_rect)
+                       , 1.0 - alpha
+                       , 0, frame(bg_rect)
+                       ) ;
+
+        cv::putText(  frame
+                    , cam_id_text, cv::Point(text_x, text_y)
+                    , font_face, font_scale
+                    , text_color, thickness
+                    ) ;
 
         QImage cap_frame = QImage ( frame.data
                                   , frame.cols

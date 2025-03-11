@@ -21,7 +21,7 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
     {
     m_camera_layout->setContentsMargins(0, 0, 0, 0);
     m_video_stream->setAlignment(Qt::AlignCenter);
-    m_video_capturer = new video_capturer();  
+    m_video_capturer = new video_capturer(cam_id);  
     m_video_stream->installEventFilter(this);
     m_video_stream->setStyleSheet("QLabel { background: #1A1A1A; }"); 
     m_draw_overlay->setParent(m_video_stream); 
@@ -75,7 +75,28 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
            , &video_capturer::frame_captured
            , this
            , [this](QImage frame) {
-                m_video_stream->setPixmap(QPixmap::fromImage(frame));
+                m_current_frame = frame.copy();
+                QSize label_size = m_video_stream->size();
+                QSize scaled_size = frame.size();
+
+                scaled_size.scale( label_size
+                                 , Qt::KeepAspectRatio
+                                 ) ;
+                QImage scaled_image = frame.scaled( scaled_size
+                                                  , Qt::KeepAspectRatio
+                                                  , Qt::SmoothTransformation
+                                                  ) ;
+                
+                QImage background(label_size, QImage::Format_RGB888);
+                background.fill(Qt::black);
+
+                QPainter painter(&background);
+                int x = (label_size.width() - scaled_size.width()) / 2;
+                int y = (label_size.height() - scaled_size.height()) / 2;
+                painter.drawImage(x, y, scaled_image);
+                    
+
+                m_video_stream->setPixmap(QPixmap::fromImage(background));
                 m_current_frame = frame.copy();
            }); m_video_capturer->start(); 
 }
@@ -84,14 +105,16 @@ void camera_wrapper::set_scale_factor(double factor) {
     m_video_capturer->set_scale_factor(factor);
 }
 
-void camera_wrapper::set_rtsp_stream(const QString& rtsp_url) {
+bool camera_wrapper::set_rtsp_stream(const QString& rtsp_url) {
     qDebug() << "Try to switch to rtsp_url: " << rtsp_url;
-    m_video_capturer->switch_rtsp_stream(rtsp_url);
+    return m_video_capturer->switch_rtsp_stream(rtsp_url);
 }
 
 QString camera_wrapper::get_rtsp_url() const {
     return m_video_capturer->get_rtsp_url();
 } 
+
+
 
 int camera_wrapper::get_cam_id() const {
     return this->m_cam_id;

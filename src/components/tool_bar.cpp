@@ -28,11 +28,11 @@ tool_bar::tool_bar(QWidget* parent)
     connect (add_rtsp_stream_config, &QAction::triggered, this, [this]{
         if (!m_rtsp_config_window) {
             m_rtsp_config_window = new rtsp_config_window(this); 
-            connect ( m_rtsp_config_window
+            connect ( m_rtsp_config_window  // -> mainwindow
                     , &rtsp_config_window::send_rtsp_url
-                    , this, [this](const QString& rtsp_url) {
+                    , this, [this](const QString& rtsp_url, const rtsp_config& rtsp_cfg) {
                         qDebug() << "rtsp url sent already!";
-                        emit send_rtsp_url(rtsp_url);
+                        emit send_rtsp_url(rtsp_url, rtsp_cfg);
                     }, Qt::QueuedConnection);
         }
         m_rtsp_config_window->show();

@@ -13,7 +13,7 @@ grouping_rtsp_stream::grouping_rtsp_stream( int start_cam_id
                                           , m_start(start_cam_id)
                                           , m_total(total_cams)
                                           {
-    // 3 x 3 grid
+    // 2 x 2 grid
     cams_grid = new QGridLayout(this);
     cams_grid->setSpacing(5);
     cams_grid->setContentsMargins(5, 5, 5, 5);
@@ -25,7 +25,7 @@ grouping_rtsp_stream::grouping_rtsp_stream( int start_cam_id
         setup_cam(cam_id, pos);
     }
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
         cams_grid->setRowStretch(i, 1);
         cams_grid->setColumnStretch(i, 1);
     }
@@ -33,8 +33,8 @@ grouping_rtsp_stream::grouping_rtsp_stream( int start_cam_id
 
 void grouping_rtsp_stream::setup_cam(int cam_id, int grid_pos) {
     QWidget* widget = nullptr;
-    int row = grid_pos / 3;
-    int col = grid_pos % 3;
+    int row = grid_pos / 2;
+    int col = grid_pos % 2;
     
     if (cam_id < m_total) {
         camera_wrapper* cam = new camera_wrapper(cam_id);
@@ -101,8 +101,8 @@ void grouping_rtsp_stream::resizeEvent(QResizeEvent*) {
     int content_width = width() - 5;
     int content_height = height() - 5;
     
-    int cell_width = content_width / 3 - 3 * 2;
-    int cell_height = content_height / 3 - 3 * 2;
+    int cell_width = content_width / 2 - 2 * 2;
+    int cell_height = content_height / 2 - 2 * 2;
     
     int final_height = qMin(cell_height, cell_width * 9 / 16);
     int final_width = final_height * 16 / 9;

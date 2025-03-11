@@ -107,10 +107,10 @@ rtsp_config_window::rtsp_config_window(QWidget* parent)
     // test
     m_test_button = new QPushButton("Test");
 
-    connect ( m_test_button
+    connect ( m_test_button // -> toolbar
             , &QPushButton::clicked
             , this, [this]() {
-                emit send_rtsp_url(m_customized_rtsp_info_edit->text());
+                emit send_rtsp_url(m_customized_rtsp_info_edit->text(), m_rtsp_config);
             });
 
     // connect

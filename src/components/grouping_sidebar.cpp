@@ -4,6 +4,11 @@
 #include <qnamespace.h>
 #include <qwidget.h>
 
+
+void grouping_sidebar::set_checked(int index) {
+
+}
+
 grouping_sidebar::grouping_sidebar(int groups_num, QWidget* parent)
     : QToolBar{parent}
 {
@@ -42,7 +47,7 @@ grouping_sidebar::grouping_sidebar(int groups_num, QWidget* parent)
     
     for (int i = 0; i < groups_num; ++i) {
         QAction* act = new QAction(
-            QString("Group %1\nCh %2-%3").arg(i+1).arg(i*9+1).arg(i*9+9),
+            QString("Group %1\nCh %2-%3").arg(i+1).arg(i*4+1).arg(i*4+4),
             this
         );
         act->setData(i);
@@ -77,4 +82,16 @@ grouping_sidebar::grouping_sidebar(int groups_num, QWidget* parent)
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     setMinimumWidth(140); 
 }
+
+void grouping_sidebar::set_current_group(int group_index) {
+    if (group_index < 0 || group_index >= m_group_actions.size()) return;
+
+    if (m_current_group >= 0 && m_current_group < m_group_actions.size())
+        m_group_actions[m_current_group]->setChecked(false);
+    qDebug() << "Invoked change index"
+             << "Group index: " << group_index;
+    m_group_actions[group_index]->setChecked(true);
+    m_current_group = group_index;
+}
+
 

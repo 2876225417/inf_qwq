@@ -20,11 +20,6 @@
 #include <QHash>
 
 
-
-
-
-
-
 class grouping_rtsp_stream: public QWidget{
     Q_OBJECT
 public:
@@ -55,7 +50,7 @@ private:
     QGridLayout* cams_grid;
     int m_start;
     int m_total;
-    static const int MAX_PER_PAGE = 9;
+    static const int MAX_PER_PAGE = 4;
     
     QWidget* create_video_widget(int cam_id);   
     QWidget* create_placeholder();

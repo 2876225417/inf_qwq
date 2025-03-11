@@ -11,7 +11,7 @@
 class video_capturer: public QThread {
     Q_OBJECT
 public:
-    explicit video_capturer(QThread* parent = nullptr);
+    explicit video_capturer(int cam_id, QThread* parent = nullptr);
     ~video_capturer();
 
     void stop();
@@ -28,6 +28,7 @@ signals:
     void frame_captured(QImage frame);
     void camera_error(const QString& error_msg);
 private:
+    int m_cam_id;
     QString m_rtsp_url;
     cv::VideoCapture m_capturer;
     std::atomic_bool m_stop{false};

@@ -8,6 +8,7 @@
 #include "opencv2/imgcodecs.hpp"
 #include "utils/ort_inf.h"
 #include "utils/ort_inf.hpp"
+#include "windows/rtsp_config_window.h"
 #include <qgridlayout.h>
 #include <qimage.h>
 #include <qlineedit.h>
@@ -211,36 +212,77 @@ mainwindow::mainwindow(QWidget* parent)
 
     connect ( m_tool_bar
             , &tool_bar::send_rtsp_url
-            , this, [this](const QString& rtsp_url) {
-                int stream_group_current_idx = m_stream_group->currentIndex();
+            , this, [this](const QString& rtsp_url, const rtsp_config& rtsp_cfg) {
+                int MAX_PER_PAGE 
+                    =  qobject_cast<grouping_rtsp_stream*>(m_stream_group->widget(0))->get_MAX_PER_PAGE();
+
+                int target_group_index = cam_nums / MAX_PER_PAGE;
+
+                m_stream_group->setCurrentIndex(target_group_index);
                 
+                qDebug() << "MAX_PER_PAGE: " << MAX_PER_PAGE 
+                         << ", current group index: " << m_stream_group->currentIndex() 
+                         << ", target_group_index: " << target_group_index;
+
                 grouping_rtsp_stream* current_grid 
                     = qobject_cast<grouping_rtsp_stream*>(m_stream_group->currentWidget());
-
-                 
-                qDebug() << "Selected id: " << current_grid->get_cam_by_id(3)->get_cam_id(); 
-                for (int i = 0; i < current_grid->get_MAX_PER_PAGE(); ++i)  
-                    current_grid->get_cam_by_id(i)->set_rtsp_stream(rtsp_url);
-             
-            });
-
-    connect ( m_tool_bar
-            , &tool_bar::send_scale_factor
-            , this, [this](float factor) {
-                int stream_group_current_idx = m_stream_group->currentIndex();
                 
-                grouping_rtsp_stream* current_grid
-                     = qobject_cast<grouping_rtsp_stream*>(m_stream_group->currentWidget());
+                bool success = current_grid->get_cam_by_id(cam_nums)->set_rtsp_stream(rtsp_url);   
+                if (success) cam_nums++;
+                // update sidebar
+                if (m_sidebar) {
+                    removeToolBar(m_sidebar);
+                    delete m_sidebar;
+                }
+                
+                m_sidebar = new grouping_sidebar( m_stream_group->count()
+                                                , this
+                                                ) ;
+                addToolBar(Qt::LeftToolBarArea, m_sidebar);
 
-                for (int i = 0; i < current_grid->get_MAX_PER_PAGE(); ++i)
-                    current_grid->get_cam_by_id(i)->set_scale_factor(factor);
+                m_sidebar->set_current_group(m_stream_group->currentIndex());
+                
+                connect ( m_sidebar
+                        , &grouping_sidebar::group_selected
+                        , this, [this](int group_index) {
+                            if (group_index >= 0 && group_index < m_stream_group->count()) 
+                                m_stream_group->setCurrentIndex(group_index);
+                        });
+                
             });
     
 
+    
     m_sidebar = new grouping_sidebar(4);
 
     m_stream_group = new QStackedWidget();
-    
+  
+
+    connect ( m_tool_bar    // bugs: 1. unable to affect all wrappers 2. sidebar activation status updated wrongly
+            , &tool_bar::send_scale_factor
+            , this, [this](float factor) {
+                int MAX_PER_PAGE 
+                    = qobject_cast<grouping_rtsp_stream*>(m_stream_group->widget(0))->get_MAX_PER_PAGE();
+                
+                int group_count = m_stream_group->count();
+
+                for (int group_idx = 0; group_idx < group_count; ++group_idx) {
+                    grouping_rtsp_stream* grid = qobject_cast<grouping_rtsp_stream*>(m_stream_group->widget(group_idx));
+                    if (!grid) continue;
+                    for (int pos = 0; pos < MAX_PER_PAGE; ++pos) {
+                        camera_wrapper* cam = grid->get_cam_by_id(pos);
+
+                        if (cam) cam->set_scale_factor(factor);
+                    }
+                }
+            });
+
+    connect ( m_stream_group
+            , &QStackedWidget::currentChanged
+            , this, [this](int group_index) {
+                if (m_sidebar) m_sidebar->set_current_group(group_index);
+            });
+
     int m_totalCams = 50;
     
     const int perPage = grouping_rtsp_stream::get_MAX_PER_PAGE();

@@ -20,13 +20,49 @@ enum class rtsp_proto_type {
     ALHUA
 };
 
+struct rtsp_config{
+        rtsp_proto_type rpt = rtsp_proto_type::HIKVISION;
+        QString username;
+        QString password;
+        QString ip;
+        QString port;
+        QString channel;
+        QString subtype;
+
+        QString config2url() const {
+            switch(rpt) {
+                case rtsp_proto_type::HIKVISION: return rtsp_hk();
+                case rtsp_proto_type::ALHUA:     return rtsp_ah();
+                default: return "";
+            }
+        } 
+    private:
+        QString rtsp_hk() const { 
+            return "rtsp://" + username 
+                 + ":"       + password
+                 + "@"       + ip       
+                 + ":"       + port     
+                 + "/Streaming/Channels/101";
+        }
+
+        QString rtsp_ah() const {
+            return "rtsp://" + username
+                 + ":"       + password
+                 + "@"       + ip
+                 + ":"       + port
+                 + "cam/realmonitor?channel=1@subtype=0";
+        }
+};
+    
+
+
 class rtsp_config_window: public QWidget {
     Q_OBJECT
 public:
     explicit rtsp_config_window(QWidget* parent = nullptr);
 
 signals:
-    void send_rtsp_url(const QString& rtsp_url);
+    void send_rtsp_url(const QString& rtsp_url, const rtsp_config& rtsp_cfg);
 
 private:
     QVBoxLayout* m_rtsp_config_main_layout; 
@@ -84,38 +120,6 @@ private:
     // connect
     QPushButton* m_connect_button;
 
-    struct {
-        rtsp_proto_type rpt = rtsp_proto_type::HIKVISION;
-        QString username;
-        QString password;
-        QString ip;
-        QString port;
-        QString channel;
-        QString subtype;
-
-        QString config2url() const {
-            switch(rpt) {
-                case rtsp_proto_type::HIKVISION: return rtsp_hk();
-                case rtsp_proto_type::ALHUA:     return rtsp_ah();
-                default: return "";
-            }
-        } 
-    private:
-        QString rtsp_hk() const { 
-            return "rtsp://" + username 
-                 + ":"       + password
-                 + "@"       + ip       
-                 + ":"       + port     
-                 + "/Streaming/Channels/101";
-        }
-
-        QString rtsp_ah() const {
-            return "rtsp://" + username
-                 + ":"       + password
-                 + "@"       + ip
-                 + ":"       + port
-                 + "cam/realmonitor?channel=1@subtype=0";
-        }
-    } m_rtsp_config;
+    rtsp_config m_rtsp_config;
 };
 #endif

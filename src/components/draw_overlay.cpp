@@ -97,9 +97,10 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
             m_number_combobox->setCurrentIndex(m_rects[m_hover_idx].number - 1);
         }
     } else if (e->button() == Qt::LeftButton) {
+        update_hover_state(e->pos());
         if (m_expand_btn_hovered) { emit expand_camera_request(m_cam_id); return; }
 
-        update_hover_state(e->pos());
+
 
         if (m_hover_idx != -1) {
             QRect btn_rect = paint_close_btn(m_rects[m_hover_idx].rect);
