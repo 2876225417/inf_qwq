@@ -38,7 +38,13 @@ void grouping_rtsp_stream::setup_cam(int cam_id, int grid_pos) {
     
     if (cam_id < m_total) {
         camera_wrapper* cam = new camera_wrapper(cam_id);
-        
+            
+        connect ( cam
+                , &camera_wrapper::cam_expand_req
+                , this, [this, cam_id](int id){
+                   emit cam_expand_req(id);
+                });
+
         m_id2cam.insert(cam_id, cam);
         m_widget2id.insert(cam, cam_id);
         m_cam_pool.append(cam);

@@ -58,12 +58,15 @@ bool video_capturer::switch_rtsp_stream(const QString& rtsp_url) {
         m_current_camera_index = -1;
         m_current_rtsp_url = rtsp_url;
         m_stop = false;
+        m_rtsp_url = rtsp_url;
         start();
         return true;
     }
     emit camera_error("无法连接到RTSP流: " + rtsp_url);
     return false;
 }
+
+QString video_capturer::get_rtsp_url() const { return m_rtsp_url; }
 
 bool video_capturer::open_camera(int index) {
     if (m_capturer.isOpened()) {

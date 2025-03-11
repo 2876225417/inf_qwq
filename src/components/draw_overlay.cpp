@@ -1,14 +1,17 @@
 
+#include "HCNetSDK.h"
 #include <components/draw_overlay.h>
 #include <QTimer>
 
-draw_overlay::draw_overlay(QWidget* parent)
+draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     : QWidget{parent}
+    , m_cam_id{cam_id}
     , m_number_combobox{new QComboBox(this)}
     , m_timer{new QTimer(this)}
     {
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
     setAttribute(Qt::WA_TranslucentBackground);
+
 
     m_number_combobox->addItems({"1", "2", "3", "4"});
     m_number_combobox->hide();
@@ -25,6 +28,18 @@ draw_overlay::draw_overlay(QWidget* parent)
                else qDebug() << "No rects selected.";
             } ); m_timer->start(5000);
 }
+
+QRect draw_overlay::get_expand_btn_rect() const {
+    const int btn_size = 24;
+    const int margin = 10;
+    return QRect (
+        width() - btn_size - margin,
+        margin,
+        btn_size,
+        btn_size
+    );
+}
+
 
 void draw_overlay::handle_rect_number_changed(int index) {
     if (m_edit_index >= 0 && m_edit_index < m_rects.size()) {
@@ -48,7 +63,11 @@ QRect draw_overlay::paint_close_btn(const QRect& rect) const {
     );
 }
 
+
+
 void draw_overlay::update_hover_state(const QPoint& pos) {
+    m_expand_btn_hovered = get_expand_btn_rect().contains(pos);
+
     m_hover_idx = -1;
     for (int i = 0; i < m_rects.size(); ++i) {
         QRect btn_rect = paint_close_btn(m_rects[i].rect);
@@ -78,6 +97,8 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
             m_number_combobox->setCurrentIndex(m_rects[m_hover_idx].number - 1);
         }
     } else if (e->button() == Qt::LeftButton) {
+        if (m_expand_btn_hovered) { emit expand_camera_request(m_cam_id); return; }
+
         update_hover_state(e->pos());
 
         if (m_hover_idx != -1) {
@@ -163,6 +184,24 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
         painter.setBrush(QColor(0, 0, 255, 30));
         painter.drawRect(m_current_rect);
     }
+    
+    QRect expand_btn = get_expand_btn_rect();
+    painter.setPen(Qt::NoPen);
+
+    if (m_expand_btn_hovered) painter.setBrush(QColor(100, 100, 255, 180));
+    else painter.setBrush(QColor(70, 70, 200, 150));
+
+    painter.drawEllipse(expand_btn);
+
+    painter.setPen(QPen(Qt::white, 2));
+    int center_X = expand_btn.center().x();
+    int center_Y = expand_btn.center().y();
+    int icon_size = expand_btn.width() / 3;
+
+    painter.drawEllipse(QPoint(center_X - 2, center_Y - 2), icon_size / 2, icon_size / 2);
+    
+    painter.drawLine(center_X + icon_size / 3, center_Y + icon_size / 3,
+                     center_X + icon_size / 2, center_Y + icon_size / 2);
 }
 
 bool draw_overlay::eventFilter(QObject* obj, QEvent* e) {

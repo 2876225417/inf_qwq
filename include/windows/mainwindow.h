@@ -40,6 +40,8 @@
 
 #include <QObject>
 
+#include <windows/expanded_camera_window.h>
+
 class mainwindow: public QMainWindow {
     Q_OBJECT
 public:

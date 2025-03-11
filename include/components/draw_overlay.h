@@ -17,13 +17,15 @@ struct rect_data {
 class draw_overlay: public QWidget {
     Q_OBJECT
 public:
-    explicit draw_overlay(QWidget* parent = nullptr);
+    explicit draw_overlay(int cam_id, QWidget* parent = nullptr);
 signals:
     void selected(QVector<rect_data>&);
     void update_frame_moving(QVector<rect_data>&);
     void timer_timeout_update(QVector<rect_data>&);
+    void expand_camera_request(int rect_number);
 private slots:
     void handle_rect_number_changed(int index);
+    
 protected:
     void mousePressEvent(QMouseEvent*) override;
     void mouseMoveEvent(QMouseEvent*) override;
@@ -33,6 +35,11 @@ protected:
     bool eventFilter(QObject*, QEvent*) override;
 
 private:
+    int m_cam_id;
+
+    QRect get_expand_btn_rect() const;
+    bool m_expand_btn_hovered = false;
+
     QRect paint_close_btn(const QRect& rect) const;
     void update_hover_state(const QPoint& pos);
     QPoint  m_start;

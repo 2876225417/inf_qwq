@@ -9,6 +9,9 @@
 #include <qtmetamacros.h>
 
 #include <QLabel>
+#include <QPushButton>
+
+#include <QCheckBox>
 
 class stream_settings_window: public QWidget{ 
     Q_OBJECT
@@ -26,7 +29,10 @@ private:
     QLabel* m_adjust_scale_factor_label;
     QComboBox*   m_adjust_scale_factor;
 
-
+    // check auto crop  
+    QHBoxLayout* m_check_auto_crop_wrapper;
+    QLabel* m_check_auto_crop_label;
+    QCheckBox* m_check_auto_crop;
 };
 
 

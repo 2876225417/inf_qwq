@@ -4,8 +4,10 @@
 #define GROUPING_RTSP_STREAM_H
 
 
+#include <qboxlayout.h>
 #include <qevent.h>
 #include <qgridlayout.h>
+#include <qpushbutton.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
 
@@ -16,6 +18,12 @@
 
 #include <QMap>
 #include <QHash>
+
+
+
+
+
+
 
 class grouping_rtsp_stream: public QWidget{
     Q_OBJECT
@@ -35,8 +43,13 @@ public:
     
     static inline int
     get_MAX_PER_PAGE() { return MAX_PER_PAGE; }
+
+signals:
+    void cam_expand_req(int cma_id); 
+
 protected:
     void resizeEvent(QResizeEvent*) override;
+    
 
 private:
     QGridLayout* cams_grid;
@@ -49,5 +62,10 @@ private:
     
     void setup_cam(int cam_id, int grid_pos);
 };
+
+
+
+
+
 
 #endif

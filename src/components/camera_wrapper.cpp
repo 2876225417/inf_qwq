@@ -1,5 +1,6 @@
 
 
+#include "components/draw_overlay.h"
 #include "utils/video_capturer.h"
 #include <components/camera_wrapper.h>
 #include <qimage.h>
@@ -14,7 +15,7 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
     : QWidget{parent}
     , m_camera_layout{new QHBoxLayout()}
     , m_video_stream{new QLabel("Wait for streaming...", this)}
-    , m_draw_overlay{new draw_overlay}
+    , m_draw_overlay{new draw_overlay(cam_id)}
     , m_timer{new QTimer(this)}
     , m_cam_id{cam_id}
     {
@@ -27,9 +28,16 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
     
     // connect(m_video_stream, &QLabel::resize, [=]{
     //     m_draw_overlay->resize(m_video_stream->size());
-    // });
+    // }); // realtime redraw
     m_draw_overlay->resize(m_video_stream->size());
-    
+   
+    connect ( m_draw_overlay
+            , &draw_overlay::expand_camera_request
+            , this, [this](int cam_id){
+                emit cam_expand_req(cam_id); 
+            });
+
+
     m_camera_layout->addWidget(m_video_stream);
     
     
@@ -80,6 +88,10 @@ void camera_wrapper::set_rtsp_stream(const QString& rtsp_url) {
     qDebug() << "Try to switch to rtsp_url: " << rtsp_url;
     m_video_capturer->switch_rtsp_stream(rtsp_url);
 }
+
+QString camera_wrapper::get_rtsp_url() const {
+    return m_video_capturer->get_rtsp_url();
+} 
 
 int camera_wrapper::get_cam_id() const {
     return this->m_cam_id;

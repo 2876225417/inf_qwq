@@ -23,11 +23,12 @@ public:
 
     void set_scale_factor(double factor);
     double get_scale_factor() const;
-
+    QString get_rtsp_url() const;
 signals:
     void frame_captured(QImage frame);
     void camera_error(const QString& error_msg);
 private:
+    QString m_rtsp_url;
     cv::VideoCapture m_capturer;
     std::atomic_bool m_stop{false};
     std::atomic_bool m_swtich_pending{false};
@@ -39,5 +40,6 @@ private:
 
     bool open_camera(int index);
     bool open_rtsp_stream(const QString& url);
+    
 };
 

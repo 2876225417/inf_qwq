@@ -12,6 +12,7 @@
 #include <qimage.h>
 #include <qlineedit.h>
 #include <qnamespace.h>
+#include <qobject.h>
 #include <qpushbutton.h>
 #include <qsharedpointer.h>
 #include <qsplitter.h>
@@ -24,6 +25,7 @@
 #include <QStackedWidget>
 
 #include <QSplitter>
+#include <windows/expanded_camera_window.h>
 
 
 mainwindow::mainwindow(QWidget* parent)
@@ -248,13 +250,36 @@ mainwindow::mainwindow(QWidget* parent)
     for(int page=0; page<totalPages; ++page){
         int startCam = page * perPage;
         bool isLastPage = (page == totalPages-1);
-       int currentTotal = isLastPage ? m_totalCams : (startCam + perPage);
+        int currentTotal = isLastPage ? m_totalCams : (startCam + perPage);
         
         //auto grid = new VideoGridPage(startCam, currentTotal);
         auto grid = new grouping_rtsp_stream(startCam,  currentTotal);
         m_stream_group->addWidget(grid);
     }
+    
+    for (int i = 0; i < m_stream_group->count(); ++i) {
+        grouping_rtsp_stream* grid 
+            = qobject_cast<grouping_rtsp_stream*>(m_stream_group->widget(i));
+        if (grid) {
+            connect (grid, &grouping_rtsp_stream::cam_expand_req, this, [this](int cam_id){
+                qDebug() << "Requested expand camera id: " << cam_id;
+                camera_wrapper* cam = nullptr;
+                grouping_rtsp_stream* current_grid 
+                    = qobject_cast<grouping_rtsp_stream*>(m_stream_group->currentWidget());
 
+                if (current_grid) {
+                    cam = current_grid->get_cam_by_id(cam_id);
+                    if (cam) {
+                        expanded_camera_window* expanded_window = new expanded_camera_window(cam);
+                        expanded_window->show();
+                    } else {
+                        qDebug() << "Error: Camera not found for id: " << cam_id;
+                    }
+                }
+            });
+
+        }
+    }
 
 
     splitter->addWidget(m_sidebar);
