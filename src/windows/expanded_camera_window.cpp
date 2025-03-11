@@ -6,6 +6,7 @@
 #include <qformlayout.h>
 #include <qgroupbox.h>
 #include <qlabel.h>
+#include <qlineedit.h>
 #include <qnamespace.h>
 #include <qpushbutton.h>
 #include <qspinbox.h>
@@ -47,9 +48,9 @@ void expanded_camera_window::set_cropped_image(const QImage& image) {
 }
 
 
-void expanded_camera_window::set_inf_result(const QString& inf_res) {
-    m_text_display->setText(inf_res);
-}
+// void expanded_camera_window::set_inf_result(const QString& inf_res) {
+//     m_text_display->setText(inf_res);
+// }
 
 void expanded_camera_window::set_rstp_info(const rtsp_config& rtsp_cfg) {
     m_rtsp_config = rtsp_cfg;    
@@ -131,16 +132,16 @@ void expanded_camera_window::create_right_panel() {
 
 void expanded_camera_window::create_right_top_panel() {
     m_right_top_widget = new QWidget(m_right_splitter);
-    m_right_top_layout = new QHBoxLayout(m_right_top_widget);
+    m_right_top_layout = new QVBoxLayout(m_right_top_widget);
     m_right_top_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_right_top_splitter = new QSplitter(Qt::Horizontal, m_right_top_widget);
+    m_right_top_splitter = new QSplitter(Qt::Vertical, m_right_top_widget);
     m_right_top_layout->addWidget(m_right_top_splitter);
 
+    // cropped image
     m_image_widget = new QWidget(m_right_top_splitter);
     m_image_layout = new QVBoxLayout(m_image_widget);
     
-
     m_image_display = new QLabel(m_image_widget);
     m_image_display->setAlignment(Qt::AlignCenter);
     m_image_display->setMinimumSize(200, 200);
@@ -149,7 +150,9 @@ void expanded_camera_window::create_right_top_panel() {
 
     m_image_layout->addWidget(m_image_display);
     m_image_widget->setLayout(m_image_layout);
+    
 
+    // inf result
     m_text_widget = new QWidget(m_right_top_splitter);
     m_text_layout = new QVBoxLayout(m_text_widget);
    
@@ -157,9 +160,18 @@ void expanded_camera_window::create_right_top_panel() {
     m_text_display->setReadOnly(true);
     m_text_display->setText("Inference result");
 
+    // relative keywords
+    m_keywords_wrapper = new QHBoxLayout();
+    m_keywords_label = new QLabel();
+    m_keywords_layout = new QGroupBox("Keywords");
+    m_keywords_wrapper = new QHBoxLayout();
+    m_keywords_wrapper->addWidget(m_keywords_label);
+    m_keywords_layout->setLayout(m_keywords_wrapper);
+
+    m_text_layout->addWidget(m_keywords_layout);
     m_text_layout->addWidget(m_text_display);
     m_text_widget->setLayout(m_text_layout);
-
+    
     m_right_top_splitter->addWidget(m_image_widget);
     m_right_top_splitter->addWidget(m_text_widget);
 
@@ -174,11 +186,11 @@ void expanded_camera_window::create_right_top_panel() {
 
 void expanded_camera_window::create_right_bottom_panel() {
     m_settings_group = new QGroupBox("Detection Settings", m_right_splitter);
-    m_settings_layout = new QHBoxLayout(m_settings_group);
+    m_settings_layout = new QVBoxLayout(m_settings_group);
+    m_rtsp__inf_layout = new QHBoxLayout(); 
     m_rtsp_info_layout = new QFormLayout();
     m_inf_config_layout = new QFormLayout();
-    
-
+    m_edit_layout = new QVBoxLayout();
 
     m_rtsp_info_layout->addRow("RTSP Protocal Type", m_rtsp_proto_type);
     m_rtsp_info_layout->addRow("RTSP Username", m_rtsp_username);
@@ -187,15 +199,34 @@ void expanded_camera_window::create_right_bottom_panel() {
     m_rtsp_info_layout->addRow("RTSP Channel", m_rtsp_channel);
     m_rtsp_info_layout->addRow("RTSP Subtype", m_rtsp_subtype);
 
+    m_edit_keywords_wrapper = new QHBoxLayout();
+    m_edit_keywords_label = new QLabel("Keyword: ");
+    m_edit_keywords = new QLineEdit();
+    
+    m_edit_keywords_wrapper->addWidget(m_edit_keywords_label);
+    m_edit_keywords_wrapper->addWidget(m_edit_keywords);
 
+    m_comfirm_config_btn = new QPushButton("Comfirm"); 
+   
+    m_edit_layout->addLayout(m_edit_keywords_wrapper);
+    m_edit_layout->addWidget(m_comfirm_config_btn);
 
-    m_settings_layout->addLayout(m_rtsp_info_layout);
-    m_settings_layout->addLayout(m_inf_config_layout);
-     
+    m_rtsp__inf_layout->addLayout(m_rtsp_info_layout);
+    m_rtsp__inf_layout->addLayout(m_inf_config_layout);
+    
+    m_settings_layout->addLayout(m_rtsp__inf_layout);
+    m_settings_layout->addLayout(m_edit_layout);
+
     m_settings_group->setLayout(m_settings_layout);
     m_right_splitter->addWidget(m_settings_group);
 }
 
 void expanded_camera_window::connect_signals() {    
-    
+    connect ( m_edit_keywords
+            , &QLineEdit::textChanged
+            , this, [this](){
+                QString keywords = m_edit_keywords->text();
+                qDebug() << "Keywords edit: " << keywords;
+                set_keywords(keywords); 
+            });
 }
