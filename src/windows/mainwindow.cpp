@@ -280,6 +280,16 @@ mainwindow::mainwindow(QWidget* parent)
 
         }
     }
+    
+    connect ( m_sidebar
+            , &grouping_sidebar::group_selected
+            , this, [this](int group_index) {
+                if (group_index >= 0 && group_index < m_stream_group->count()) {
+                    m_stream_group->setCurrentIndex(group_index);
+                } else {
+
+                }
+            });
 
 
     splitter->addWidget(m_sidebar);
