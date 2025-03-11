@@ -110,6 +110,12 @@ rtsp_config_window::rtsp_config_window(QWidget* parent)
     connect ( m_test_button // -> toolbar
             , &QPushButton::clicked
             , this, [this]() {
+                qDebug() << "Username: " << m_rtsp_config.username << '\n'
+                         << "Password: " << m_rtsp_config.password << '\n'
+                         << "IP: " << m_rtsp_config.ip << '\n'
+                         << "Port: " << m_rtsp_config.port << '\n'
+                         << "Channel: " << m_rtsp_config.channel << '\n'
+                         << "Subtype: " << m_rtsp_config.subtype << '\n';
                 emit send_rtsp_url(m_customized_rtsp_info_edit->text(), m_rtsp_config);
             });
 
@@ -194,13 +200,6 @@ rtsp_config_window::rtsp_config_window(QWidget* parent)
             , this, [](const QString& customized_rtsp_info){
                 qDebug() << "customized rtsp info: " << customized_rtsp_info;
                  
-            });
-
-    // test
-    connect ( m_test_button
-            , &QPushButton::clicked
-            , this, []() {
-                qDebug() << "try to test";
             });
     
     // connect

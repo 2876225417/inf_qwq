@@ -26,8 +26,8 @@ struct rtsp_config{
         QString password;
         QString ip;
         QString port;
-        QString channel;
-        QString subtype;
+        QString channel = "101";
+        QString subtype = "0";
 
         QString config2url() const {
             switch(rpt) {
@@ -52,6 +52,17 @@ struct rtsp_config{
                  + ":"       + port
                  + "cam/realmonitor?channel=1@subtype=0";
         }
+     
+        std::ostream& operator<<(std::ostream& os) {
+            os << "Username: " << username.toStdString()
+               << "Passowrd: " << password.toStdString()
+               << "IP:       " << ip.toStdString()
+               << "Port:     " << port.toStdString()
+               << "Channel:  " << channel.toStdString()
+               << "Subtype: "  << subtype.toStdString();
+            return os;
+        }
+    
 };
     
 

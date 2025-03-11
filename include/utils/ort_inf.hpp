@@ -62,11 +62,10 @@ public:
         , m_session_options{}
         , m_session{nullptr}
         {
-
         const int num_cpu_cores = std::thread::hardware_concurrency();
-        m_session_options.SetIntraOpNumThreads(num_cpu_cores);
+        m_session_options.SetIntraOpNumThreads(num_cpu_cores / 4);
         m_session_options.SetInterOpNumThreads(1);
-        m_session_options.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
+        //m_session_options.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
         m_session_options.EnableCpuMemArena();
         m_session_options.EnableMemPattern();
         m_session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);

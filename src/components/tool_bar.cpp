@@ -32,6 +32,12 @@ tool_bar::tool_bar(QWidget* parent)
                     , &rtsp_config_window::send_rtsp_url
                     , this, [this](const QString& rtsp_url, const rtsp_config& rtsp_cfg) {
                         qDebug() << "rtsp url sent already!";
+                qDebug() << "Username: " << rtsp_cfg.username << '\n'
+                         << "Password: " << rtsp_cfg.password << '\n'
+                         << "IP: " << rtsp_cfg.ip << '\n'
+                         << "Port: " << rtsp_cfg.port << '\n'
+                         << "Channel: " << rtsp_cfg.channel << '\n'
+                         << "Subtype: " << rtsp_cfg.subtype << '\n'; 
                         emit send_rtsp_url(rtsp_url, rtsp_cfg);
                     }, Qt::QueuedConnection);
         }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/grouping_sidebar.h"
+#include "windows/rtsp_config_window.h"
 #include <GL/gl.h>
 #include <QMainWindow>
 #include <QCamera>
@@ -121,6 +122,11 @@ private:
     QStackedWidget* m_stream_group;  
 
     static int cam_nums;
+    
+    QMap<int, expanded_camera_window*> m_expanded_windows;
+    QMap<int, rtsp_config> m_expands_window2rtsp_config; 
+    QMap<int, QString> m_expanded_window2_inf_res;
+    QMap<int, QImage> m_expanded_window2_inf_cropped;
 };
 
 inline int mainwindow::cam_nums = 0;

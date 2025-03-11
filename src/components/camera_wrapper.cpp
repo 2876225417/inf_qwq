@@ -121,15 +121,23 @@ int camera_wrapper::get_cam_id() const {
 }
 
 QRect camera_wrapper::rect2coords(const QRect& rect) {
-    QSize video_size = m_video_stream->pixmap().size();
-    QSize widgets_size = m_video_stream->size();
 
-    qreal x_scale = video_size.width() / (qreal)widgets_size.width();
-    qreal y_scale = video_size.height() / (qreal)widgets_size.height();
+    QSize label_size = m_video_stream->size();
+    
+    QSize original_frame_size = m_current_frame.size();
+    
+    QSize scaled_size = original_frame_size;
+    scaled_size.scale(label_size, Qt::KeepAspectRatio);
+    
+    int x_offset = (label_size.width() - scaled_size.width()) / 2;
+    int y_offset = (label_size.height() - scaled_size.height()) / 2;
+    
+    qreal x_scale = (qreal)original_frame_size.width() / scaled_size.width();
+    qreal y_scale = (qreal)original_frame_size.height() / scaled_size.height();
 
     return QRect(
-        rect.x() * x_scale,
-        rect.y() * y_scale,
+        (rect.x() - x_offset) * x_scale,
+        (rect.y() - y_offset) * y_scale,
         rect.width() * x_scale,
         rect.height() * y_scale
     );

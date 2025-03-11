@@ -2,6 +2,7 @@
 #ifndef EXPANDED_CAMERA_WINDOW_H
 #define EXPANDED_CAMERA_WINDOW_H
 
+#include "windows/rtsp_config_window.h"
 #include <QWidget>
 #include <QVBoxLayout>
 #include <components/camera_wrapper.h>
@@ -23,6 +24,11 @@ public:
     explicit expanded_camera_window( camera_wrapper* cam
                                    , QWidget* parent = nullptr);
     ~expanded_camera_window() = default;
+
+    void set_cropped_image(const QImage& image);
+    void set_rstp_info(const rtsp_config& rstp_cfg);
+    void set_inf_result(const QString& inf_res);
+    QString parse_rtsp_protocal_type();
 private:
     QVBoxLayout* m_expanded_camera_window_layout;
     QHBoxLayout* m_content_layout;
@@ -58,14 +64,21 @@ private:
 
     // right -> bottom
     QWidget* m_settings_group;
-    QFormLayout* m_settings_layout;
-    QComboBox* m_detection_mode;
-    QCheckBox* m_enable_tracking;
-    QSpinBox* m_confidence_threshold;
-    QPushButton* m_apply_settings;
-    QPushButton* m_close_window_button;
+    QHBoxLayout* m_settings_layout;
+    QFormLayout* m_rtsp_info_layout;
+    QFormLayout* m_inf_config_layout;
+    
+    // right -> bottom -> rtsp connect info
+    QLabel* m_rtsp_proto_type;
+    QLabel* m_rtsp_username;
+    QLabel* m_rtsp_ip;
+    QLabel* m_rtsp_port;
+    QLabel* m_rtsp_channel;
+    QLabel* m_rtsp_subtype;
 
     camera_wrapper* m_org_camera;
+    rtsp_config m_rtsp_config;
+
 
     void setup_UI();
     void create_left_panel();
