@@ -32,7 +32,13 @@ public:
     }
     
     bool start_crop_image4inf();
-
+    
+    void update_inf_result();
+    void set_inference_result(const QString& result);
+    void set_keywords(const QVector<QString>& keywords);
+    void set_status();
+    
+    void update_keywords_no_args();
 signals:
     void selected(QVector<rect_data>& rects);
     void update_frame_moving(QVector<rect_data>& rects);
@@ -45,8 +51,9 @@ private:
     void paintEvent(QPaintEvent* e) override;
     bool eventFilter(QObject* obj, QEvent* e) override;
     bool event(QEvent* e) override;
-    
-    
+   
+    static QString detect_matched_keywords( const QString& text
+                                          , const QVector<QString>& all_keywords);
 
 public:
     enum resize_handle {
@@ -77,6 +84,15 @@ public:
     resize_handle m_resize_handle = none;
     int m_resize_idx = -1;
     const int m_handle_size = 8;
+
+    QString m_inference_result;
+    QString m_keywords;
+    QVector<QString> m_all_keywords;
+    bool m_is_normal_status = true;
+
+
+    void draw_status_indicator(QPainter& painter);
+    void draw_inference_result(QPainter& painter);
 
     void update_hover_state(const QPoint& pos);
     QRect paint_close_btn(const QRect& rect) const;

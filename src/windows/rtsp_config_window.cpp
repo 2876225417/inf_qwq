@@ -14,292 +14,293 @@ rtsp_config_window::rtsp_config_window(QWidget* parent)
     
     m_settings = new QSettings("Chun Hui", "inf_qwq", this);
     
-    setupUI();
-    createConnections();
-    loadSettings();
+    setup_UI();
+    create_connections();
+    load_settings();
 }
 
 rtsp_config_window::~rtsp_config_window(){ }
 
-void rtsp_config_window::setupUI() {
-    m_mainLayout = new QVBoxLayout(this);
-    m_mainLayout->setSpacing(10);
-    m_mainLayout->setContentsMargins(10, 10, 10, 10);
+void rtsp_config_window::setup_UI() {
+    m_main_layout = new QVBoxLayout(this);
+    m_main_layout->setSpacing(10);
+    m_main_layout->setContentsMargins(10, 10, 10, 10);
    
     // RTSP Protocal Type
-    m_rtspProtoLayout = new QHBoxLayout();
-    m_rtspProtoLabel = new QLabel(tr("Protocol:"));
-    m_rtspProtoCombo = new QComboBox();
-    m_rtspProtoCombo->addItem("HIKVISION", static_cast<int>(rtsp_proto_type::HIKVISION));
-    m_rtspProtoCombo->addItem("ALHUA", static_cast<int>(rtsp_proto_type::ALHUA));
-    m_rtspProtoLayout->addWidget(m_rtspProtoLabel);
-    m_rtspProtoLayout->addWidget(m_rtspProtoCombo);
+    m_rtsp_proto_layout = new QHBoxLayout();
+    m_rtsp_proto_label = new QLabel(tr("Protocol:"));
+    m_rtsp_proto_combo = new QComboBox();
+    m_rtsp_proto_combo->addItem("HIKVISION", static_cast<int>(rtsp_proto_type::HIKVISION));
+    m_rtsp_proto_combo->addItem("ALHUA", static_cast<int>(rtsp_proto_type::ALHUA));
+    m_rtsp_proto_layout->addWidget(m_rtsp_proto_label);
+    m_rtsp_proto_layout->addWidget(m_rtsp_proto_combo);
     
     // Username & Password
-    m_userPassLayout = new QHBoxLayout();
+    m_userPass_layout = new QHBoxLayout();
     
     // Username
-    m_usernameLayout = new QHBoxLayout();
-    m_usernameLabel = new QLabel(tr("Username:"));
-    m_usernameEdit = new QLineEdit();
-    m_usernameEdit->setPlaceholderText(tr("username"));
-    m_usernameLayout->addWidget(m_usernameLabel);
-    m_usernameLayout->addWidget(m_usernameEdit);
+    m_username_layout = new QHBoxLayout();
+    m_username_label = new QLabel(tr("Username:"));
+    m_username_edit = new QLineEdit();
+    m_username_edit->setPlaceholderText(tr("username"));
+    m_username_layout->addWidget(m_username_label);
+    m_username_layout->addWidget(m_username_edit);
     
     // Password
-    m_passwordLayout = new QHBoxLayout();
-    m_passwordLabel = new QLabel(tr("Password:"));
-    m_passwordEdit = new QLineEdit();
-    m_passwordEdit->setPlaceholderText(tr("password"));
-    m_passwordEdit->setEchoMode(QLineEdit::Password);
-    m_passwordLayout->addWidget(m_passwordLabel);
-    m_passwordLayout->addWidget(m_passwordEdit);
+    m_password_layout = new QHBoxLayout();
+    m_password_label = new QLabel(tr("Password:"));
+    m_password_edit = new QLineEdit();
+    m_password_edit->setPlaceholderText(tr("password"));
+    m_password_edit->setEchoMode(QLineEdit::Password);
+    m_password_layout->addWidget(m_password_label);
+    m_password_layout->addWidget(m_password_edit);
     
-    m_userPassLayout->addLayout(m_usernameLayout);
-    m_userPassLayout->addLayout(m_passwordLayout);
+    m_userPass_layout->addLayout(m_username_layout);
+    m_userPass_layout->addLayout(m_password_layout);
     
     // IP & Port
-    m_ipPortLayout = new QHBoxLayout();
+    m_ip_port_layout = new QHBoxLayout();
     
     // IP
-    m_ipLayout = new QHBoxLayout();
-    m_ipLabel = new QLabel(tr("IP:"));
-    m_ipEdit = new QLineEdit();
-    m_ipEdit->setPlaceholderText(tr("192.168.1.100"));
-    m_ipLayout->addWidget(m_ipLabel);
-    m_ipLayout->addWidget(m_ipEdit);
+    m_ip_layout = new QHBoxLayout();
+    m_ip_label = new QLabel(tr("IP:"));
+    m_ip_edit = new QLineEdit();
+    m_ip_edit->setPlaceholderText(tr("192.168.1.100"));
+    m_ip_layout->addWidget(m_ip_label);
+    m_ip_layout->addWidget(m_ip_edit);
     
     // Port
-    m_portLayout = new QHBoxLayout();
-    m_portLabel = new QLabel(tr("Port:"));
-    m_portEdit = new QLineEdit();
-    m_portEdit->setPlaceholderText(tr("554"));
-    m_portLayout->addWidget(m_portLabel);
-    m_portLayout->addWidget(m_portEdit);
+    m_port_layout = new QHBoxLayout();
+    m_port_label = new QLabel(tr("Port:"));
+    m_port_edit = new QLineEdit();
+    m_port_edit->setPlaceholderText(tr("554"));
+    m_port_layout->addWidget(m_port_label);
+    m_port_layout->addWidget(m_port_edit);
     
-    m_ipPortLayout->addLayout(m_ipLayout);
-    m_ipPortLayout->addLayout(m_portLayout);
+    m_ip_port_layout->addLayout(m_ip_layout);
+    m_ip_port_layout->addLayout(m_port_layout);
     
     // Channel & Subtype
-    m_channelSubtypeLayout = new QHBoxLayout();
+    m_channel_subtype_layout = new QHBoxLayout();
     
     // Channel
-    m_channelLayout = new QHBoxLayout();
-    m_channelLabel = new QLabel(tr("Channel:"));
-    m_channelEdit = new QLineEdit();
-    m_channelEdit->setText("101");
-    m_channelLayout->addWidget(m_channelLabel);
-    m_channelLayout->addWidget(m_channelEdit);
+    m_channel_layout = new QHBoxLayout();
+    m_channel_label = new QLabel(tr("Channel:"));
+    m_channel_edit = new QLineEdit();
+    m_channel_edit->setText("101");
+    m_channel_layout->addWidget(m_channel_label);
+    m_channel_layout->addWidget(m_channel_edit);
     
     // Subtype
-    m_subtypeLayout = new QHBoxLayout();
-    m_subtypeLabel = new QLabel(tr("Subtype:"));
-    m_subtypeEdit = new QLineEdit();
-    m_subtypeEdit->setText("0");
-    m_subtypeLayout->addWidget(m_subtypeLabel);
-    m_subtypeLayout->addWidget(m_subtypeEdit);
+    m_subtype_layout = new QHBoxLayout();
+    m_subtype_label = new QLabel(tr("Subtype:"));
+    m_subtype_edit = new QLineEdit();
+    m_subtype_edit->setText("0");
+    m_subtype_layout->addWidget(m_subtype_label);
+    m_subtype_layout->addWidget(m_subtype_edit);
     
-    m_channelSubtypeLayout->addLayout(m_channelLayout);
-    m_channelSubtypeLayout->addLayout(m_subtypeLayout);
+    m_channel_subtype_layout->addLayout(m_channel_layout);
+    m_channel_subtype_layout->addLayout(m_subtype_layout);
     
     // RTSP URL
-    m_rtspUrlLayout = new QHBoxLayout();
-    m_rtspUrlLabel = new QLabel(tr("RTSP URL:"));
-    m_rtspUrlEdit = new QLineEdit();
-    m_rtspUrlEdit->setReadOnly(false);
-    m_rtspUrlLayout->addWidget(m_rtspUrlLabel);
-    m_rtspUrlLayout->addWidget(m_rtspUrlEdit);
+    m_rtsp_url_layout = new QHBoxLayout();
+    m_rtsp_rrl_label = new QLabel(tr("RTSP URL:"));
+    m_rtsp_url_edit = new QLineEdit();
+    m_rtsp_url_edit->setReadOnly(false);
+    m_rtsp_url_layout->addWidget(m_rtsp_rrl_label);
+    m_rtsp_url_layout->addWidget(m_rtsp_url_edit);
     
     // buttons
-    m_buttonLayout = new QHBoxLayout();
-    m_testButton = new QPushButton(tr("Test Connection"));
-    m_saveButton = new QPushButton(tr("Save Config"));
-    m_connectButton = new QPushButton(tr("Connect"));
-    m_cancelButton = new QPushButton(tr("Cancel"));
+    m_button_layout = new QHBoxLayout();
+    m_test_button = new QPushButton(tr("Test Connection"));
+    m_save_button = new QPushButton(tr("Save Config"));
+    m_connect_button = new QPushButton(tr("Connect"));
+    m_cancel_button = new QPushButton(tr("Cancel"));
     
-    m_testButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay));
-    m_saveButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
-    m_connectButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogOkButton));
-    m_cancelButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogCancelButton));
+    m_test_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay));
+    m_save_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
+    m_connect_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogOkButton));
+    m_cancel_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogCancelButton));
     
-    m_buttonLayout->addWidget(m_testButton);
-    m_buttonLayout->addWidget(m_saveButton);
-    m_buttonLayout->addStretch();
-    m_buttonLayout->addWidget(m_connectButton);
-    m_buttonLayout->addWidget(m_cancelButton);
+    m_button_layout->addWidget(m_test_button);
+    m_button_layout->addWidget(m_save_button);
+    m_button_layout->addStretch();
+    m_button_layout->addWidget(m_connect_button);
+    m_button_layout->addWidget(m_cancel_button);
     
     // status label
-    m_statusLabel = new QLabel();
-    m_statusLabel->setWordWrap(true);
+    m_status_label = new QLabel();
+    m_status_label->setWordWrap(true);
     
     QGroupBox* rtspGroup = new QGroupBox(tr("RTSP Connection Settings"));
     QVBoxLayout* groupLayout = new QVBoxLayout();
-    groupLayout->addLayout(m_rtspProtoLayout);
-    groupLayout->addLayout(m_userPassLayout);
-    groupLayout->addLayout(m_ipPortLayout);
-    groupLayout->addLayout(m_channelSubtypeLayout);
-    groupLayout->addLayout(m_rtspUrlLayout);
+    groupLayout->addLayout(m_rtsp_proto_layout);
+    groupLayout->addLayout(m_userPass_layout);
+    groupLayout->addLayout(m_ip_port_layout);
+    groupLayout->addLayout(m_channel_subtype_layout);
+    groupLayout->addLayout(m_rtsp_url_layout);
     rtspGroup->setLayout(groupLayout);
     
-    m_mainLayout->addWidget(rtspGroup);
-    m_mainLayout->addLayout(m_buttonLayout);
-    m_mainLayout->addWidget(m_statusLabel);
-    m_mainLayout->addStretch();
+    m_main_layout->addWidget(rtspGroup);
+    m_main_layout->addLayout(m_button_layout);
+    m_main_layout->addWidget(m_status_label);
+    m_main_layout->addStretch();
     
-    setLayout(m_mainLayout); 
-    updateRtspUrl();
+    setLayout(m_main_layout); 
+    update_rtsp_url();
 }
 
-void rtsp_config_window::createConnections() {
+void rtsp_config_window::create_connections() {
     // RTSP Protocal Type
-    connect(m_rtspProtoCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+    connect(m_rtsp_proto_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
             [this](int index) {
-                m_rtspConfig.rpt = static_cast<rtsp_proto_type>(
-                    m_rtspProtoCombo->itemData(index).toInt());
-                qDebug() << "Protocol: " << (m_rtspConfig.rpt == rtsp_proto_type::HIKVISION ? "HIKVISION" : "ALHUA");
-                updateRtspUrl();
+                m_rtsp_config.rpt = static_cast<rtsp_proto_type>(
+                    m_rtsp_proto_combo->itemData(index).toInt());
+                qDebug() << "Protocol: " << (m_rtsp_config.rpt == rtsp_proto_type::HIKVISION ? "HIKVISION" : "ALHUA");
+                update_rtsp_url();
             });
     
     // Username
-    connect(m_usernameEdit, &QLineEdit::textChanged, 
+    connect(m_username_edit, &QLineEdit::textChanged, 
             [this](const QString& text) {
-                m_rtspConfig.username = text;
-                updateRtspUrl();
+                m_rtsp_config.username = text;
+                update_rtsp_url();
             });
     
     // Password
-    connect(m_passwordEdit, &QLineEdit::textChanged, 
+    connect(m_password_edit, &QLineEdit::textChanged, 
             [this](const QString& text) {
-                m_rtspConfig.password = text;
-                updateRtspUrl();
+                m_rtsp_config.password = text;
+                update_rtsp_url();
             });
     
     // IP
-    connect(m_ipEdit, &QLineEdit::textChanged, 
+    connect(m_ip_edit, &QLineEdit::textChanged, 
             [this](const QString& text) {
-                m_rtspConfig.ip = text;
-                updateRtspUrl();
+                m_rtsp_config.ip = text;
+                update_rtsp_url();
             });
     
     // Port
-    connect(m_portEdit, &QLineEdit::textChanged, 
+    connect(m_port_edit, &QLineEdit::textChanged, 
             [this](const QString& text) {
-                m_rtspConfig.port = text;
-                updateRtspUrl();
+                m_rtsp_config.port = text;
+                update_rtsp_url();
             });
     
     // Channel
-    connect(m_channelEdit, &QLineEdit::textChanged, 
+    connect(m_channel_edit, &QLineEdit::textChanged, 
             [this](const QString& text) {
-                m_rtspConfig.channel = text;
-                updateRtspUrl();
+                m_rtsp_config.channel = text;
+                update_rtsp_url();
             });
     
     // Subtype
-    connect(m_subtypeEdit, &QLineEdit::textChanged, 
+    connect(m_subtype_edit, &QLineEdit::textChanged, 
             [this](const QString& text) {
-                m_rtspConfig.subtype = text;
-                updateRtspUrl();
+                m_rtsp_config.subtype = text;
+                update_rtsp_url();
             });
     
-    connect(m_testButton, &QPushButton::clicked, this, &rtsp_config_window::onTestConnection);
-    connect(m_saveButton, &QPushButton::clicked, this, &rtsp_config_window::onSaveConfig);
-    connect(m_connectButton, &QPushButton::clicked, this, &rtsp_config_window::onConnect);
-    connect(m_cancelButton, &QPushButton::clicked, this, &rtsp_config_window::onCancel);
+    connect(m_test_button, &QPushButton::clicked, this, &rtsp_config_window::on_test_connection);
+    connect(m_save_button, &QPushButton::clicked, this, &rtsp_config_window::on_save_config);
+    connect(m_connect_button, &QPushButton::clicked, this, &rtsp_config_window::on_connect);
+    connect(m_cancel_button, &QPushButton::clicked, this, &rtsp_config_window::on_cancel);
 }
 
-void rtsp_config_window::updateRtspUrl() {
-    m_rtspUrlEdit->setText(m_rtspConfig.config2url());
+void rtsp_config_window::update_rtsp_url() {
+    m_rtsp_url_edit->setText(m_rtsp_config.config2url());
 }
 
-void rtsp_config_window::onTestConnection() {
-    m_statusLabel->setText(tr("Testing RTSP connection..."));
+void rtsp_config_window::on_test_connection() {
+    m_status_label->setText(tr("Testing RTSP connection..."));
     QApplication::processEvents();
     
     bool success = true;
     
     if (success) {
-        m_statusLabel->setText(tr("Connection successful!"));
-        m_statusLabel->setStyleSheet("color: green;");
+        m_status_label->setText(tr("Connection successful!"));
+        m_status_label->setStyleSheet("color: green;");
     } else {
-        m_statusLabel->setText(tr("Connection failed!"));
-        m_statusLabel->setStyleSheet("color: red;");
+        m_status_label->setText(tr("Connection failed!"));
+        m_status_label->setStyleSheet("color: red;");
     }
    
     // proceed connecting
-    emit send_rtsp_url(m_rtspUrlEdit->text(), m_rtspConfig);
+    emit send_rtsp_url(m_rtsp_url_edit->text(), m_rtsp_config);
 }
 
-void rtsp_config_window::onSaveConfig() {
-    saveSettings();
-    m_statusLabel->setText(tr("Configuration saved."));
-    m_statusLabel->setStyleSheet("color: black;");
+void rtsp_config_window::on_save_config() {
+    save_settings();
+    m_status_label->setText(tr("Configuration saved."));
+    m_status_label->setStyleSheet("color: black;");
     
-    emit rtspConfigSaved(m_rtspConfig);
+    emit rtsp_config_saved(m_rtsp_config);
 }
 
-void rtsp_config_window::onConnect() {
-    m_statusLabel->setText(tr("Connecting to RTSP stream..."));
+void rtsp_config_window::on_connect() {
+    m_status_label->setText(tr("Connecting to RTSP stream..."));
     QApplication::processEvents();
     
-    saveSettings();
+    save_settings();
     
-    emit send_rtsp_url(m_rtspUrlEdit->text(), m_rtspConfig);
+    emit send_rtsp_url(m_rtsp_url_edit->text(), m_rtsp_config);
     
     close();
 }
 
-void rtsp_config_window::onCancel() {
+void rtsp_config_window::on_cancel() {
     close();
 }
 
-void rtsp_config_window::saveSettings() {
-    m_settings->setValue("RTSP/Protocol", static_cast<int>(m_rtspConfig.rpt));
-    m_settings->setValue("RTSP/Username", m_rtspConfig.username);
-    m_settings->setValue("RTSP/Password", m_rtspConfig.password);
-    m_settings->setValue("RTSP/IP", m_rtspConfig.ip);
-    m_settings->setValue("RTSP/Port", m_rtspConfig.port);
-    m_settings->setValue("RTSP/Channel", m_rtspConfig.channel);
-    m_settings->setValue("RTSP/Subtype", m_rtspConfig.subtype);
-    m_settings->setValue("RTSP/URL", m_rtspUrlEdit->text());
+void rtsp_config_window::save_settings() {
+    m_settings->setValue("RTSP/Protocol", static_cast<int>(m_rtsp_config.rpt));
+    m_settings->setValue("RTSP/Username", m_rtsp_config.username);
+    m_settings->setValue("RTSP/Password", m_rtsp_config.password);
+    m_settings->setValue("RTSP/IP", m_rtsp_config.ip);
+    m_settings->setValue("RTSP/Port", m_rtsp_config.port);
+    m_settings->setValue("RTSP/Channel", m_rtsp_config.channel);
+    m_settings->setValue("RTSP/Subtype", m_rtsp_config.subtype);
+    m_settings->setValue("RTSP/URL", m_rtsp_url_edit->text());
     m_settings->sync();
 }
 
-void rtsp_config_window::loadSettings() {
+void rtsp_config_window::load_settings() {
     // load config
     int protocol = m_settings->value("RTSP/Protocol", static_cast<int>(rtsp_proto_type::HIKVISION)).toInt();
-    m_rtspConfig.rpt = static_cast<rtsp_proto_type>(protocol);
-    m_rtspConfig.username = m_settings->value("RTSP/Username", "").toString();
-    m_rtspConfig.password = m_settings->value("RTSP/Password", "").toString();
-    m_rtspConfig.ip = m_settings->value("RTSP/IP", "").toString();
-    m_rtspConfig.port = m_settings->value("RTSP/Port", "554").toString();
-    m_rtspConfig.channel = m_settings->value("RTSP/Channel", "101").toString();
-    m_rtspConfig.subtype = m_settings->value("RTSP/Subtype", "0").toString();
+    m_rtsp_config.rpt = static_cast<rtsp_proto_type>(protocol);
+    m_rtsp_config.username = m_settings->value("RTSP/Username", "").toString();
+    m_rtsp_config.password = m_settings->value("RTSP/Password", "").toString();
+    m_rtsp_config.ip = m_settings->value("RTSP/IP", "").toString();
+    m_rtsp_config.port = m_settings->value("RTSP/Port", "554").toString();
+    m_rtsp_config.channel = m_settings->value("RTSP/Channel", "101").toString();
+    m_rtsp_config.subtype = m_settings->value("RTSP/Subtype", "0").toString();
     
-    m_rtspProtoCombo->setCurrentIndex(m_rtspProtoCombo->findData(protocol));
-    m_usernameEdit->setText(m_rtspConfig.username);
-    m_passwordEdit->setText(m_rtspConfig.password);
-    m_ipEdit->setText(m_rtspConfig.ip);
-    m_portEdit->setText(m_rtspConfig.port);
-    m_channelEdit->setText(m_rtspConfig.channel);
-    m_subtypeEdit->setText(m_rtspConfig.subtype);
     
-    updateRtspUrl();
+    m_rtsp_proto_combo->setCurrentIndex(m_rtsp_proto_combo->findData(protocol));
+    m_username_edit->setText(m_rtsp_config.username);
+    m_password_edit->setText(m_rtsp_config.password);
+    m_ip_edit->setText(m_rtsp_config.ip);
+    m_port_edit->setText(m_rtsp_config.port);
+    m_channel_edit->setText(m_rtsp_config.channel);
+    m_subtype_edit->setText(m_rtsp_config.subtype);
+    
+    update_rtsp_url();
 }
 
-rtsp_config rtsp_config_window::getConfig() const {
-    return m_rtspConfig;
+rtsp_config rtsp_config_window::get_config() const {
+    return m_rtsp_config;
 }
 
-QString rtsp_config_window::getRtspUrl() const {
-    return m_rtspUrlEdit->text();
+QString rtsp_config_window::get_rtsp_url() const {
+    return m_rtsp_url_edit->text();
 }
 
-bool rtsp_config_window::hasSavedConfig() const {
+bool rtsp_config_window::has_saved_config() const {
     return m_settings->contains("RTSP/IP") && 
            m_settings->contains("RTSP/Username");
 }
 
-void rtsp_config_window::loadSavedConfig() {
-    loadSettings();
+void rtsp_config_window::load_saved_config() {
+    load_settings();
 }

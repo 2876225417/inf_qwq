@@ -201,20 +201,43 @@ mainwindow::mainwindow(QWidget* parent)
                                 }
                              });
 
+                    connect ( m_tool_bar
+                            , &tool_bar::send_keywords
+                            , this, [this, cam](const QVector<QString>& keywords){ 
+                                int cam_id = cam->get_cam_id();
+                                qDebug() << "cam_id: " << cam_id << "with keyword: ";
+                                cam->set_do_keywords(keywords);
+                                for(auto& keyword: keywords) qDebug() << keyword << ' ';
+                            });
+
+                    connect ( m_tool_bar
+                            , &tool_bar::send_scale_factor
+                            , this, [this, cam](float factor) {
+                               cam->set_scale_factor(factor); 
+                            });
+
+
                     connect ( m_chars_ort_inferer
                             , &chars_ort_inferer::inference_completed
-                            , this, [this](int cam_id, const std::vector<std::string> results) {
+                            , this, [this, cam](int cam_id, const std::vector<std::string> results) {
                                 QString result_set;
                                 for (const auto& result: results) {
                                     result_set += result;
                                 }
+                                // update camera wrapper inf result
+                                cam->invoke();
+                                cam->set_do_inf_result(result_set);
                                 m_expanded_window2_inf_res[cam_id] = result_set;
                                 qDebug() << "Inf result: " << m_expanded_window2_inf_res;
-                                if (DBManager::instance().isConnected()) {
-                                        DBManager::instance().addInfResult(cam_id, "keywords", result_set);
-                                }
+                                cam->get_draw_overlay()->update_keywords_no_args();
+                                cam->get_draw_overlay()->set_status();
+                                if (db_manager::instance().is_connected()) {
 
-                            });       
+                                        db_manager::instance().add_inf_result(cam_id, "keywords", result_set);
+                                }
+                            });
+                    
+
 
                     emit conn_cnt_changed(cam_nums++);
                 }
@@ -245,26 +268,6 @@ mainwindow::mainwindow(QWidget* parent)
 
     m_stream_group = new QStackedWidget();
   
-
-    connect ( m_tool_bar    // bugs: 1. unable to affect all wrappers 2. sidebar activation status updated wrongly
-            , &tool_bar::send_scale_factor
-            , this, [this](float factor) {
-                int MAX_PER_PAGE 
-                    = qobject_cast<grouping_rtsp_stream*>(m_stream_group->widget(0))->get_MAX_PER_PAGE();
-                
-                int group_count = m_stream_group->count();
-
-                for (int group_idx = 0; group_idx < group_count; ++group_idx) {
-                    grouping_rtsp_stream* grid = qobject_cast<grouping_rtsp_stream*>(m_stream_group->widget(group_idx));
-                    if (!grid) continue;
-                    for (int pos = 0; pos < MAX_PER_PAGE; ++pos) {
-                        camera_wrapper* cam = grid->get_cam_by_id(pos);
-
-                        if (cam) cam->set_scale_factor(factor);
-                    }
-                }
-            });
-
     connect ( m_stream_group
             , &QStackedWidget::currentChanged
             , this, [this](int group_index) {
@@ -355,15 +358,7 @@ mainwindow::mainwindow(QWidget* parent)
         }
     }
     
-    connect ( m_sidebar
-            , &grouping_sidebar::group_selected
-            , this, [this](int group_index) {
-                if (group_index >= 0 && group_index < m_stream_group->count()) {
-                    m_stream_group->setCurrentIndex(group_index);
-                } else {
-
-                }
-            });
+    
 
     
     splitter->addWidget(m_sidebar);

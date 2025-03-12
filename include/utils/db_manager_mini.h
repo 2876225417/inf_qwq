@@ -15,71 +15,98 @@
 
 #include <QDateTime>
 
-class DBManager : public QObject {
+class db_manager: public QObject {
     Q_OBJECT
     
 public:
-    // 获取单例实例
-    static DBManager& instance();
+    static db_manager& instance();
     
-    // 初始化数据库连接
-    bool connect(const QString& host, const QString& dbName,
-                const QString& user, const QString& password, int port = 5432);
+    bool connect( const QString& host
+                , const QString& db_name
+                , const QString& user
+                , const QString& password
+                , int port = 5432
+                );
     
-    // 关闭数据库连接
     void disconnect();
     
-    // 检查连接状态
-    bool isConnected() const;
+    bool is_connected() const;
     
-    // 执行查询操作
-    QSqlQuery executeQuery(const QString& query, const QMap<QString, QVariant>& params = QMap<QString, QVariant>());
+    QSqlQuery execute_query( const QString& query
+                           , const QMap<QString, QVariant>& params 
+                             = QMap<QString, QVariant>()
+                           );    
     
     // 执行非查询操作（插入、更新、删除）
-    bool executeNonQuery(const QString& query, const QMap<QString, QVariant>& params = QMap<QString, QVariant>());
+    bool execute_non_query( const QString& query
+                          , const QMap<QString, QVariant>& params 
+                            = QMap<QString, QVariant>()
+                          );
     
     // RTSP相关操作
-    bool addRtspConfig(const QString& username, const QString& ip, const QString& port, 
-                      const QString& channel, const QString& subtype, const QString& rtsp_url);
-    bool updateRtspConfig(int id, const QString& username, const QString& ip, const QString& port,
-                         const QString& channel, const QString& subtype, const QString& rtsp_url);
-    bool deleteRtspConfig(int id);
-    QVector<QMap<QString, QVariant>> getAllRtspConfigs();
-    QMap<QString, QVariant> getRtspConfigById(int id);
+    bool add_rtsp_config( const QString& username
+                        , const QString& ip
+                        , const QString& port
+                        , const QString& channel
+                        , const QString& subtype
+                        , const QString& rtsp_url
+                        );
+
+    bool update_rtsp_config( int id
+                           , const QString& username
+                           , const QString& ip
+                           , const QString& port
+                           , const QString& channel
+                           , const QString& subtype
+                           , const QString& rtsp_url
+                           );
+
+    bool delete_rtsp_config(int id);
+
+    QVector<QMap<QString, QVariant>> get_all_rtsp_configs();
+    QMap<QString, QVariant> get_rtsp_config_by_id(int id);
     
     // 识别结果相关操作
-    bool addRecognitionResult(int camera_id, const QVector<QString>& text_content);
-    QVector<QMap<QString, QVariant>> getRecognitionResults(int camera_id, 
-                                                         const QDateTime& startTime = QDateTime(),
-                                                         const QDateTime& endTime = QDateTime(),
-                                                         int limit = 100);
+    bool add_recognition_result( int camera_id
+                               , const QVector<QString>& text_content
+                               ) ;
+    QVector<QMap<QString, QVariant>> 
+    get_recognition_results( int camera_id
+                         , const QDateTime& startTime = QDateTime()
+                         , const QDateTime& endTime = QDateTime()
+                         , int limit = 100
+                         );
 
-    bool addInfResult(int cam_id, const QString& keywords, const QString& inf_result);
-    QVector<QMap<QString, QVariant>> getInfResults(int cam_id, int limit = 100);
+    bool add_inf_result( int cam_id
+                       , const QString& keywords
+                       , const QString& inf_result
+                       );
+    QVector<QMap<QString, QVariant>> 
+    get_inf_results( int cam_id
+                   , int limit = 100
+                   );
     
 signals:
-    void databaseError(const QString& error);
-    void operationCompleted(const QString& operation, bool success);
+    void database_error(const QString& error);
+    void operation_completed( const QString& operation
+                            , bool success
+                            );
     
 private:
-    // 私有构造函数 - 单例模式
-    explicit DBManager(QObject* parent = nullptr);
-    ~DBManager();
+    explicit db_manager(QObject* parent = nullptr);
+    ~db_manager();
     
-    // 禁止拷贝和赋值
-    DBManager(const DBManager&) = delete;
-    DBManager& operator=(const DBManager&) = delete;
+    db_manager(const db_manager&) = delete;
+    db_manager& operator=(const db_manager&) = delete;
     
-    // 确保表存在
-    bool ensureTablesExist();
-    bool createRtspConfigTable();
-    bool createRecognitionResultsTable();
-    
+    bool ensure_tables_exist();
+    bool create_rtsp_config_table();
+    bool create_recognition_results_table();
+    bool create_recognition_result_table();
+
     QSqlDatabase m_db;
     QMutex m_mutex;
     bool m_connected;
 };
-
-
 
 #endif

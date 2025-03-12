@@ -1,6 +1,6 @@
 
 
-#ifndef DB_MANAGER_H
+#ifdef DB_MANAGER_H
 #define DB_MANAGER_H
 
 #include <QObject>

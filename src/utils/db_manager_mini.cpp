@@ -8,40 +8,39 @@
 #include <QSqlRecord>
 #include <QDateTime>
 
-DBManager::DBManager(QObject* parent) 
+db_manager::db_manager(QObject* parent) 
     : QObject(parent), m_connected(false) {
-    // 创建数据库连接
     m_db = QSqlDatabase::addDatabase("QPSQL");
 }
 
-DBManager::~DBManager() {
+db_manager::~db_manager() {
     disconnect();
 }
 
-DBManager& DBManager::instance() {
-    static DBManager instance;
+db_manager& db_manager::instance() {
+    static db_manager instance;
     return instance;
 }
 
-bool DBManager::connect(const QString& host, const QString& dbName,
-                      const QString& user, const QString& password, int port) {
-    // QMutexLocker locker(&m_mutex);
-    
+bool db_manager::connect( const QString& host
+                        , const QString& db_name
+                        , const QString& user
+                        , const QString& password
+                        , int port
+                        ) { 
     if (m_connected) {
         qDebug() << "Database already connected";
         return true;
     }
     
-    // 设置连接参数
     m_db.setHostName(host);
-    m_db.setDatabaseName(dbName);
+    m_db.setDatabaseName(db_name);
     m_db.setUserName(user);
     m_db.setPassword(password);
     m_db.setPort(port);
     
-    // 尝试连接
     if (!m_db.open()) {
-        emit databaseError("Failed to connect to database: " + m_db.lastError().text());
+        emit database_error("Failed to connect to database: " + m_db.lastError().text());
         return false;
     }
     
@@ -60,7 +59,7 @@ bool DBManager::connect(const QString& host, const QString& dbName,
     return m_connected;
 }
 
-void DBManager::disconnect() {
+void db_manager::disconnect() {
     QMutexLocker locker(&m_mutex);
     
     if (m_connected) {
@@ -70,11 +69,11 @@ void DBManager::disconnect() {
     }
 }
 
-bool DBManager::isConnected() const {
+bool db_manager::is_connected() const {
     return m_connected && m_db.isOpen();
 }
 
-QSqlQuery DBManager::executeQuery(const QString& query, const QMap<QString, QVariant>& params) {
+QSqlQuery db_manager::execute_query(const QString& query, const QMap<QString, QVariant>& params) {
     QMutexLocker locker(&m_mutex);
     
     QSqlQuery sqlQuery(m_db);
@@ -90,23 +89,23 @@ QSqlQuery DBManager::executeQuery(const QString& query, const QMap<QString, QVar
     if (!sqlQuery.exec()) {
         qWarning() << "Query failed:" << sqlQuery.lastError().text();
         qWarning() << "Query was:" << query;
-        emit databaseError("Query failed: " + sqlQuery.lastError().text());
+        emit database_error("Query failed: " + sqlQuery.lastError().text());
     }
     
     return sqlQuery;
 }
 
-bool DBManager::executeNonQuery(const QString& query, const QMap<QString, QVariant>& params) {
-    QSqlQuery sqlQuery = executeQuery(query, params);
+bool db_manager::execute_non_query(const QString& query, const QMap<QString, QVariant>& params) {
+    QSqlQuery sqlQuery = execute_query(query, params);
     return !sqlQuery.lastError().isValid();
 }
 
-bool DBManager::ensureTablesExist() {
-    return createRtspConfigTable() && createRecognitionResultsTable();
+bool db_manager::ensure_tables_exist() {
+    return create_rtsp_config_table() && create_recognition_results_table();
 }
 
-bool DBManager::createRtspConfigTable() {
-    return executeNonQuery(
+bool db_manager::create_rtsp_config_table() {
+    return execute_non_query(
         "CREATE TABLE IF NOT EXISTS rtsp_config ("
         "id SERIAL PRIMARY KEY, "
         "username VARCHAR(50) NOT NULL, "
@@ -121,8 +120,8 @@ bool DBManager::createRtspConfigTable() {
     );
 }
 
-bool DBManager::createRecognitionResultsTable() {
-    return executeNonQuery(
+bool db_manager::create_recognition_results_table() {
+    return execute_non_query(
         "CREATE TABLE IF NOT EXISTS recognition_results ("
         "id SERIAL PRIMARY KEY, "
         "camera_id INTEGER, "
@@ -133,10 +132,10 @@ bool DBManager::createRecognitionResultsTable() {
     );
 }
 
-bool DBManager::addRtspConfig(const QString& username, const QString& ip, const QString& port,
+bool db_manager::add_rtsp_config(const QString& username, const QString& ip, const QString& port,
                             const QString& channel, const QString& subtype, const QString& rtsp_url) {
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return false;
     }
     
@@ -148,7 +147,7 @@ bool DBManager::addRtspConfig(const QString& username, const QString& ip, const 
     params[":subtype"] = subtype;
     params[":rtsp_url"] = rtsp_url;
     
-    QSqlQuery query = executeQuery(
+    QSqlQuery query = execute_query(
         "INSERT INTO rtsp_config (username, ip, port, channel, subtype, rtsp_url) "
         "VALUES (:username, :ip, :port, :channel, :subtype, :rtsp_url) RETURNING id",
         params
@@ -157,18 +156,18 @@ bool DBManager::addRtspConfig(const QString& username, const QString& ip, const 
     bool success = query.next();
     
     if (success) {
-        emit operationCompleted("Add RTSP Config", true);
+        emit operation_completed("Add RTSP Config", true);
     } else {
-        emit databaseError("Failed to add RTSP configuration");
+        emit database_error("Failed to add RTSP configuration");
     }
     
     return success;
 }
 
-bool DBManager::updateRtspConfig(int id, const QString& username, const QString& ip, const QString& port,
+bool db_manager::update_rtsp_config(int id, const QString& username, const QString& ip, const QString& port,
                                const QString& channel, const QString& subtype, const QString& rtsp_url) {
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return false;
     }
     
@@ -181,7 +180,7 @@ bool DBManager::updateRtspConfig(int id, const QString& username, const QString&
     params[":subtype"] = subtype;
     params[":rtsp_url"] = rtsp_url;
     
-    bool success = executeNonQuery(
+    bool success = execute_non_query(
         "UPDATE rtsp_config SET "
         "username = :username, "
         "ip = :ip, "
@@ -195,43 +194,43 @@ bool DBManager::updateRtspConfig(int id, const QString& username, const QString&
     );
     
     if (success) {
-        emit operationCompleted("Update RTSP Config", true);
+        emit operation_completed("Update RTSP Config", true);
     } else {
-        emit databaseError("Failed to update RTSP configuration");
+        emit database_error("Failed to update RTSP configuration");
     }
     
     return success;
 }
 
-bool DBManager::deleteRtspConfig(int id) {
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+bool db_manager::delete_rtsp_config(int id) {
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return false;
     }
     
     QMap<QString, QVariant> params;
     params[":id"] = id;
     
-    bool success = executeNonQuery("DELETE FROM rtsp_config WHERE id = :id", params);
+    bool success = execute_non_query("DELETE FROM rtsp_config WHERE id = :id", params);
     
     if (success) {
-        emit operationCompleted("Delete RTSP Config", true);
+        emit operation_completed("Delete RTSP Config", true);
     } else {
-        emit databaseError("Failed to delete RTSP configuration");
+        emit database_error("Failed to delete RTSP configuration");
     }
     
     return success;
 }
 
-QVector<QMap<QString, QVariant>> DBManager::getAllRtspConfigs() {
+QVector<QMap<QString, QVariant>> db_manager::get_all_rtsp_configs() {
     QVector<QMap<QString, QVariant>> result;
     
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return result;
     }
     
-    QSqlQuery query = executeQuery("SELECT * FROM rtsp_config ORDER BY id");
+    QSqlQuery query = execute_query("SELECT * FROM rtsp_config ORDER BY id");
     
     while (query.next()) {
         QMap<QString, QVariant> row;
@@ -244,18 +243,18 @@ QVector<QMap<QString, QVariant>> DBManager::getAllRtspConfigs() {
     return result;
 }
 
-QMap<QString, QVariant> DBManager::getRtspConfigById(int id) {
+QMap<QString, QVariant> db_manager::get_rtsp_config_by_id(int id) {
     QMap<QString, QVariant> result;
     
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return result;
     }
     
     QMap<QString, QVariant> params;
     params[":id"] = id;
     
-    QSqlQuery query = executeQuery("SELECT * FROM rtsp_config WHERE id = :id", params);
+    QSqlQuery query = execute_query("SELECT * FROM rtsp_config WHERE id = :id", params);
     
     if (query.next()) {
         for (int i = 0; i < query.record().count(); i++) {
@@ -266,9 +265,9 @@ QMap<QString, QVariant> DBManager::getRtspConfigById(int id) {
     return result;
 }
 
-bool DBManager::addRecognitionResult(int camera_id, const QVector<QString>& text_content) {
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+bool db_manager::add_recognition_result(int camera_id, const QVector<QString>& text_content) {
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return false;
     }
     
@@ -284,27 +283,27 @@ bool DBManager::addRecognitionResult(int camera_id, const QVector<QString>& text
     params[":camera_id"] = camera_id;
     params[":text_content"] = textArray;
     
-    bool success = executeNonQuery(
+    bool success = execute_non_query(
         "INSERT INTO recognition_results (camera_id, text_content) "
         "VALUES (:camera_id, :text_content::text[])",
         params
     );
     
     if (!success) {
-        emit databaseError("Failed to add recognition result");
+        emit database_error("Failed to add recognition result");
     }
     
     return success;
 }
 
-QVector<QMap<QString, QVariant>> DBManager::getRecognitionResults(int camera_id,
+QVector<QMap<QString, QVariant>> db_manager::get_recognition_results(int camera_id,
                                                                const QDateTime& startTime,
                                                                const QDateTime& endTime,
                                                                int limit) {
     QVector<QMap<QString, QVariant>> result;
     
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return result;
     }
     
@@ -325,7 +324,7 @@ QVector<QMap<QString, QVariant>> DBManager::getRecognitionResults(int camera_id,
     queryStr += " ORDER BY timestamp DESC LIMIT :limit";
     params[":limit"] = limit;
     
-    QSqlQuery query = executeQuery(queryStr, params);
+    QSqlQuery query = execute_query(queryStr, params);
     
     while (query.next()) {
         QMap<QString, QVariant> row;
@@ -339,9 +338,9 @@ QVector<QMap<QString, QVariant>> DBManager::getRecognitionResults(int camera_id,
 }
 
 
-bool DBManager::addInfResult(int cam_id, const QString& keywords, const QString& inf_result) {
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+bool db_manager::add_inf_result(int cam_id, const QString& keywords, const QString& inf_result) {
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return false;
     }
     
@@ -350,26 +349,26 @@ bool DBManager::addInfResult(int cam_id, const QString& keywords, const QString&
     params[":keywords"] = keywords;
     params[":inf_result"] = inf_result;
     
-    bool success = executeNonQuery(
+    bool success = execute_non_query(
         "INSERT INTO inf_qwq_result (cam_id, keywords, inf_result) "
         "VALUES (:cam_id, :keywords, :inf_result)",
         params
     );
     
     if (!success) {
-        emit databaseError("Failed to add inference result");
+        emit database_error("Failed to add inference result");
     } else {
-        emit operationCompleted("Add Inference Result", true);
+        emit operation_completed("Add Inference Result", true);
     }
     
     return success;
 }
 
-QVector<QMap<QString, QVariant>> DBManager::getInfResults(int cam_id, int limit) {
+QVector<QMap<QString, QVariant>> db_manager::get_inf_results(int cam_id, int limit) {
     QVector<QMap<QString, QVariant>> result;
     
-    if (!isConnected()) {
-        emit databaseError("Database not connected");
+    if (!is_connected()) {
+        emit database_error("Database not connected");
         return result;
     }
     
@@ -377,7 +376,7 @@ QVector<QMap<QString, QVariant>> DBManager::getInfResults(int cam_id, int limit)
     params[":cam_id"] = cam_id;
     params[":limit"] = limit;
     
-    QSqlQuery query = executeQuery(
+    QSqlQuery query = execute_query(
         "SELECT * FROM inf_qwq_result "
         "WHERE cam_id = :cam_id "
         "ORDER BY created_at DESC "

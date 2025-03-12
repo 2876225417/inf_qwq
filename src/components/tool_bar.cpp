@@ -1,6 +1,7 @@
 
 
 #include "windows/db_config_window.h"
+#include "windows/keywords_edit_window.h"
 #include "windows/rtsp_config_window.h"
 #include "windows/stream_settings_window.h"
 #include <components/tool_bar.h>
@@ -85,6 +86,27 @@ tool_bar::tool_bar(QWidget* parent)
                 m_db_config_window->show();
                 m_db_config_window->raise();
                 m_db_config_window->activateWindow();
+            });
+
+    QAction* add_keywords_edit_settings = new QAction("Keywords Edit", this);
+    addAction(add_keywords_edit_settings);
+
+
+    connect ( add_keywords_edit_settings
+            , &QAction::triggered
+            , [this]() {
+                if (!m_keywords_edit_window) {   
+                    m_keywords_edit_window = new keywords_edit_window(this);
+                    connect ( m_keywords_edit_window
+                            , &keywords_edit_window::keywords_change
+                            , this, [this](const QVector<QString>& keywords){
+                                emit send_keywords(keywords);    
+                            });
+                }
+                m_keywords_edit_window->show();
+                m_keywords_edit_window->raise();
+                m_keywords_edit_window->activateWindow();
+
             });
 
 

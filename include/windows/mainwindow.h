@@ -51,7 +51,8 @@ public:
     ~mainwindow();
 signals:
     void keywords_changed(const QString& keywords);
-    void conn_cnt_changed(int cnt); 
+    void conn_cnt_changed(int cnt);
+    void test_inside();
 private:
     // mainwindow layout
     QWidget*                m_mainwindow_layout;

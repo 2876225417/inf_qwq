@@ -29,6 +29,14 @@ public:
     int get_cam_id() const;
     QString get_rtsp_url() const;
     QString get_rtsp_config() const;
+
+    void invoke() { qDebug() << "Invoked! and cam_id: " << m_cam_id;}
+    void set_do_inf_result(const QString& inf_res) { m_draw_overlay->set_inference_result(inf_res); }
+    void set_do_keywords(const QVector<QString>& keywords) { m_draw_overlay->set_keywords(keywords); }
+    
+    draw_overlay* get_draw_overlay() { return m_draw_overlay; }
+    
+    void update_keywords();     // again !!!
 signals:
     // send cropped img when selected and moving
     void img_cropped(QVector<cropped_image>&);
@@ -38,7 +46,7 @@ signals:
     void cam_expand_req(int cam_id);
     // send inf result
     void inf_result(const QString& inf_result);
-    
+
 protected:
     bool eventFilter(QObject*, QEvent*) override;
 private slots: 
@@ -48,7 +56,7 @@ private:
     void start_inf();
     cv::Mat qimage2mat(QImage& qimage);
 
-
+     
     QHBoxLayout* m_camera_layout;
     QLabel* m_video_stream;
   

@@ -7,7 +7,7 @@ file(GLOB HEADER_FILES ${CMAKE_SOURCE_DIR}/include/windows/*.h)
 
 
 #message(STATUS "HEADERS_FILES: ${SRC_FILES}")
-
+  
 
 add_library(windows
     STATIC

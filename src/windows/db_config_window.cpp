@@ -134,7 +134,7 @@ void db_config_window::on_connect() {
              << "password: " << m_password_edit->text()
              << "port: " << m_port_spinbox->value();
     
-    bool success = DBManager::instance().connect(
+    bool success = db_manager::instance().connect(
         m_host_edit->text(),
         m_database_edit->text(),
         m_username_edit->text(), 

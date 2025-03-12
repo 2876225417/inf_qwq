@@ -3,12 +3,107 @@
 #include <components/draw_overlay.h>
 #include <QTimer>
 #include <qcombobox.h>
+#include <qcontainerfwd.h>
 #include <qevent.h>
 #include <qnamespace.h>
 #include <qoverload.h>
 #include <qwidget.h>
 
+void draw_overlay::set_inference_result(const QString& result) {
+    m_inference_result = result;
+    update();
+}
 
+void draw_overlay::set_keywords(const QVector<QString>& keywords) {
+    m_all_keywords = keywords;
+    m_keywords = detect_matched_keywords(m_inference_result, m_all_keywords);
+    update();
+}
+
+void draw_overlay::update_keywords_no_args() {
+    m_keywords = detect_matched_keywords(m_inference_result, m_all_keywords);
+    update();
+}
+
+void draw_overlay::set_status() {
+    m_is_normal_status = !m_keywords.isEmpty();
+    update();
+}
+
+
+
+void draw_overlay::draw_status_indicator(QPainter& painter) {
+    painter.save();
+
+    QFont status_font("Arial", 12, QFont::Bold);
+    painter.setFont(status_font);
+
+    QString status_text = m_is_normal_status ? "Normal" : "Abnormal";
+    QColor status_color = m_is_normal_status ? Qt::green : Qt::red;
+
+    int status_width = width() / 5;
+    int status_X = (width() - status_width) / 2;
+
+    QRect status_rect(status_X, 10, status_width, 30);
+
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(0, 0, 0, 150));
+    painter.drawRoundedRect(status_rect, 5, 5);
+
+    painter.setPen(status_color);
+    painter.drawText(status_rect, Qt::AlignCenter, status_text);
+    painter.restore();
+}
+
+void draw_overlay::draw_inference_result(QPainter& painter) {
+    painter.save();
+
+    QFont result_font("Arial", 10);
+    painter.setFont(result_font);
+    
+    int margin = 10;
+    int line_height = 20;
+    int text_width = width() / 2;
+
+    QRect result_rect(margin, height() - 2 * line_height - margin, text_width, line_height);
+    QRect keywords_rect(margin, height() - line_height - margin, text_width, line_height);
+
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(0, 0, 0, 150));
+    painter.drawRoundedRect(QRect( margin - 5
+                                 , height() - 2 * line_height - margin - 5
+                                 , text_width + 10
+                                 , 2 * line_height + 10), 5, 5);
+
+    painter.setPen(Qt::white);
+    QString result_text = "Result: " + (m_inference_result.isEmpty() ? "Null" : m_inference_result);
+
+    QFontMetrics fm(result_font);
+    result_text = fm.elidedText(result_text, Qt::ElideRight, text_width);
+    painter.drawText(result_rect, Qt::AlignLeft | Qt::AlignVCenter, result_text);
+
+    painter.setPen(m_is_normal_status ? Qt::white : Qt::yellow);
+    QString all_keywords; for(auto& keyword: m_keywords) all_keywords += keyword;
+    QString keywords_text = "Keywords: " + (all_keywords.isEmpty() ? "Null" : all_keywords);
+
+    keywords_text = fm.elidedText(keywords_text, Qt::ElideRight, text_width);
+    painter.drawText(keywords_rect, Qt::AlignLeft | Qt::AlignVCenter, keywords_text);
+    painter.restore();
+}
+
+
+QString draw_overlay::detect_matched_keywords( const QString& text
+                                             , const QVector<QString>& all_keywords) 
+                                             {
+    QStringList matched_keywords;
+
+    for (const QString& keyword: all_keywords) {
+        if (text.contains(keyword, Qt::CaseInsensitive)) {
+            matched_keywords.append(keyword);
+        }
+    }
+    return matched_keywords.join(" ");
+}
 
 draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     : QWidget(parent)
@@ -300,6 +395,9 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
     painter.drawEllipse(QPoint(center_X - 2, center_Y - 2), icon_size / 2, icon_size / 2);
    
     painter.drawLine(center_X + icon_size / 3, center_Y + icon_size / 3, center_X + icon_size / 2, center_Y + icon_size / 2);
+
+    draw_status_indicator(painter);
+    draw_inference_result(painter);
 }
 
 bool draw_overlay::eventFilter(QObject* obj, QEvent* e) {

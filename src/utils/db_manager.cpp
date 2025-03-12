@@ -1,5 +1,5 @@
 
-
+#ifdef DB_MANAGER_H
 
 #include <iterator>
 #include <qmap.h>
@@ -165,3 +165,5 @@ QSharedPointer<database_connection> db_manager::get_connection() {
     QThread::msleep(100);
     return get_connection();
 }
+
+#endif
