@@ -1,8 +1,10 @@
 
 
+#include "windows/db_config_window.h"
 #include "windows/rtsp_config_window.h"
 #include "windows/stream_settings_window.h"
 #include <components/tool_bar.h>
+#include <qaction.h>
 #include <qnamespace.h>
 #include <qsizepolicy.h>
 #include <qwidget.h>
@@ -22,7 +24,7 @@ tool_bar::tool_bar(QWidget* parent)
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     addWidget(spacer);
 
-    QAction* add_rtsp_stream_config = new QAction("+", this);
+    QAction* add_rtsp_stream_config = new QAction("RTSP", this);
     addAction(add_rtsp_stream_config);
 
     connect (add_rtsp_stream_config, &QAction::triggered, this, [this]{
@@ -46,7 +48,7 @@ tool_bar::tool_bar(QWidget* parent)
         m_rtsp_config_window->activateWindow();
     });
 
-    QAction* add_stream_settings = new QAction("-", this);
+    QAction* add_stream_settings = new QAction("Setting", this);
     addAction(add_stream_settings);
 
     connect ( add_stream_settings
@@ -65,6 +67,26 @@ tool_bar::tool_bar(QWidget* parent)
                 m_stream_settings_window->raise();
                 m_stream_settings_window->activateWindow();
             });
+   
+    QAction* add_db_config_settings = new QAction("Database", this);
+    addAction(add_db_config_settings);
+
+    connect ( add_db_config_settings
+            , &QAction::triggered
+            , this, [this] {
+                if (!m_db_config_window) {
+                    m_db_config_window = new db_config_window(this);
+                    connect ( m_db_config_window
+                            , &db_config_window::connection_established
+                            , this, [this](){
+                                emit send_database_connected_established();
+                            }); 
+                 }
+                m_db_config_window->show();
+                m_db_config_window->raise();
+                m_db_config_window->activateWindow();
+            });
+
 
     
     setMovable(false);

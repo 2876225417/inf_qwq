@@ -7,6 +7,8 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "utils/chars_ort_inferer.h"
+#include "utils/db_manager.h"
+#include "utils/db_manager_mini.h"
 #include "utils/ort_inf.h"
 #include "utils/ort_inf.hpp"
 #include "windows/rtsp_config_window.h"
@@ -131,12 +133,14 @@ mainwindow::mainwindow(QWidget* parent)
         
     m_mainwindow_layout_wrapper->setContentsMargins(0, 0, 0, 0);
     m_mainwindow_layout_wrapper->setSpacing(0);
-
+    
 
     m_chars_rec_inferer = new rec_inferer();
     m_chars_det_inferer = new det_inferer();
    
  
+    
+
 
     // tool bar and status bar
     m_tool_bar = new tool_bar();
@@ -149,6 +153,13 @@ mainwindow::mainwindow(QWidget* parent)
     QSplitter* splitter = new QSplitter(Qt::Horizontal);
     splitter->setHandleWidth(1);
     splitter->setStyleSheet("QSplitter::handle { background: #404040; }");
+
+    connect ( m_tool_bar
+            , &tool_bar::send_database_connected_established
+            , this, [this]() {
+                qDebug() << "Connection established";
+
+            });
 
     connect ( m_tool_bar
             , &tool_bar::send_rtsp_url
@@ -186,16 +197,23 @@ mainwindow::mainwindow(QWidget* parent)
                                     int inf_cam_id = cam->get_cam_id();
                                     cv::Mat cropped = qimage2mat(croppeds[0].image);
                                     m_expanded_window2_inf_cropped[inf_cam_id] = croppeds[0].image;
-                                    m_chars_ort_inferer->run_inf(inf_cam_id, cropped); 
+                                    m_chars_ort_inferer->run_inf(inf_cam_id, cropped); // aysnc inf
                                 }
                              });
 
-                    connect ( cam
-                            , &camera_wrapper::inf_result
-                            , this, [this, cam](const QString& inf_res) {
-                                int inf_cam_id = cam->get_cam_id();
-                                m_expanded_window2_inf_res[inf_cam_id] = inf_res;
+                    connect ( m_chars_ort_inferer
+                            , &chars_ort_inferer::inference_completed
+                            , this, [this](int cam_id, const std::vector<std::string> results) {
+                                QString result_set;
+                                for (const auto& result: results) {
+                                    result_set += result;
+                                }
+                                m_expanded_window2_inf_res[cam_id] = result_set;
                                 qDebug() << "Inf result: " << m_expanded_window2_inf_res;
+                                if (DBManager::instance().isConnected()) {
+                                        DBManager::instance().addInfResult(cam_id, "keywords", result_set);
+                                }
+
                             });       
 
                     emit conn_cnt_changed(cam_nums++);
@@ -380,3 +398,21 @@ cv::Mat mainwindow::qimage2mat(QImage& qimage) {
     return mat;
 }
 
+
+// bool mainwindow::initialize_database() {
+//     QSettings settings("Chun Hui", "inf_qwq");
+//     QString host = settings.value("Database/Host", "localhost").toString();
+//     QString db_name = settings.value("Database/Database", "det_qwq").toString();
+//     QString user = settings.value("Database/Usernaem", "postgres").toString();
+//     QString password = settings.value("Database/Password", "20041025").toString();
+//     int port = settings.value("Database/Port", 5432).toInt();
+//
+//     bool success = db_manager::instance().initialize( "QPSQL", host
+//                                                     , db_name, user
+//                                                     , password, port
+//                                                     );
+//     if (success) qDebug() << "Database connection intialized successfully!";
+//     else qWarning() << "Failed to intialize database connection";
+//
+//     return success;
+// }

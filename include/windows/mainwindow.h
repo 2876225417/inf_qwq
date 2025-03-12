@@ -107,7 +107,7 @@ private:
         }
     } m_config;
 
-    
+   
 
     //ort_inferer* m_inferer;
     cv::Mat for2{};
@@ -125,7 +125,12 @@ private:
     static int cam_nums;
    
     chars_ort_inferer* m_chars_ort_inferer;
-
+    
+    // todo struct expanded map data 
+    // @ rstp_config
+    // @ inf result
+    // @ inf cropped
+    // @ keywords
     QMap<int, expanded_camera_window*> m_expanded_windows;
     QMap<int, rtsp_config> m_expands_window2rtsp_config; 
     QMap<int, QString> m_expanded_window2_inf_res;

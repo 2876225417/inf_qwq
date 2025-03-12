@@ -71,11 +71,12 @@ void inference_worker::process_next() {
         }
 
         std::vector<std::string> result_set;
+        QString results_set;
         for (auto& region: detected_regions) {
             std::string recognized_text = m_rec_inferer->run_inf(region);
-            if (!recognized_text.empty()) result_set.push_back(recognized_text);
+            if (!recognized_text.empty()) { result_set.push_back(recognized_text); results_set += recognized_text + '\t'; };
         }
-        qDebug() << "result set: " << result_set;
+        qDebug() << "result set: " << results_set; 
         emit result_ready(inference_result(task.cam_id, result_set));
     } catch (const std::exception& e) {
         qWarning() << "Error occurred when inferring: " << e.what();
