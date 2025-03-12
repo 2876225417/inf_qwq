@@ -39,6 +39,11 @@ public:
     void set_status();
     
     void update_keywords_no_args();
+    void set_cam_id(int cam_id) { m_cam_id = cam_id; }
+ 
+
+    void hint_warning();
+
 signals:
     void selected(QVector<rect_data>& rects);
     void update_frame_moving(QVector<rect_data>& rects);
@@ -51,7 +56,10 @@ private:
     void paintEvent(QPaintEvent* e) override;
     bool eventFilter(QObject* obj, QEvent* e) override;
     bool event(QEvent* e) override;
-   
+    
+
+    bool is_allerted() const { return m_keywords.isEmpty(); }
+    
     static QString detect_matched_keywords( const QString& text
                                           , const QVector<QString>& all_keywords);
 
@@ -89,10 +97,16 @@ public:
     QString m_keywords;
     QVector<QString> m_all_keywords;
     bool m_is_normal_status = true;
-
+    
+    int cam_id;
 
     void draw_status_indicator(QPainter& painter);
     void draw_inference_result(QPainter& painter);
+    void draw_camera_id(QPainter& painter);
+
+    bool m_show_warning = false;
+    QTimer* m_warning_timer = nullptr;
+    void draw_warning(QPainter& painter);
 
     void update_hover_state(const QPoint& pos);
     QRect paint_close_btn(const QRect& rect) const;

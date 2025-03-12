@@ -7,6 +7,7 @@
 #include <qevent.h>
 #include <qnamespace.h>
 #include <qoverload.h>
+#include <qtimer.h>
 #include <qwidget.h>
 
 void draw_overlay::set_inference_result(const QString& result) {
@@ -26,10 +27,79 @@ void draw_overlay::update_keywords_no_args() {
 }
 
 void draw_overlay::set_status() {
-    m_is_normal_status = !m_keywords.isEmpty();
+    m_is_normal_status = m_keywords.isEmpty();
     update();
 }
 
+void draw_overlay::hint_warning() {
+    if (!m_keywords.isEmpty()) {
+        m_show_warning = true;
+        update();
+        m_warning_timer->start(5000);
+    }
+}
+
+void draw_overlay::draw_warning(QPainter& painter) {
+    if (!m_show_warning || m_keywords.isEmpty()) {
+        return;
+    }
+
+    painter.save();
+
+    QFont warning_font("Arial", 16, QFont::Bold);
+    painter.setFont(warning_font);
+
+    QString warning_text = QString("Detected keywords: %1").arg(m_keywords);
+
+    QFontMetrics fm(warning_font);
+    QSize text_size = fm.size(Qt::TextSingleLine, warning_text);
+
+    int x = (width() - text_size.width()) / 2;
+    int y = (height() - text_size.height()) / 2;
+
+    int padding = 20;
+    QRect bg_rect(x - padding, y - padding, text_size.width() + 2 * padding, text_size.height() + 2 * padding);
+
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(0, 0, 0, 200));
+    painter.drawRoundedRect(bg_rect, 10, 10);
+
+    painter.setPen(QPen(Qt::red, 2));
+    painter.drawRoundedRect(bg_rect, 10, 10);
+
+    painter.setPen(Qt::red);
+    painter.drawText(QRect(x, y, text_size.width(), text_size.height()), Qt::AlignCenter, warning_text);
+
+    painter.restore();
+}
+
+
+void draw_overlay::draw_camera_id(QPainter& painter) {
+    painter.save();
+
+    QFont id_font("Arial", 10, QFont::Bold);
+    painter.setFont(id_font);
+
+    QString id_text = QString("Camera ID: %1").arg(m_cam_id);
+
+    QFontMetrics fm(id_font);
+    QSize text_size = fm.size(Qt::TextSingleLine, id_text);
+
+    int margin = 10;
+    int x = width() - text_size.width() - margin;
+    int y = height() - text_size.height() - margin;
+
+    QRect bg_rect(x - 5, y - 5, text_size.width() + 10, text_size.height() + 10);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(0, 0, 0, 0));
+    painter.drawRoundedRect(bg_rect, 5, 5);
+
+    painter.setPen(Qt::white);
+    painter.drawText(QRect( x, y
+                          , text_size.width(), text_size.height())
+                          , Qt::AlignLeft | Qt::AlignTop, id_text);
+    painter.restore();
+}
 
 
 void draw_overlay::draw_status_indicator(QPainter& painter) {
@@ -54,6 +124,8 @@ void draw_overlay::draw_status_indicator(QPainter& painter) {
     painter.drawText(status_rect, Qt::AlignCenter, status_text);
     painter.restore();
 }
+
+
 
 void draw_overlay::draw_inference_result(QPainter& painter) {
     painter.save();
@@ -128,7 +200,18 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
         if (!m_rects.isEmpty()) emit timer_timeout_update(m_rects);
         //else qDebug() << "No rects selected.";
     }); m_timer->start(5000);
+
+
+    m_warning_timer = new QTimer(this);
+    m_warning_timer->setSingleShot(true);
+    connect (m_warning_timer, &QTimer::timeout, [this]() {
+        m_show_warning = false;
+        update();
+    });
 }
+
+
+
 
 QRect draw_overlay::get_expand_btn_rect() const {
     const int btn_size = 24;
@@ -398,6 +481,9 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
 
     draw_status_indicator(painter);
     draw_inference_result(painter);
+
+    draw_camera_id(painter);
+    draw_warning(painter);
 }
 
 bool draw_overlay::eventFilter(QObject* obj, QEvent* e) {

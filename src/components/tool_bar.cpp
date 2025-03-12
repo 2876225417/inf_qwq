@@ -5,6 +5,7 @@
 #include "windows/rtsp_config_window.h"
 #include "windows/stream_settings_window.h"
 #include <components/tool_bar.h>
+#include <opencv2/calib3d.hpp>
 #include <qaction.h>
 #include <qnamespace.h>
 #include <qsizepolicy.h>
@@ -109,7 +110,22 @@ tool_bar::tool_bar(QWidget* parent)
 
             });
 
+    QAction* add_warning_records_settings = new QAction("Records", this);
+    addAction(add_warning_records_settings);
 
+    connect ( add_warning_records_settings
+            , &QAction::triggered
+            , this, [this]() {
+                qDebug() << "Show warning records window";
+                if (!m_record_warnings_window) {
+                    m_record_warnings_window = new warning_records_window(this);
+
+                    
+                }
+                m_record_warnings_window->show();
+                m_record_warnings_window->raise();
+                m_record_warnings_window->activateWindow(); 
+            });
     
     setMovable(false);
 }

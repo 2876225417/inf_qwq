@@ -30,6 +30,9 @@ public:
     QString get_rtsp_url() const;
     QString get_rtsp_config() const;
 
+
+    void hide_draw_overlay() { m_draw_overlay->hide(); }
+
     void invoke() { qDebug() << "Invoked! and cam_id: " << m_cam_id;}
     void set_do_inf_result(const QString& inf_res) { m_draw_overlay->set_inference_result(inf_res); }
     void set_do_keywords(const QVector<QString>& keywords) { m_draw_overlay->set_keywords(keywords); }

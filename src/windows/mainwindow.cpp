@@ -46,102 +46,13 @@ mainwindow::mainwindow(QWidget* parent)
     , m_camera_cropped_layout{new QGroupBox("采集区")}
     , m_camera_cropped_layout_wrapper{new QVBoxLayout()}
     , m_cropped_img_wrapper{new QHBoxLayout()}
-    {
-  //
- 
-   //  // update cropped img 
-   //  connect ( m_camera
-   //          , &camera_wrapper::img_cropped
-   //          , this
-   //          , [this](QVector<cropped_image>& cropped_images) {
-   //              qDebug() << "count of images: " << cropped_images.size();
-   //              tmp = cropped_images[0].image;
-   //              cv::Mat mat = qimage2mat(tmp);
-   //              
-   //              for (auto& cropped: cropped_images){
-   //                  m_1_cropped_img->set_image(0, cropped.image);
-   //                  m_4_croppeds_img->set_image(cropped.number - 1, cropped.image); }
-   //           });
-   // 
-
-   //
-   //
-   //  // keyword
-   //  connect ( m_actions_wrapper, &actions_wrapper::keywords_changed
-   //          , this, [this](const QString& keywords) {
-   //              qDebug() << "Keywords: " << keywords;
-   //              m_1_cropped_img->set_keywords(keywords); 
-   //           });
-   //
-   //
-   //  connect (m_actions_wrapper, &actions_wrapper::start_inf, this, [this]() {
-   //              auto start = std::chrono::high_resolution_clock::now();
-   //              
-   //              int idx = 0;
-   //              std::vector<cv::Mat> croppeds = m_chars_det_inferer->run_inf(for2);
-   //              QString result_set;
-   //              int box_idx = 0;
-   //              for (auto& cropped: croppeds) {
-   //                  QString res = QString(m_chars_rec_inferer->run_inf(cropped).c_str());
-   //                  qDebug() << "Res result: " << res;
-   //                  result_set += res;
-   //                  // std::string cropped_name = "Text Box " +std::to_string(++box_idx);
-   //                  // cv::imshow(cropped_name, cropped);
-   //                  // cv::moveWindow(cropped_name, 100 + box_idx * 50, 100);
-   //                  // cv::waitKey(0);
-   //              }
-   //              qDebug() << "Result set: " << result_set;
-   //              m_1_cropped_img->set_inf_result(result_set);
-   //
-   //              auto end = std::chrono::high_resolution_clock::now();
-   //              auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-   //              qDebug() << "推理总耗时： " << duration;
-   //  });
-   //
-   //
-   //  connect ( m_camera, &camera_wrapper::img_cropped4inf
-   //          , this, [this](QVector<cropped_image>& cropped_images) {
-   //              auto start = std::chrono::high_resolution_clock::now();
-   //              
-   //              int idx = 0;
-   //              m_1_cropped_img->set_image(cropped_images[0].image);
-   //              for2 = qimage2mat(cropped_images[0].image);
-   //              for (auto cropped: cropped_images) {
-   //                  idx += 1;
-   //                  //qDebug() << "推理结果: " << m_inferer->exec_inf(qimage2mat(cropped.image));  
-   //             }
-   //              auto end = std::chrono::high_resolution_clock::now();
-   //              auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-   //              qDebug() << "推理总耗时： " << duration;
-   //       });
-   //
-   //  m_camera_cropped_layout->setLayout(m_cropped_img_wrapper);
-
-    // m_mainwindow_camera_layout_wrapper->addWidget(m_camera);
-    // m_mainwindow_camera_layout_wrapper->setAlignment(m_camera, Qt::AlignLeft | Qt::AlignTop);
-    // m_mainwindow_camera_layout_wrapper->setContentsMargins(0, 0, 0, 0);
-    // m_mainwindow_camera_layout->setLayout(m_mainwindow_camera_layout_wrapper);
-    // m_mainwindow_camera_layout->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    //
-    // m_camera_rel_layout->addWidget(m_mainwindow_camera_layout);     // camera
-    // m_camera_rel_layout->addWidget(m_actions_wrapper);              // actions
-    // Sidebar* m_sidebar = new Sidebar();
-    // m_mainwindow_layout_wrapper->addWidget(m_sidebar);
-    // m_mainwindow_layout_wrapper->addLayout(m_camera_rel_layout);    // (camera + actions) wrapper
-    // m_mainwindow_layout_wrapper->addWidget(m_camera_cropped_layout);// camera croppeds
-   
-        
+    {        
     m_mainwindow_layout_wrapper->setContentsMargins(0, 0, 0, 0);
     m_mainwindow_layout_wrapper->setSpacing(0);
     
-
     m_chars_rec_inferer = new rec_inferer();
     m_chars_det_inferer = new det_inferer();
    
- 
-    
-
-
     // tool bar and status bar
     m_tool_bar = new tool_bar();
     addToolBar(Qt::TopToolBarArea, m_tool_bar);
@@ -187,7 +98,7 @@ mainwindow::mainwindow(QWidget* parent)
                 auto cam = current_grid->get_cam_by_id(cam_nums);
                 bool success = cam->set_rtsp_stream(rtsp_url);
                 //bool success = current_grid->get_cam_by_id(cam_nums)->set_rtsp_stream(rtsp_url); 
-                
+                cam->get_draw_overlay()->set_cam_id(cam->get_cam_id() + 1);
                 if (success) {
                     m_expands_window2rtsp_config[cam_nums] = rtsp_cfg;
                     connect ( cam
@@ -200,6 +111,31 @@ mainwindow::mainwindow(QWidget* parent)
                                     m_chars_ort_inferer->run_inf(inf_cam_id, cropped); // aysnc inf
                                 }
                              });
+                    connect ( cam
+                            , &camera_wrapper::cam_expand_req
+                            , this, [this, cam]() {
+                                qDebug() << "expanding window request received!";
+
+                                expanded_camera_window* expanded_window = new expanded_camera_window(cam);
+                                expanded_window->show();
+                                expanded_window->activateWindow();
+                                expanded_window->raise();
+
+                                connect ( cam
+                                        , &camera_wrapper::img_cropped
+                                        , this, [this, expanded_window](QVector<cropped_image>& croppeds) {
+                                            if (!croppeds.empty())
+                                                expanded_window->set_cropped_image(croppeds[0].image);
+                                        });
+
+                                connect ( cam
+                                        , &camera_wrapper::img_cropped4inf
+                                        , this, [this, expanded_window](QVector<cropped_image>& croppeds) {
+                                            if (!croppeds.empty()) {
+                                                expanded_window->set_cropped_image(croppeds[0].image);
+                                            } 
+                                        });
+                    });
 
                     connect ( m_tool_bar
                             , &tool_bar::send_keywords
@@ -216,6 +152,7 @@ mainwindow::mainwindow(QWidget* parent)
                                cam->set_scale_factor(factor); 
                             });
 
+                
 
                     connect ( m_chars_ort_inferer
                             , &chars_ort_inferer::inference_completed
@@ -231,6 +168,7 @@ mainwindow::mainwindow(QWidget* parent)
                                 qDebug() << "Inf result: " << m_expanded_window2_inf_res;
                                 cam->get_draw_overlay()->update_keywords_no_args();
                                 cam->get_draw_overlay()->set_status();
+                                cam->get_draw_overlay()->hint_warning();
                                 if (db_manager::instance().is_connected()) {
 
                                         db_manager::instance().add_inf_result(cam_id, "keywords", result_set);
@@ -289,74 +227,74 @@ mainwindow::mainwindow(QWidget* parent)
         m_stream_group->addWidget(grid);
     }
     
-    for (int i = 0; i < m_stream_group->count(); ++i) {
-        grouping_rtsp_stream* grid 
-            = qobject_cast<grouping_rtsp_stream*>(m_stream_group->widget(i));
-        if (grid) {
-            connect (grid, &grouping_rtsp_stream::cam_expand_req, this, [this](int cam_id){
-                qDebug() << "Requested expand camera id: " << cam_id;
-                
-                if (m_expanded_windows.contains(cam_id)) {
-                    m_expanded_windows[cam_id]->activateWindow();
-                    m_expanded_windows[cam_id]->raise();
-                    return;
-                }
-
-                camera_wrapper* cam = nullptr;
-                grouping_rtsp_stream* current_grid 
-                    = qobject_cast<grouping_rtsp_stream*>(m_stream_group->currentWidget());
-
-                if (current_grid) {
-                    cam = current_grid->get_cam_by_id(cam_id);
-                    if (cam) {
-                        expanded_camera_window* expanded_window = new expanded_camera_window(cam);
-                        //expanded_window->show();
-                        expanded_window->setAttribute(Qt::WA_DeleteOnClose, true);
-                        m_expanded_windows[cam_id] = expanded_window;
-                         
-
-                        connect( expanded_window // -> cropped moving
-                               , &QObject::destroyed
-                               , this, [this, cam_id](){m_expanded_windows.remove(cam_id); });
-                        
-                        
-                        connect ( expanded_window
-                                , &expanded_camera_window::keywords_changed
-                                , this, [this, cam_id](const QString& keywords) {
-                                    m_expanded_window2_keywords[cam_id] = keywords;   
-                                    qDebug() << "Received keywords: " << m_expanded_window2_keywords;
-                                });
-
-                        connect( cam
-                               , &camera_wrapper::img_cropped
-                               , expanded_window, [expanded_window](QVector<cropped_image>& croppeds) { 
-                                    expanded_window->set_cropped_image(croppeds[0].image);  
-                               }, Qt::DirectConnection);
-
-                        connect( cam            //  timeout cropped for inference
-                               , &camera_wrapper::img_cropped4inf
-                               , expanded_window, [this, expanded_window, cam_id](QVector<cropped_image>& croppeds) {
-                                    if (!croppeds.isEmpty()){
-                                        expanded_window->set_cropped_image(m_expanded_window2_inf_cropped[cam_id]);
-                                        expanded_window->set_inf_result(m_expanded_window2_inf_res[cam_id]);
-                                    }
-                               }, Qt::DirectConnection);
-
-
-                        rtsp_config rc = m_expands_window2rtsp_config[cam_id];
-
-                        qDebug() << "Send id: " << rc.ip << '\n';
-
-                        expanded_window->show();
-                        expanded_window->set_rstp_info(m_expands_window2rtsp_config[cam_id]);
-                    } else {
-                        qDebug() << "Error: Camera not found for id: " << cam_id;
-                    }
-                }
-            });
-
-        }
-    }
+    // for (int i = 0; i < m_stream_group->count(); ++i) {
+    //     grouping_rtsp_stream* grid 
+    //         = qobject_cast<grouping_rtsp_stream*>(m_stream_group->widget(i));
+    //     if (grid) {
+    //         connect (grid, &grouping_rtsp_stream::cam_expand_req, this, [this](int cam_id){
+    //             qDebug() << "Requested expand camera id: " << cam_id;
+    //             
+    //             if (m_expanded_windows.contains(cam_id)) {
+    //                 m_expanded_windows[cam_id]->activateWindow();
+    //                 m_expanded_windows[cam_id]->raise();
+    //                 return;
+    //             }
+    //
+    //             camera_wrapper* cam = nullptr;
+    //             grouping_rtsp_stream* current_grid 
+    //                 = qobject_cast<grouping_rtsp_stream*>(m_stream_group->currentWidget());
+    //
+    //             if (current_grid) {
+    //                 cam = current_grid->get_cam_by_id(cam_id);
+    //                 if (cam) {
+    //                     expanded_camera_window* expanded_window = new expanded_camera_window(cam);
+    //                     //expanded_window->show();
+    //                     expanded_window->setAttribute(Qt::WA_DeleteOnClose, true);
+    //                     m_expanded_windows[cam_id] = expanded_window;
+    //                      
+    //
+    //                     connect( expanded_window // -> cropped moving
+    //                            , &QObject::destroyed
+    //                            , this, [this, cam_id](){m_expanded_windows.remove(cam_id); });
+    //                     
+    //                     
+    //                     connect ( expanded_window
+    //                             , &expanded_camera_window::keywords_changed
+    //                             , this, [this, cam_id](const QString& keywords) {
+    //                                 m_expanded_window2_keywords[cam_id] = keywords;   
+    //                                 qDebug() << "Received keywords: " << m_expanded_window2_keywords;
+    //                             });
+    //
+    //                     connect( cam
+    //                            , &camera_wrapper::img_cropped
+    //                            , expanded_window, [expanded_window](QVector<cropped_image>& croppeds) { 
+    //                                 expanded_window->set_cropped_image(croppeds[0].image);  
+    //                            }, Qt::DirectConnection);
+    //
+    //                     connect( cam            //  timeout cropped for inference
+    //                            , &camera_wrapper::img_cropped4inf
+    //                            , expanded_window, [this, expanded_window, cam_id](QVector<cropped_image>& croppeds) {
+    //                                 if (!croppeds.isEmpty()){
+    //                                     expanded_window->set_cropped_image(m_expanded_window2_inf_cropped[cam_id]);
+    //                                     expanded_window->set_inf_result(m_expanded_window2_inf_res[cam_id]);
+    //                                 }
+    //                            }, Qt::DirectConnection);
+    //
+    //
+    //                     rtsp_config rc = m_expands_window2rtsp_config[cam_id];
+    //
+    //                     qDebug() << "Send id: " << rc.ip << '\n';
+    //
+    //                     expanded_window->show();
+    //                     expanded_window->set_rstp_info(m_expands_window2rtsp_config[cam_id]);
+    //                 } else {
+    //                     qDebug() << "Error: Camera not found for id: " << cam_id;
+    //                 }
+    //             }
+    //         });
+    //
+    //     }
+    // }
     
     
 

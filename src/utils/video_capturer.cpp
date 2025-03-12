@@ -149,12 +149,12 @@ void video_capturer::run() {
                        , 0, frame(bg_rect)
                        ) ;
 
-        cv::putText(  frame
-                    , cam_id_text, cv::Point(text_x, text_y)
-                    , font_face, font_scale
-                    , text_color, thickness
-                    ) ;
-
+        // cv::putText(  frame
+        //             , cam_id_text, cv::Point(text_x, text_y)
+        //             , font_face, font_scale
+        //             , text_color, thickness
+        //             ) ;
+        //
         QImage cap_frame = QImage ( frame.data
                                   , frame.cols
                                   , frame.rows

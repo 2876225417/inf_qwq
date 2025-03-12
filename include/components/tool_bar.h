@@ -7,7 +7,7 @@
 #include <windows/stream_settings_window.h>
 #include <windows/db_config_window.h>
 #include <windows/keywords_edit_window.h>
-
+#include <windows/warning_records_window.h>
 
 class tool_bar: public QToolBar{ 
     Q_OBJECT
@@ -27,4 +27,5 @@ private:
     stream_settings_window* m_stream_settings_window = nullptr;
     db_config_window* m_db_config_window = nullptr;
     keywords_edit_window* m_keywords_edit_window = nullptr;
+    warning_records_window* m_record_warnings_window = nullptr;
 };

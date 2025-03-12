@@ -107,6 +107,8 @@ void expanded_camera_window::create_left_panel() {
     
     m_camera->set_rtsp_stream(m_org_camera->get_rtsp_url());
     
+    m_camera->hide_draw_overlay();
+
     m_left_layout->addWidget(m_camera);    
     m_left_widget->setLayout(m_left_layout);
     m_content_splitter->addWidget(m_left_widget);
