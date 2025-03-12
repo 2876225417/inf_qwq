@@ -57,7 +57,9 @@ public:
     void set_cropped_image(const QImage& image);
     void set_rstp_info(const rtsp_config& rstp_cfg);
     
-    void inline set_inf_result(const QString& inf_res) { }
+    void inline set_inf_result(const QString& inf_res) { 
+        m_inf_result->setText(highlight_text(inf_res));
+    }
 
     void inline 
     set_keywords(const QString& keywords) {
@@ -66,12 +68,12 @@ public:
         m_keywords.removeDuplicates();
 
         m_keywords_label->setText(format_keywords_display());
-        //update_highlight();
+        update_highlight();
     }
-    
-    void keywords_changed(const QString& keywords);
-    
     QString parse_rtsp_protocal_type();
+
+signals: 
+    void keywords_changed(const QString& keywords); 
 private:
     QVBoxLayout* m_expanded_camera_window_layout;
     QHBoxLayout* m_content_layout;

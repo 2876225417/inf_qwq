@@ -32,6 +32,7 @@ if(ENABLE_GPU)
         cudnn
         nvinfer
         nvonnxparser
+        cudart
     )
 endif()
 
@@ -42,7 +43,7 @@ target_link_libraries(utils
     Qt6::Core
     Qt6::Widgets
     Qt6::Gui
-    cudart
+    Qt6::Sql
 )
 
 if(OpenMP_CXX_FOUND)

@@ -6,6 +6,7 @@
 #include "opencv2/core.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgcodecs.hpp"
+#include "utils/chars_ort_inferer.h"
 #include "utils/ort_inf.h"
 #include "utils/ort_inf.hpp"
 #include "windows/rtsp_config_window.h"
@@ -142,6 +143,9 @@ mainwindow::mainwindow(QWidget* parent)
     addToolBar(Qt::TopToolBarArea, m_tool_bar);
     m_status_bar = new status_bar();
     setStatusBar(m_status_bar);
+    
+    m_chars_ort_inferer = new chars_ort_inferer();
+
     QSplitter* splitter = new QSplitter(Qt::Horizontal);
     splitter->setHandleWidth(1);
     splitter->setStyleSheet("QSplitter::handle { background: #404040; }");
@@ -182,17 +186,19 @@ mainwindow::mainwindow(QWidget* parent)
                                     int inf_cam_id = cam->get_cam_id();
                                     cv::Mat cropped = qimage2mat(croppeds[0].image);
                                     m_expanded_window2_inf_cropped[inf_cam_id] = croppeds[0].image;
-                                    std::vector<cv::Mat> det_cropped = m_chars_det_inferer->run_inf(cropped);
-                                    QString inf_result_set;
-                                    for (auto& rec_cropped: det_cropped) 
-                                        inf_result_set += m_chars_rec_inferer->run_inf(rec_cropped) + '\t';
-                                
-                                    m_expanded_window2_inf_res[inf_cam_id] = inf_result_set;
-                                    qDebug() << "inf result: " << m_expanded_window2_inf_res[inf_cam_id];
+                                    m_chars_ort_inferer->run_inf(inf_cam_id, cropped); 
                                 }
                              });
-                    
-                    cam_nums++;
+
+                    connect ( cam
+                            , &camera_wrapper::inf_result
+                            , this, [this, cam](const QString& inf_res) {
+                                int inf_cam_id = cam->get_cam_id();
+                                m_expanded_window2_inf_res[inf_cam_id] = inf_res;
+                                qDebug() << "Inf result: " << m_expanded_window2_inf_res;
+                            });       
+
+                    emit conn_cnt_changed(cam_nums++);
                 }
                 // update sidebar
                 if (m_sidebar) {
@@ -212,8 +218,7 @@ mainwindow::mainwindow(QWidget* parent)
                         , this, [this](int group_index) {
                             if (group_index >= 0 && group_index < m_stream_group->count()) 
                                 m_stream_group->setCurrentIndex(group_index);
-                        });
-                
+                        });                
             });
     
 
@@ -292,6 +297,15 @@ mainwindow::mainwindow(QWidget* parent)
                         connect( expanded_window // -> cropped moving
                                , &QObject::destroyed
                                , this, [this, cam_id](){m_expanded_windows.remove(cam_id); });
+                        
+                        
+                        connect ( expanded_window
+                                , &expanded_camera_window::keywords_changed
+                                , this, [this, cam_id](const QString& keywords) {
+                                    m_expanded_window2_keywords[cam_id] = keywords;   
+                                    qDebug() << "Received keywords: " << m_expanded_window2_keywords;
+                                });
+
                         connect( cam
                                , &camera_wrapper::img_cropped
                                , expanded_window, [expanded_window](QVector<cropped_image>& croppeds) { 
@@ -300,9 +314,8 @@ mainwindow::mainwindow(QWidget* parent)
 
                         connect( cam            //  timeout cropped for inference
                                , &camera_wrapper::img_cropped4inf
-                               , expanded_window, [this, expanded_window, cam](QVector<cropped_image>& croppeds) {
+                               , expanded_window, [this, expanded_window, cam_id](QVector<cropped_image>& croppeds) {
                                     if (!croppeds.isEmpty()){
-                                        int cam_id = cam->get_cam_id();
                                         expanded_window->set_cropped_image(m_expanded_window2_inf_cropped[cam_id]);
                                         expanded_window->set_inf_result(m_expanded_window2_inf_res[cam_id]);
                                     }
@@ -334,7 +347,7 @@ mainwindow::mainwindow(QWidget* parent)
                 }
             });
 
-
+    
     splitter->addWidget(m_sidebar);
     splitter->addWidget(m_stream_group);
     

@@ -10,6 +10,7 @@
 #include <opencv2/opencv.hpp>
 #include <onnxruntime_cxx_api.h>
 #include <QDebug>
+#include <qobject.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -658,16 +659,6 @@ public:
     void set_char_dict(const std::string& char_dict_path) { }
 
 };
-
-
-
-// class ort_inferer {
-// private:
-//     std::unique_ptr<det_inferer> m_chars_det_inferer;
-//     std::unique_ptr<rec_inferer> m_chars_rec_inferer;
-// };
-
-
 
 
 #endif // ORT_INF_HPP

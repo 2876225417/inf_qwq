@@ -30,6 +30,8 @@ public:
         QWidget::resize(size);
         update();
     }
+    
+    bool start_crop_image4inf();
 
 signals:
     void selected(QVector<rect_data>& rects);
@@ -43,6 +45,8 @@ private:
     void paintEvent(QPaintEvent* e) override;
     bool eventFilter(QObject* obj, QEvent* e) override;
     bool event(QEvent* e) override;
+    
+    
 
 public:
     enum resize_handle {

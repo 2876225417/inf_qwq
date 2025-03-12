@@ -3,6 +3,7 @@
 #include "components/draw_overlay.h"
 #include "utils/video_capturer.h"
 #include <components/camera_wrapper.h>
+#include <memory>
 #include <qimage.h>
 #include <qnamespace.h>
 #include <qpixmap.h>
@@ -26,6 +27,9 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
     m_video_stream->setStyleSheet("QLabel { background: #1A1A1A; }"); 
     m_draw_overlay->setParent(m_video_stream); 
     
+
+
+
     // connect(m_video_stream, &QLabel::resize, [=]{
     //     m_draw_overlay->resize(m_video_stream->size());
     // }); // realtime redraw
@@ -37,11 +41,8 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
                 emit cam_expand_req(cam_id); 
             });
 
-
     m_camera_layout->addWidget(m_video_stream);
     
-    
-
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setLayout(m_camera_layout);
 
@@ -64,11 +65,17 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
                 emit img_cropped(m_cropped_images);
             });
 
-    connect (m_draw_overlay, &draw_overlay::timer_timeout_update, [this](QVector<rect_data>& rects) {
-                qDebug() << "Frame updated";
-                rect2image(rects);
-                emit img_cropped4inf(m_cropped_images);
+    connect ( m_draw_overlay
+            , &draw_overlay::timer_timeout_update
+            , [this](QVector<rect_data>& rects) {  
+                if (!rects.empty()) {
+                    qDebug() << "Frame updated";
+                    rect2image(rects);
+                    emit img_cropped4inf(m_cropped_images); 
+                }
             });
+
+
 
     // camera stream  
     connect( m_video_capturer 
@@ -162,3 +169,14 @@ bool camera_wrapper::eventFilter(QObject* watched, QEvent* event) {
 
 camera_wrapper::~camera_wrapper() { }
 
+
+cv::Mat camera_wrapper::qimage2mat(QImage& qimage) {
+    QImage swapped = qimage.convertToFormat(QImage::Format_RGB888)
+                    .rgbSwapped();
+    cv::Mat mat = cv::Mat(swapped.height(), swapped.width(), 
+                        CV_8UC3, 
+                        const_cast<uchar*>(swapped.constBits()), 
+                        static_cast<size_t>(swapped.bytesPerLine()))
+                .clone();  
+    return mat;
+}

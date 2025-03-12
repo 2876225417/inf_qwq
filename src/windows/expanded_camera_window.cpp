@@ -11,6 +11,7 @@
 #include <qpushbutton.h>
 #include <qspinbox.h>
 #include <qsplitter.h>
+#include <qtextbrowser.h>
 #include <qtextedit.h>
 #include <qwidget.h>
 #include <windows/expanded_camera_window.h>
@@ -156,9 +157,11 @@ void expanded_camera_window::create_right_top_panel() {
     m_text_widget = new QWidget(m_right_top_splitter);
     m_text_layout = new QVBoxLayout(m_text_widget);
    
-    m_text_display = new QTextEdit(m_text_widget);
-    m_text_display->setReadOnly(true);
-    m_text_display->setText("Inference result");
+    // m_text_display = new QTextEdit(m_text_widget);
+    // m_text_display->setReadOnly(true);
+    // m_text_display->setText("Inference result");
+    m_inf_result = new QTextBrowser();
+    
 
     // relative keywords
     m_keywords_wrapper = new QHBoxLayout();
@@ -169,7 +172,8 @@ void expanded_camera_window::create_right_top_panel() {
     m_keywords_layout->setLayout(m_keywords_wrapper);
 
     m_text_layout->addWidget(m_keywords_layout);
-    m_text_layout->addWidget(m_text_display);
+    //m_text_layout->addWidget(m_text_display);
+    m_text_layout->addWidget(m_inf_result);
     m_text_widget->setLayout(m_text_layout);
     
     m_right_top_splitter->addWidget(m_image_widget);
@@ -222,11 +226,12 @@ void expanded_camera_window::create_right_bottom_panel() {
 }
 
 void expanded_camera_window::connect_signals() {    
-    connect ( m_edit_keywords
+    connect ( m_edit_keywords   // -> update keywords
             , &QLineEdit::textChanged
             , this, [this](){
                 QString keywords = m_edit_keywords->text();
                 qDebug() << "Keywords edit: " << keywords;
-                set_keywords(keywords); 
+                set_keywords(keywords);
+                emit keywords_changed(keywords);
             });
 }

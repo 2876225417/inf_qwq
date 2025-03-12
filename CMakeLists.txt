@@ -51,7 +51,7 @@ if(ENABLE_GPU)
     set(CUDA_INCLUDE_DIR "/opt/cuda/include")
     find_package(CUDNN REQUIRED)
     find_package(TensorRT REQUIRED)
-    find_package(CUDA REQUIRED)
+    find_package(CUDAToolkit REQUIRED)
 endif()
 
 find_package(hkvision REQUIRED)
@@ -65,6 +65,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Multimedia
     MultimediaWidgets
     OpenGLWidgets
+    Sql
 )
 
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/grouping_sidebar.h"
+#include "utils/chars_ort_inferer.h"
 #include "windows/rtsp_config_window.h"
 #include <GL/gl.h>
 #include <QMainWindow>
@@ -50,7 +51,7 @@ public:
     ~mainwindow();
 signals:
     void keywords_changed(const QString& keywords);
-
+    void conn_cnt_changed(int cnt); 
 private:
     // mainwindow layout
     QWidget*                m_mainwindow_layout;
@@ -122,11 +123,14 @@ private:
     QStackedWidget* m_stream_group;  
 
     static int cam_nums;
-    
+   
+    chars_ort_inferer* m_chars_ort_inferer;
+
     QMap<int, expanded_camera_window*> m_expanded_windows;
     QMap<int, rtsp_config> m_expands_window2rtsp_config; 
     QMap<int, QString> m_expanded_window2_inf_res;
     QMap<int, QImage> m_expanded_window2_inf_cropped;
+    QMap<int, QString> m_expanded_window2_keywords;
 };
 
 inline int mainwindow::cam_nums = 0;

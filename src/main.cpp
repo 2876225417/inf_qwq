@@ -12,6 +12,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
 #include <qapplication.h>
+#include <qsqldatabase.h>
 #include <windows/mainwindow.h>
 #include <utils/ort_inf.h>
 
@@ -22,7 +23,31 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QDebug>
+
+bool create_connection() {
+    QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
+    db.setHostName("localhost");
+    db.setDatabaseName("det_qwq");
+    db.setUserName("postgres");
+    db.setPassword("20041025");
+    db.setPort(5432);
+
+    if (!db.open()) {
+        return false;
+    }
+
+    qDebug() << "Database connection established!";
+    return true;
+}
+
+
+
 int main(int argc, char* argv[]) {
+    
+
     // test model conversion
     //trt_inf::TRT_det_inferer* _trt_inferer = new trt_inf::TRT_det_inferer(); 
     
@@ -36,6 +61,10 @@ int main(int argc, char* argv[]) {
     //
     // for (auto& cropped: croppeds) rec->run_inf(cropped);
     QApplication app(argc, argv);
+    
+    //if (!create_connection()) {
+        
+    //}
 
     mainwindow main_mainwindow;
     main_mainwindow.show();

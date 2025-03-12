@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/ort_inf.h"
 #include <QWidget>
 #include <QLabel>
 #include <QHBoxLayout>
@@ -10,6 +11,8 @@
 #include <utils/video_capturer.h>
 
 #include <components/draw_overlay.h>
+
+#include <utils/chars_ort_inferer.h>
 
 struct cropped_image{
     int number;
@@ -33,6 +36,8 @@ signals:
     void img_cropped4inf(QVector<cropped_image>&);
     // send cameram expanding request
     void cam_expand_req(int cam_id);
+    // send inf result
+    void inf_result(const QString& inf_result);
     
 protected:
     bool eventFilter(QObject*, QEvent*) override;
@@ -40,6 +45,9 @@ private slots:
     QRect rect2coords(const QRect&);
 private:
     void rect2image(QVector<rect_data>&);
+    void start_inf();
+    cv::Mat qimage2mat(QImage& qimage);
+
 
     QHBoxLayout* m_camera_layout;
     QLabel* m_video_stream;
@@ -53,4 +61,6 @@ private:
     QTimer* m_timer;
     
     int m_cam_id;
+
+    //chars_ort_inferer* m_chars_inferer;
 };
