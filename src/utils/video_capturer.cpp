@@ -2,6 +2,7 @@
 #include "components/actions_wrapper.h"
 #include <format>
 #include <opencv2/core.hpp>
+#include <opencv2/core/cuda.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
 #include <qmutex.h>
@@ -87,7 +88,21 @@ bool video_capturer::open_camera(int index) {
 bool video_capturer::open_rtsp_stream(const QString& url) {
     if (m_capturer.isOpened()) { m_capturer.release(); }
 
+    /* if gpu
+    m_capturer = cv::VideoCapture();
+    std::string rtsp_url = url.toStdString();
+
+    std::string pipeline = "ffmpeg -hwaccel cuda -rtsp_transport tcp -i " + rtsp_url;
+
+    bool success = m_capturer.open(rtsp_url, cv::CAP_FFMPEG);
+    
+    if (success) {
+        m_capturer.set(cv::CAP_PROP_HW_ACCELERATION, cv::VIDEO_ACCELERATION_ANY);
+    }
+    */
     bool success = m_capturer.open(url.toStdString());
+ 
+   
     return success;
 }
 
@@ -114,7 +129,20 @@ void video_capturer::run() {
             QMutexLocker locker(&m_scale_mutex);
             scale = m_scale_factor;
         }
-            
+        
+        if (!m_use_cuda) {
+            m_gpu_frame.upload(frame);
+            cv::cuda::GpuMat resized_gpu_frame;
+            cv::cuda::resize(m_gpu_frame, resized_gpu_frame, cv::Size(), scale, scale, cv::INTER_LINEAR);
+            cv::Mat resized_frame;
+            resized_gpu_frame.download(resized_frame);
+
+            QImage cap_frame = QImage(resized_frame.data, resized_frame.cols, resized_frame.rows, resized_frame.step, QImage::Format_RGB888);
+
+            cap_frame = cap_frame.rgbSwapped();
+            emit frame_captured(cap_frame);
+        } else {
+
         cv::resize(frame, frame, cv::Size(), scale, scale, cv::INTER_LINEAR);
     
         std::string cam_id_text = "Camera ID: " + std::to_string(m_cam_id + 1);
@@ -163,6 +191,7 @@ void video_capturer::run() {
                                   ) ;
         cap_frame = cap_frame.rgbSwapped();
         emit frame_captured(cap_frame);
+        }
     }
     m_capturer.release();
 }

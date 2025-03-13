@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QGroupBox>
 #include <QSettings>
+#include <qboxlayout.h>
 
 enum class rtsp_proto_type {
     HIKVISION,
@@ -19,6 +20,7 @@ enum class rtsp_proto_type {
 
 struct rtsp_config {
     rtsp_proto_type rpt = rtsp_proto_type::HIKVISION;
+    QString rtsp_name;
     QString username;
     QString password;
     QString ip;
@@ -83,14 +85,22 @@ private:
 
     // rtsp_config_layout
     QVBoxLayout* m_main_layout;
-    
+   
+    // RTSP Protocal Type & RTSP Stream Name
+    QHBoxLayout* m_rtsp_protocal__name_layout;
+
     // RTSP protocal type
     QHBoxLayout* m_rtsp_proto_layout;
     QLabel* m_rtsp_proto_label;
     QComboBox* m_rtsp_proto_combo;
-    
+   
+    QHBoxLayout* m_rtsp_stream_name_layout;
+    QLabel* m_rtsp_stream_name_label;
+    QLineEdit* m_rtsp_stream_name_edit;
+
+
     // Username & Password
-    QHBoxLayout* m_userPass_layout;
+    QHBoxLayout* m_user_pass_layout;
     
     // Username
     QHBoxLayout* m_username_layout;

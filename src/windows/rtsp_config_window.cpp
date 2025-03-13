@@ -4,6 +4,9 @@
 #include <QGroupBox>
 #include <QDebug>
 #include <QMessageBox>
+#include <qboxlayout.h>
+#include <qendian.h>
+#include <qlineedit.h>
 
 rtsp_config_window::rtsp_config_window(QWidget* parent)
     : QWidget(parent, Qt::Window)
@@ -26,6 +29,9 @@ void rtsp_config_window::setup_UI() {
     m_main_layout->setSpacing(10);
     m_main_layout->setContentsMargins(10, 10, 10, 10);
    
+    // RTSP Protocal Type & RTSP Stream Name
+    m_rtsp_protocal__name_layout = new QHBoxLayout();
+
     // RTSP Protocal Type
     m_rtsp_proto_layout = new QHBoxLayout();
     m_rtsp_proto_label = new QLabel(tr("Protocol:"));
@@ -34,9 +40,22 @@ void rtsp_config_window::setup_UI() {
     m_rtsp_proto_combo->addItem("ALHUA", static_cast<int>(rtsp_proto_type::ALHUA));
     m_rtsp_proto_layout->addWidget(m_rtsp_proto_label);
     m_rtsp_proto_layout->addWidget(m_rtsp_proto_combo);
+     
+    // RTSP stream name
+    m_rtsp_stream_name_layout = new QHBoxLayout();
+    m_rtsp_stream_name_label = new QLabel(tr("name"));
+    m_rtsp_stream_name_edit = new QLineEdit();
+    m_rtsp_stream_name_edit->setPlaceholderText(tr("Stream Name"));
+    m_rtsp_stream_name_layout->addWidget(m_rtsp_stream_name_label);
+    m_rtsp_stream_name_layout->addWidget(m_rtsp_stream_name_edit);
     
+
+    // devide average
+    m_rtsp_protocal__name_layout->addLayout(m_rtsp_proto_layout);
+    m_rtsp_protocal__name_layout->addLayout(m_rtsp_stream_name_layout);
+
     // Username & Password
-    m_userPass_layout = new QHBoxLayout();
+    m_user_pass_layout = new QHBoxLayout();
     
     // Username
     m_username_layout = new QHBoxLayout();
@@ -55,8 +74,8 @@ void rtsp_config_window::setup_UI() {
     m_password_layout->addWidget(m_password_label);
     m_password_layout->addWidget(m_password_edit);
     
-    m_userPass_layout->addLayout(m_username_layout);
-    m_userPass_layout->addLayout(m_password_layout);
+    m_user_pass_layout->addLayout(m_username_layout);
+    m_user_pass_layout->addLayout(m_password_layout);
     
     // IP & Port
     m_ip_port_layout = new QHBoxLayout();
@@ -134,8 +153,8 @@ void rtsp_config_window::setup_UI() {
     
     QGroupBox* rtspGroup = new QGroupBox(tr("RTSP Connection Settings"));
     QVBoxLayout* groupLayout = new QVBoxLayout();
-    groupLayout->addLayout(m_rtsp_proto_layout);
-    groupLayout->addLayout(m_userPass_layout);
+    groupLayout->addLayout(m_rtsp_protocal__name_layout);
+    groupLayout->addLayout(m_user_pass_layout);
     groupLayout->addLayout(m_ip_port_layout);
     groupLayout->addLayout(m_channel_subtype_layout);
     groupLayout->addLayout(m_rtsp_url_layout);
@@ -157,6 +176,14 @@ void rtsp_config_window::create_connections() {
                 m_rtsp_config.rpt = static_cast<rtsp_proto_type>(
                     m_rtsp_proto_combo->itemData(index).toInt());
                 qDebug() << "Protocol: " << (m_rtsp_config.rpt == rtsp_proto_type::HIKVISION ? "HIKVISION" : "ALHUA");
+                update_rtsp_url();
+            });
+
+    // RTSP Stream Name
+    connect ( m_rtsp_stream_name_edit
+            , &QLineEdit::textChanged
+            , this, [this](const QString& stream_name) {
+                m_rtsp_config.rtsp_name = stream_name;
                 update_rtsp_url();
             });
     

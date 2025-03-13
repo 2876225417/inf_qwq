@@ -46,7 +46,6 @@ bool db_manager::connect( const QString& host
     
     m_connected = true;
     
-    // 确保必要的表存在
     //bool tablesCreated = ensureTablesExist();
     bool tablesCreated = true;
     if (tablesCreated) {
@@ -70,6 +69,7 @@ void db_manager::disconnect() {
 }
 
 bool db_manager::is_connected() const {
+    
     return m_connected && m_db.isOpen();
 }
 
@@ -271,7 +271,6 @@ bool db_manager::add_recognition_result(int camera_id, const QVector<QString>& t
         return false;
     }
     
-    // 将文本内容转换为PostgreSQL数组格式
     QString textArray = "{";
     for (int i = 0; i < text_content.size(); ++i) {
         if (i > 0) textArray += ",";
@@ -383,6 +382,116 @@ QVector<QMap<QString, QVariant>> db_manager::get_inf_results(int cam_id, int lim
         "LIMIT :limit",
         params
     );
+    
+    while (query.next()) {
+        QMap<QString, QVariant> row;
+        for (int i = 0; i < query.record().count(); i++) {
+            row[query.record().fieldName(i)] = query.value(i);
+        }
+        result.append(row);
+    }
+    
+    return result;
+}
+
+bool db_manager::create_warning_records_table() {
+    return execute_non_query(
+        "CREATE TABLE IF NOT EXISTS warning_records ("
+        "id SERIAL PRIMARY KEY, "
+        "cam_id INTEGER NOT NULL, "
+        "cam_name VARCHAR(100), "
+        "inf_res TEXT NOT NULL, "
+        "status BOOLEAN NOT NULL, "
+        "keywords TEXT, "
+        "rtsp_name VARCHAR(100), "
+        "rtsp_url TEXT NOT NULL, "
+        "record_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        ")"
+    );
+}
+
+bool db_manager::add_warning_record( int cam_id
+                                   , const QString& cam_name
+                                   , const QString& inf_res
+                                   , bool status
+                                   , const QString& keywords
+                                   , const QString& rtsp_name
+                                   , const QString& rtsp_url) 
+                                   {
+    if (!is_connected()) {
+        emit database_error("Database not connected");
+        return false;
+    }
+
+    QMap<QString, QVariant> params;
+    params[":cam_id"] = cam_id;
+    params[":cam_name"] = cam_name;
+    params[":inf_res"] = inf_res;
+    params[":status"] = status;
+    params[":keywords"] = keywords;
+    params[":rtsp_name"] = rtsp_name;
+    params[":rtsp_url"] = rtsp_url;
+
+    bool success = execute_non_query(
+        "INSERT INTO warning_records (cam_id, cam_name, inf_res, status, keywords, rtsp_name, rtsp_url) "
+        "VALUES (:cam_id, :cam_name, :inf_res, :status, :keywords, :rtsp_name, :rtsp_url)",
+        params
+    );
+
+    if (!success) emit database_error("Failed to add warning record");
+    else operation_completed("Add Warning Record", true);
+    
+    return success;
+}
+
+
+QVector<QMap<QString, QVariant>> db_manager::get_warning_records( int cam_id
+                                                                , bool onlyAbnormal
+                                                                , const QDateTime& startTime
+                                                                , const QDateTime& endTime
+                                                                , int limit
+                                                                , int offset
+                                                                , const QString& keyword
+                                                                ) {
+    QVector<QMap<QString, QVariant>> result;
+    
+    if (!is_connected()) {
+        emit database_error("Database not connected");
+        return result;
+    }
+    
+    QString queryStr = "SELECT * FROM warning_records WHERE 1=1";
+    QMap<QString, QVariant> params;
+    
+    if (cam_id >= 0) {
+        queryStr += " AND cam_id = :cam_id";
+        params[":cam_id"] = cam_id;
+    }
+    
+    if (onlyAbnormal) {
+        queryStr += " AND status = false";
+    }
+    
+    if (startTime.isValid()) {
+        queryStr += " AND record_time >= :start_time";
+        params[":start_time"] = startTime;
+    }
+    
+    if (endTime.isValid()) {
+        queryStr += " AND record_time <= :end_time";
+        params[":end_time"] = endTime;
+    }
+    
+    if (!keyword.isEmpty()) {
+        queryStr += " AND (keywords LIKE :keyword OR inf_res LIKE :keyword)";
+        params[":keyword"] = "%" + keyword + "%";
+    }
+    
+    queryStr += " ORDER BY record_time DESC LIMIT :limit OFFSET :offset";
+    params[":limit"] = limit;
+    params[":offset"] = offset;
+    
+    QSqlQuery query = execute_query(queryStr, params);
     
     while (query.next()) {
         QMap<QString, QVariant> row;

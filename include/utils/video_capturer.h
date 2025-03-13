@@ -1,5 +1,6 @@
 #pragma once
 
+#include "opencv2/core/cuda.hpp"
 #include <QPixmap>
 #include <QTimer>
 #include <QThread>
@@ -8,6 +9,13 @@
 #include <atomic>
 #include <QString>
 #include <QMutex>
+
+#include <opencv2/cudawarping.hpp>
+
+#ifdef ENABLE_CUDA
+#include <opencv2/cudawarping.hpp>
+#endif
+
 class video_capturer: public QThread {
     Q_OBJECT
 public:
@@ -28,6 +36,9 @@ signals:
     void frame_captured(QImage frame);
     void camera_error(const QString& error_msg);
 private:
+    cv::cuda::GpuMat m_gpu_frame;
+    bool m_use_cuda = true;
+
     int m_cam_id;
     QString m_rtsp_url;
     cv::VideoCapture m_capturer;

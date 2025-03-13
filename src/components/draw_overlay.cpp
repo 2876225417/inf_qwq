@@ -1,5 +1,6 @@
 
 #include "HCNetSDK.h"
+#include "utils/db_manager_mini.h"
 #include <components/draw_overlay.h>
 #include <QTimer>
 #include <qcombobox.h>
@@ -31,12 +32,49 @@ void draw_overlay::set_status() {
     update();
 }
 
+void draw_overlay::set_cam_name(const QString& cam_name) {
+    m_cam_name = cam_name;
+    update();
+}
+
 void draw_overlay::hint_warning() {
     if (!m_keywords.isEmpty()) {
         m_show_warning = true;
         update();
         m_warning_timer->start(5000);
     }
+}
+
+void draw_overlay::record_warning2db() {
+
+    // but need to record all records
+    // if (m_keywords.isEmpty()) return;
+    
+    if (!db_manager::instance().is_connected()) {
+        qWarning() << "Database not connected, warning record not saved";
+        return;
+    }
+    
+    // data postprocess
+    int cam_id_2db            = m_cam_id;
+    QString rtsp_name_2db     = m_rtsp_config.rtsp_name;
+    QString inference_res_2db = m_inference_result.isEmpty() ? "Detected nothing" : m_inference_result;
+    bool status_2db           = m_is_normal_status;
+    QString keywords_2db      = m_keywords.isEmpty() ? " " /* or not set keywords */ : m_keywords;
+    QString rtsp_url_2db      = m_rtsp_config.config2url();
+    
+
+    bool success 
+        = db_manager::instance().add_warning_record( cam_id_2db
+                                                   , rtsp_name_2db
+                                                   , inference_res_2db
+                                                   , status_2db
+                                                   , keywords_2db
+                                                   , rtsp_name_2db
+                                                   , rtsp_url_2db
+                                                   ) ;
+    if (success) qDebug() << "Warning record saved to database for camera " << m_cam_id;
+    else qDebug() << "Failed to save warning record to database";
 }
 
 void draw_overlay::draw_warning(QPainter& painter) {
@@ -100,6 +138,35 @@ void draw_overlay::draw_camera_id(QPainter& painter) {
                           , Qt::AlignLeft | Qt::AlignTop, id_text);
     painter.restore();
 }
+
+void draw_overlay::draw_camera_name(QPainter& painter) {
+    painter.save();
+
+    QFont name_font("Arial", 10, QFont::Bold);
+    painter.setFont(name_font);
+
+    QString name_text = QString("Camera Name: %1").arg(m_cam_name);
+
+    QFontMetrics fm(name_font);
+    QSize text_size = fm.size(Qt::TextSingleLine, name_text);
+
+    int margin = 10;
+    int x = width() - text_size.width() - margin;
+    int y = height() - text_size.height() - margin;
+   
+    QRect bg_rect(x - 5, y - 5, text_size.width() + 10, text_size.height() + 10);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(0, 0, 0, 0));
+    painter.drawRoundedRect(bg_rect, 5, 5);
+
+    painter.setPen(Qt::white);
+    painter.drawText(QRect( x, y - 50
+                          , text_size.width(), text_size.height())
+                          , Qt::AlignLeft | Qt::AlignTop, name_text);
+
+    painter.restore();
+}
+
 
 
 void draw_overlay::draw_status_indicator(QPainter& painter) {
@@ -481,8 +548,9 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
 
     draw_status_indicator(painter);
     draw_inference_result(painter);
-
+    
     draw_camera_id(painter);
+    draw_camera_name(painter);
     draw_warning(painter);
 }
 

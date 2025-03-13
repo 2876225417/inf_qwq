@@ -96,9 +96,12 @@ mainwindow::mainwindow(QWidget* parent)
                     = qobject_cast<grouping_rtsp_stream*>(m_stream_group->currentWidget());
                 
                 auto cam = current_grid->get_cam_by_id(cam_nums);
+                cam->get_draw_overlay()->set_rtsp_config(rtsp_cfg);
+
                 bool success = cam->set_rtsp_stream(rtsp_url);
                 //bool success = current_grid->get_cam_by_id(cam_nums)->set_rtsp_stream(rtsp_url); 
                 cam->get_draw_overlay()->set_cam_id(cam->get_cam_id() + 1);
+                cam->get_draw_overlay()->set_cam_name(rtsp_cfg.rtsp_name);
                 if (success) {
                     m_expands_window2rtsp_config[cam_nums] = rtsp_cfg;
                     connect ( cam
@@ -169,8 +172,8 @@ mainwindow::mainwindow(QWidget* parent)
                                 cam->get_draw_overlay()->update_keywords_no_args();
                                 cam->get_draw_overlay()->set_status();
                                 cam->get_draw_overlay()->hint_warning();
+                                cam->get_draw_overlay()->record_warning2db();
                                 if (db_manager::instance().is_connected()) {
-
                                         db_manager::instance().add_inf_result(cam_id, "keywords", result_set);
                                 }
                             });

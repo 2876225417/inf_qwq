@@ -5,6 +5,7 @@
 #define DRAW_OVERLAY_H
 
 
+#include "windows/rtsp_config_window.h"
 #include <QWidget>
 #include <QPainter>
 #include <QMouseEvent>
@@ -37,12 +38,14 @@ public:
     void set_inference_result(const QString& result);
     void set_keywords(const QVector<QString>& keywords);
     void set_status();
-    
+    void set_cam_name(const QString& cam_name);
+
     void update_keywords_no_args();
     void set_cam_id(int cam_id) { m_cam_id = cam_id; }
- 
+    void set_rtsp_config(const rtsp_config& rtsp_cfg) { m_rtsp_config = rtsp_cfg; }
 
     void hint_warning();
+    void record_warning2db();
 
 signals:
     void selected(QVector<rect_data>& rects);
@@ -93,16 +96,19 @@ public:
     int m_resize_idx = -1;
     const int m_handle_size = 8;
 
-    QString m_inference_result;
-    QString m_keywords;
+
     QVector<QString> m_all_keywords;
-    bool m_is_normal_status = true;
-    
-    int cam_id;
+    QString m_inference_result; // 2db
+    QString m_keywords; // 2db
+    bool m_is_normal_status = true; // 2db
+    int cam_id; // 2db
+    rtsp_config m_rtsp_config; // 2db
+    QString m_cam_name;
 
     void draw_status_indicator(QPainter& painter);
     void draw_inference_result(QPainter& painter);
     void draw_camera_id(QPainter& painter);
+    void draw_camera_name(QPainter& painter);
 
     bool m_show_warning = false;
     QTimer* m_warning_timer = nullptr;
@@ -112,11 +118,13 @@ public:
     QRect paint_close_btn(const QRect& rect) const;
     QRect get_expand_btn_rect() const;
     void handle_rect_number_changed(int idx);
-
+    
     void check_resize_handles(const QPoint& pos);
     QRect get_resize_handle_rect(const QRect& rect, resize_handle handle) const;
     void update_rect_with_resize(const QPoint& pos);
+    
     void draw_resize_handles(QPainter& painter, const QRect& rect);
+
 };
 
 #endif

@@ -14,6 +14,8 @@
 #include <QVariant>
 
 #include <QDateTime>
+#include <qcontainerfwd.h>
+#include <qdatetime.h>
 
 class db_manager: public QObject {
     Q_OBJECT
@@ -37,13 +39,11 @@ public:
                              = QMap<QString, QVariant>()
                            );    
     
-    // 执行非查询操作（插入、更新、删除）
     bool execute_non_query( const QString& query
                           , const QMap<QString, QVariant>& params 
                             = QMap<QString, QVariant>()
                           );
     
-    // RTSP相关操作
     bool add_rtsp_config( const QString& username
                         , const QString& ip
                         , const QString& port
@@ -61,12 +61,21 @@ public:
                            , const QString& rtsp_url
                            );
 
+    bool add_warning_record( int cam_id
+                           , const QString& cam_name
+                           , const QString& inf_res
+                           , bool status
+                           , const QString& keywords
+                           , const QString& rtsp_name
+                           , const QString& rtsp_url
+                           );
+    
+
     bool delete_rtsp_config(int id);
 
     QVector<QMap<QString, QVariant>> get_all_rtsp_configs();
     QMap<QString, QVariant> get_rtsp_config_by_id(int id);
     
-    // 识别结果相关操作
     bool add_recognition_result( int camera_id
                                , const QVector<QString>& text_content
                                ) ;
@@ -85,6 +94,16 @@ public:
     get_inf_results( int cam_id
                    , int limit = 100
                    );
+
+    QVector<QMap<QString, QVariant>>
+    get_warning_records( int cam_id = -1
+                       , bool only_abnormal = false
+                       , const QDateTime& start_time = QDateTime()
+                       , const QDateTime& end_time = QDateTime()
+                       , int limit = 100
+                       , int offset = 0
+                       , const QString& keyword = QString()
+                       );
     
 signals:
     void database_error(const QString& error);
@@ -103,6 +122,7 @@ private:
     bool create_rtsp_config_table();
     bool create_recognition_results_table();
     bool create_recognition_result_table();
+    bool create_warning_records_table();
 
     QSqlDatabase m_db;
     QMutex m_mutex;
