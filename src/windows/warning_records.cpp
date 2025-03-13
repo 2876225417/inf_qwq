@@ -199,6 +199,10 @@ void warning_records_window::load_cameras() {
         return;
     }
 
+    /*** @deprecated
+     *   can not comfir the id of every camera
+     */
+
     QVector<QMap<QString, QVariant>> cameras = db_manager::instance().get_all_rtsp_configs();
 
     for (const auto& camera: cameras) {
@@ -258,9 +262,9 @@ void warning_records_window::load_data()
         m_total_records = 0;
     }
     
-    int totalPages = (m_total_records + m_page_size - 1) / m_page_size;
-    if (m_current_page > totalPages && totalPages > 0) {
-        m_current_page = totalPages;
+    int total_pages = (m_total_records + m_page_size - 1) / m_page_size;
+    if (m_current_page > total_pages && total_pages > 0) {
+        m_current_page = total_pages;
     }
     
     int offset = (m_current_page - 1) * m_page_size;
@@ -299,7 +303,7 @@ void warning_records_window::update_table() {
 
         m_records_table->setItem(i, 4, new QTableWidgetItem(record["keywords"].toString()));
         m_records_table->setItem(i, 5, new QTableWidgetItem(record["rtsp_name"].toString()));
-        QDateTime record_time = record["record_date"].toDateTime();
+        QDateTime record_time = record["record_time"].toDateTime();
         m_records_table->setItem(i, 6, new QTableWidgetItem(format_date_time(record_time)));
     }
 
@@ -311,7 +315,7 @@ void warning_records_window::update_page_info() {
     int total_pages = (m_total_records + m_page_size - 1) / m_page_size;
     if (total_pages == 0) total_pages = 1;
     
-    m_page_info_label->setText(tr("Page %1 / %2 (%3 Pages)")
+    m_page_info_label->setText(tr("Page %1 / %2 (%3 Records)")
                                .arg(m_current_page)
                                .arg(total_pages)
                                .arg(m_total_records));
@@ -405,25 +409,22 @@ void warning_records_window::export2CSV(const QString& filename)
 {
     QFile file(filename);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, tr("导出错误"), tr("无法打开文件进行写入"));
+        QMessageBox::critical(this, tr("Error occurred when exporting"), tr("Cant not open file to wirte"));
         return;
     }
     
     QTextStream out(&file);
-    // out.setCodec("UTF-8");
-    
-    // 写入BOM (Byte Order Mark)，确保Excel正确识别UTF-8
+    // BOM mark 
     out << QChar(0xFEFF);
     
-    // 写入表头
-    out << "ID,摄像头ID,摄像头名称,状态,关键词,RTSP名称,RTSP URL,推理内容,时间\n";
+   
+    out << "ID,Camera ID,Camera Name,Status,Keyword(s),RTSP Name,RTSP URL,Inference Result,Timestamp\n";
     
-    // 写入数据
     for (const auto& record : m_current_records) {
         out << record["id"].toString() << ","
             << record["cam_id"].toString() << ","
             << "\"" << record["cam_name"].toString().replace("\"", "\"\"") << "\","
-            << (record["status"].toBool() ? "正常" : "异常") << ","
+            << (record["status"].toBool() ? "Normal" : "Abnormal") << ","
             << "\"" << record["keywords"].toString().replace("\"", "\"\"") << "\","
             << "\"" << record["rtsp_name"].toString().replace("\"", "\"\"") << "\","
             << "\"" << record["rtsp_url"].toString().replace("\"", "\"\"") << "\","
@@ -433,8 +434,8 @@ void warning_records_window::export2CSV(const QString& filename)
     
     file.close();
     
-    QMessageBox::information(this, tr("导出成功"), 
-                            tr("数据已成功导出到: %1").arg(filename));
+    QMessageBox::information(this, tr("Export Successfully"), 
+                            tr("Exported file saved at: %1").arg(filename));
 }
 
 

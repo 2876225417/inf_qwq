@@ -1,6 +1,7 @@
 
 
 #include "windows/db_config_window.h"
+#include "windows/http_alarm_window.h"
 #include "windows/keywords_edit_window.h"
 #include "windows/rtsp_config_window.h"
 #include "windows/stream_settings_window.h"
@@ -111,13 +112,33 @@ tool_bar::tool_bar(QWidget* parent)
 
             });
 
+    QAction* add_http_alarm_settings = new QAction("HTTP", this);
+    addAction(add_http_alarm_settings);
+
+    connect ( add_http_alarm_settings
+            , &QAction::triggered
+            , [this]() {
+                qDebug() << "Show window!";
+                if (!m_http_alarm_window) {
+                    m_http_alarm_window = new http_alarm_window(this);
+                    connect ( m_http_alarm_window
+                            , &http_alarm_window::config_changed
+                            , this, [this](const QString& http_url, bool radiated_all) {
+                                emit send_http_url(http_url, radiated_all); 
+                            }, Qt::QueuedConnection);
+                }
+                m_http_alarm_window->show();
+                m_http_alarm_window->raise();
+                m_http_alarm_window->activateWindow();
+
+            });
+
     QAction* add_warning_records_settings = new QAction("Records", this);
     addAction(add_warning_records_settings);
 
     connect ( add_warning_records_settings
             , &QAction::triggered
             , this, [this]() {
-                qDebug() << "Show warning records window";
                 if (!m_record_warnings_window) {
                     m_record_warnings_window = new warning_records_window(this);
 
@@ -127,6 +148,9 @@ tool_bar::tool_bar(QWidget* parent)
                 m_record_warnings_window->raise();
                 m_record_warnings_window->activateWindow(); 
             });
+
+
+
     
     setMovable(false);
 }

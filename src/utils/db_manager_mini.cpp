@@ -1,6 +1,7 @@
 
 
 #include <utils/db_manager_mini.h>
+#include <QSettings>
 
 
 // db_manager.cpp
@@ -21,6 +22,25 @@ db_manager& db_manager::instance() {
     static db_manager instance;
     return instance;
 }
+
+bool db_manager::database_initialize() {
+    QSettings settings("Chun Hui", "inf_qwq");
+    QString host = settings.value("Database/Host", "localhost").toString();
+    QString db_name = settings.value("Database/Database", "").toString();
+    QString user = settings.value("Database/Username", "postgres").toString();
+    QString password = settings.value("Database/Password").toString();
+    int port = settings.value("Database/Port", 5432).toInt();
+
+    bool success =  db_manager::instance().connect(host, db_name, user, password, port);
+
+    if (success) qDebug() << "Database connection intialized successfully!";
+    else qDebug() << "Failed to initialize database connection";
+
+    return success;
+}
+
+
+
 
 bool db_manager::connect( const QString& host
                         , const QString& db_name
@@ -229,7 +249,7 @@ QVector<QMap<QString, QVariant>> db_manager::get_all_rtsp_configs() {
         emit database_error("Database not connected");
         return result;
     }
-    
+ 
     QSqlQuery query = execute_query("SELECT * FROM rtsp_config ORDER BY id");
     
     while (query.next()) {

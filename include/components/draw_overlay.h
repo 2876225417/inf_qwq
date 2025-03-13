@@ -14,6 +14,8 @@
 #include <QDebug>
 #include <qcombobox.h>
 #include <qevent.h>
+#include <qnetworkaccessmanager.h>
+#include <qnetworkreply.h>
 
 
 struct rect_data {
@@ -46,7 +48,9 @@ public:
 
     void hint_warning();
     void record_warning2db();
-
+    
+    void set_http_url(const QString& url) { m_http_url = url; }
+    void set_http_url_status(bool radiated) { m_enable_http_url = radiated; }
 signals:
     void selected(QVector<rect_data>& rects);
     void update_frame_moving(QVector<rect_data>& rects);
@@ -78,6 +82,16 @@ public:
         bottom,
         left
     };
+    
+    // enable http_url msg
+    QString m_http_url;
+    bool m_enable_http_url;
+
+    QNetworkAccessManager* m_network_mgr;
+    void send_http_alarm();
+    void handle_http_response(QNetworkReply* reply);
+    
+
 
     int m_cam_id;
     QVector<rect_data> m_rects;

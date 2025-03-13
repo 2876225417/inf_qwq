@@ -12,6 +12,7 @@
 #include <qline.h>
 #include <qlineedit.h>
 #include <qpushbutton.h>
+#include <qsettings.h>
 #include <qspinbox.h>
 #include <qwidget.h>
 #include <windows/db_config_window.h>
@@ -31,6 +32,7 @@ db_config_window::db_config_window(QWidget* parent)
     load_settings();
 }
 
+
 void db_config_window::setup_UI() {
     QFormLayout* db_config_form_layout = new QFormLayout();
 
@@ -39,7 +41,7 @@ void db_config_window::setup_UI() {
 
     m_database_edit = new QLineEdit(this);
     m_database_edit->setPlaceholderText(tr("database name"));
-
+ 
     m_username_edit = new QLineEdit(this);
     m_username_edit->setPlaceholderText(tr("database name"));
 

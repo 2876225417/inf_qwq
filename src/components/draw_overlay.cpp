@@ -5,8 +5,14 @@
 #include <QTimer>
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
+#include <qdatetime.h>
 #include <qevent.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
 #include <qnamespace.h>
+#include <qnetworkaccessmanager.h>
+#include <qnetworkreply.h>
+#include <qnetworkrequest.h>
 #include <qoverload.h>
 #include <qtimer.h>
 #include <qwidget.h>
@@ -275,9 +281,71 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
         m_show_warning = false;
         update();
     });
+
+
+    m_network_mgr = new QNetworkAccessManager(this); 
 }
 
+void draw_overlay::send_http_alarm() {
+    if (!m_enable_http_url || m_http_url.isEmpty()) return;
 
+    if (m_is_normal_status) return;
+
+    QUrl url(m_http_url);
+    if (url.isValid()) {
+        qWarning() << "Invalid HTTP alarm URL: " << m_http_url;
+        return;
+    }
+
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QJsonObject json_data;
+    json_data["deviceId"] = QString::number(m_cam_id);
+    json_data["alarmTime"] = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+    
+    QString alarm_msg = tr("Camera %1 detected abnormal content: %2")
+                            .arg(m_cam_id)
+                            .arg(m_keywords);
+
+    if (!m_rtsp_config.rtsp_name.isEmpty()) {
+        alarm_msg = tr("Camera %1 (%2) detected abnormal content: %3")
+                            .arg(m_cam_id)
+                            .arg(m_rtsp_config.rtsp_name.isEmpty() ? "Null" : m_rtsp_config.rtsp_name)
+                            .arg(m_keywords);
+
+        json_data["deviceId"] = m_rtsp_config.rtsp_name;
+    }
+
+    json_data["alarmMsg"] = alarm_msg;
+
+    QJsonDocument doc(json_data);
+    QByteArray json_bytes = doc.toJson();
+
+    QNetworkReply* reply = m_network_mgr->post(request, json_bytes);
+
+    connect (reply, &QNetworkReply::finished, [this, reply]() {
+        handle_http_response(reply);
+    });
+}
+
+void draw_overlay::handle_http_response(QNetworkReply* reply) {
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray response_data = reply->readAll();
+        QJsonDocument response_doc = QJsonDocument::fromJson(response_data);
+        
+        if (response_doc.isObject()) {
+            QJsonObject response_obj = response_doc.object();
+            QString code = response_obj["code"].toString();
+            QString message = response_obj["message"].toString();
+
+            if (code == "200") qDebug() << "HTTP alarm sent successfully: " << message;
+            else qWarning() << "HTTP alarm failed with code: " << code << message;
+        }
+    } else qWarning() << "HTTP alarm request failed: " << reply->errorString();
+    
+    reply->deleteLater();
+}
 
 
 QRect draw_overlay::get_expand_btn_rect() const {

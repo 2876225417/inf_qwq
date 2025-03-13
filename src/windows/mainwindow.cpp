@@ -49,7 +49,12 @@ mainwindow::mainwindow(QWidget* parent)
     {        
     m_mainwindow_layout_wrapper->setContentsMargins(0, 0, 0, 0);
     m_mainwindow_layout_wrapper->setSpacing(0);
+
+
+    // initialize database when launch
     
+    db_manager::instance().database_initialize();
+
     m_chars_rec_inferer = new rec_inferer();
     m_chars_det_inferer = new det_inferer();
    
@@ -153,6 +158,17 @@ mainwindow::mainwindow(QWidget* parent)
                             , &tool_bar::send_scale_factor
                             , this, [this, cam](float factor) {
                                cam->set_scale_factor(factor); 
+                            });
+
+                    connect ( m_tool_bar        // send http url
+                            , &tool_bar::send_http_url
+                            , this, [this, cam](const QString& http_url, bool radiated){
+                                qDebug() << "Received here";
+                                cam->get_draw_overlay()->set_http_url(http_url);
+                                cam->get_draw_overlay()->set_http_url_status(radiated);
+                                qDebug() << "Received http url: " << http_url 
+                                         << " whether enable radiated all: " << (radiated ? "Enabled" : "Disabled"); 
+                                
                             });
 
                 

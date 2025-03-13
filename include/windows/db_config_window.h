@@ -38,8 +38,8 @@ public:
 
 
     bool has_saved_config() const;
-    
     void load_saved_config();
+
 
 signals:
     void connection_established();

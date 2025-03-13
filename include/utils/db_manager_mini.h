@@ -29,7 +29,10 @@ public:
                 , const QString& password
                 , int port = 5432
                 );
-    
+   
+
+    bool database_initialize();
+
     void disconnect();
     
     bool is_connected() const;
