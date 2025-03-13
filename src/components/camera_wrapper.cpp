@@ -40,6 +40,10 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
             , this, [this](int cam_id){
                 emit cam_expand_req(cam_id); 
             });
+    
+    connect ( m_draw_overlay
+            , &draw_overlay::reset_inf_result_after_hint
+            , this, [this](int cam_id) { emit reset_inf_result_after_hint(cam_id); });
 
     m_camera_layout->addWidget(m_video_stream);
     

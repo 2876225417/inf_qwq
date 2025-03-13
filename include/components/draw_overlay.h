@@ -46,16 +46,21 @@ public:
     void set_cam_id(int cam_id) { m_cam_id = cam_id; }
     void set_rtsp_config(const rtsp_config& rtsp_cfg) { m_rtsp_config = rtsp_cfg; }
 
-    void hint_warning();
-    void record_warning2db();
-    
-    void set_http_url(const QString& url) { m_http_url = url; }
+    void hint_warning();    // warning relatives
+    void record_warning2db();   
+   
+    bool is_inferrable() { return m_is_inf; } 
+
+    void set_http_url(const QString& url) { m_http_url = url; qDebug() << "update url: " << m_http_url;}
     void set_http_url_status(bool radiated) { m_enable_http_url = radiated; }
 signals:
     void selected(QVector<rect_data>& rects);
     void update_frame_moving(QVector<rect_data>& rects);
     void timer_timeout_update(QVector<rect_data>& rects);
     void expand_camera_request(int cam_id);
+    
+    void reset_inf_result_after_hint(int cam_id);
+
 private:
     void mousePressEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
@@ -91,8 +96,8 @@ public:
     void send_http_alarm();
     void handle_http_response(QNetworkReply* reply);
     
-
-
+    bool m_is_inf = true;
+    
     int m_cam_id;
     QVector<rect_data> m_rects;
     QPoint m_start;

@@ -49,7 +49,8 @@ signals:
     void cam_expand_req(int cam_id);
     // send inf result
     void inf_result(const QString& inf_result);
-
+    // reset inf result after hint
+    void reset_inf_result_after_hint(int cam_id);
 protected:
     bool eventFilter(QObject*, QEvent*) override;
 private slots: 

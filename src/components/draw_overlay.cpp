@@ -44,10 +44,15 @@ void draw_overlay::set_cam_name(const QString& cam_name) {
 }
 
 void draw_overlay::hint_warning() {
-    if (!m_keywords.isEmpty()) {
+    // trigger keywords
+    if (!m_keywords.isEmpty() && m_is_inf /* forbid hint repeatedly */) {
         m_show_warning = true;
         update();
         m_warning_timer->start(5000);
+        m_rects.clear();
+        m_is_inf = false;
+        send_http_alarm();
+        emit reset_inf_result_after_hint(m_cam_id); 
     }
 }
 
@@ -292,7 +297,7 @@ void draw_overlay::send_http_alarm() {
     if (m_is_normal_status) return;
 
     QUrl url(m_http_url);
-    if (url.isValid()) {
+    if (!url.isValid()) {
         qWarning() << "Invalid HTTP alarm URL: " << m_http_url;
         return;
     }
@@ -521,6 +526,7 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
                      << m_rects.size()
                      << "rect: " << new_rect.rect;
             emit selected(m_rects);
+            m_is_inf = true; 
             m_current_rect = QRect();
         }
         m_is_dragging = false;

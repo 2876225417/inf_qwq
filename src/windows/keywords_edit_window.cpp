@@ -58,7 +58,7 @@ void keywords_edit_window::setup_UI() {
     m_button_layout = new QHBoxLayout();
     m_remove_button = new QPushButton(tr("Remove"), this);
     m_confirm_button = new QPushButton(tr("Comfirm"), this);
-    m_cancel_button = new QPushButton(tr("Cancel"), this);
+    m_cancel_button = new QPushButton(tr("Cancel")/*, this */);
 
     m_remove_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogNoButton));
     m_confirm_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogOkButton));
@@ -67,7 +67,8 @@ void keywords_edit_window::setup_UI() {
     m_button_layout->addWidget(m_remove_button);
     m_button_layout->addStretch();
     m_button_layout->addWidget(m_confirm_button);
-    m_button_layout->addWidget(m_cancel_button);
+    /* Todo: Error to cancel */
+    //m_button_layout->addWidget(m_cancel_button);
 
     m_status_label = new QLabel(this);
     m_status_label->setWordWrap(true);

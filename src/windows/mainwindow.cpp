@@ -112,13 +112,18 @@ mainwindow::mainwindow(QWidget* parent)
                     connect ( cam
                             , &camera_wrapper::img_cropped4inf
                             , this, [this, cam](QVector<cropped_image>& croppeds) {
-                                if (!croppeds.empty()) {  
+                                if (!croppeds.empty() && cam->get_draw_overlay()->is_inferrable()) {  
                                     int inf_cam_id = cam->get_cam_id();
                                     cv::Mat cropped = qimage2mat(croppeds[0].image);
                                     m_expanded_window2_inf_cropped[inf_cam_id] = croppeds[0].image;
                                     m_chars_ort_inferer->run_inf(inf_cam_id, cropped); // aysnc inf
                                 }
                              });
+
+                    connect ( cam
+                            , &camera_wrapper::reset_inf_result_after_hint
+                            , this, [this](int cam_id) { m_expanded_window2_inf_res[cam_id] = ""; });       
+             
                     connect ( cam
                             , &camera_wrapper::cam_expand_req
                             , this, [this, cam]() {
@@ -182,8 +187,13 @@ mainwindow::mainwindow(QWidget* parent)
                                 }
                                 // update camera wrapper inf result
                                 cam->invoke();
-                                cam->set_do_inf_result(result_set);
+                                qDebug() << "cam id: " << cam_id;
                                 m_expanded_window2_inf_res[cam_id] = result_set;
+
+                                for (int i = 0; i < m_expanded_window2_inf_res.size(); i++) {
+                                    if (i == cam->get_cam_id()) cam->set_do_inf_result(m_expanded_window2_inf_res[i]);
+                                } // should clear the coords before detect again 
+                                //cam->set_do_inf_result(m_expanded_window2_inf_res[cam_id]);
                                 qDebug() << "Inf result: " << m_expanded_window2_inf_res;
                                 cam->get_draw_overlay()->update_keywords_no_args();
                                 cam->get_draw_overlay()->set_status();
