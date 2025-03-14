@@ -10,7 +10,6 @@
 #include <QString>
 #include <QMutex>
 
-#include <opencv2/cudawarping.hpp>
 
 #ifdef ENABLE_CUDA
 #include <opencv2/cudawarping.hpp>

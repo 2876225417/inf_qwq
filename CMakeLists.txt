@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-project(inf_qwq LANGUAGES CXX CUDA)
+project(inf_qwq LANGUAGES CXX)
 
 
 set(CMAKE_CXX_STANDARD 20)

@@ -129,7 +129,7 @@ void video_capturer::run() {
             QMutexLocker locker(&m_scale_mutex);
             scale = m_scale_factor;
         }
-        
+        #ifdef ENABLE_GPU
         if (!m_use_cuda) {
             m_gpu_frame.upload(frame);
             cv::cuda::GpuMat resized_gpu_frame;
@@ -142,6 +142,7 @@ void video_capturer::run() {
             cap_frame = cap_frame.rgbSwapped();
             emit frame_captured(cap_frame);
         } else {
+        #endif
 
         cv::resize(frame, frame, cv::Size(), scale, scale, cv::INTER_LINEAR);
     
@@ -191,7 +192,9 @@ void video_capturer::run() {
                                   ) ;
         cap_frame = cap_frame.rgbSwapped();
         emit frame_captured(cap_frame);
+        #ifdef ENABLE_GPU
         }
+        #endif
     }
     m_capturer.release();
 }
