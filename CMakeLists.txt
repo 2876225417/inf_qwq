@@ -12,12 +12,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# set(QT_RESOURCE_DIR ${CMAKE_SOURCE_DIR}/resources)
-#
-# set(TS_FILES
-#     ${QT_RESOURCE_DIR}/translations/zh_CN.ts
-#     ${QT_RESOURCE_DIR}/translations/en_US.ts
-# )
+
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -101,26 +96,6 @@ include_directories(
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 
-# i18n test
-# if(${Qt6_FOUND})
-#     qt6_create_translation(QM_FILES ${CMAKE_SOURCE_DIR}/src ${TS_FILES})
-#     qt6_add_translation(QM_FILES_BINARY ${TS_FILES})
-# endif()
-#
-# add_custom_target(translations DEPENDS ${QM_FILES})
-# add_dependencies(${PROJECT_NAME} translations)
-#
-# set(TRANSLATIONS_QRC ${CMAKE_BINARY_DIR}/translations.qrc)
-# configure_file(translations.qrc.in ${TRANSLATIONS_QRC} @ONLY)
-#
-# if(${Qt6_FOUND})
-#     qt6_add_resources(RESOURCES ${TRANSLATIONS_QRC})
-# else()
-#
-# endif()
-#
-#
-# target_sources(${PROJECT_NAME} PRIVATE ${RESOURCES})
 
 
 # hk test
