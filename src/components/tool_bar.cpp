@@ -15,19 +15,19 @@
 tool_bar::tool_bar(QWidget* parent)
     : QToolBar{"ToolBar", parent}
     {
-    QAction* file_act = new QAction("File", this);
+    QAction* file_act = new QAction("File"/*, this*/);
     QMenu* file_menu = new QMenu(this);
     file_menu->addAction("new dialog");
     file_menu->addSeparator();
     file_menu->addAction("close");
     file_act->setMenu(file_menu);
-    addAction(file_act);
+    //addAction(file_act);
 
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     addWidget(spacer);
 
-    QAction* add_rtsp_stream_config = new QAction("RTSP", this);
+    QAction* add_rtsp_stream_config = new QAction("RTSP配置", this);
     addAction(add_rtsp_stream_config);
 
     connect (add_rtsp_stream_config, &QAction::triggered, this, [this]{
@@ -52,8 +52,8 @@ tool_bar::tool_bar(QWidget* parent)
         m_rtsp_config_window->activateWindow();
     });
 
-    QAction* add_stream_settings = new QAction("Setting", this);
-    addAction(add_stream_settings);
+    QAction* add_stream_settings = new QAction("Setting" /*, this*/);
+    //addAction(add_stream_settings);
 
     connect ( add_stream_settings
             , &QAction::triggered
@@ -72,7 +72,7 @@ tool_bar::tool_bar(QWidget* parent)
                 m_stream_settings_window->activateWindow();
             });
    
-    QAction* add_db_config_settings = new QAction("Database", this);
+    QAction* add_db_config_settings = new QAction("数据库配置", this);
     addAction(add_db_config_settings);
 
     connect ( add_db_config_settings
@@ -91,7 +91,7 @@ tool_bar::tool_bar(QWidget* parent)
                 m_db_config_window->activateWindow();
             });
 
-    QAction* add_keywords_edit_settings = new QAction("Keywords Edit", this);
+    QAction* add_keywords_edit_settings = new QAction("关键字配置", this);
     addAction(add_keywords_edit_settings);
 
 
@@ -112,7 +112,7 @@ tool_bar::tool_bar(QWidget* parent)
 
             });
 
-    QAction* add_http_alarm_settings = new QAction("HTTP", this);
+    QAction* add_http_alarm_settings = new QAction("HTTP配置", this);
     addAction(add_http_alarm_settings);
 
     connect ( add_http_alarm_settings
@@ -133,7 +133,7 @@ tool_bar::tool_bar(QWidget* parent)
 
             });
 
-    QAction* add_warning_records_settings = new QAction("Records", this);
+    QAction* add_warning_records_settings = new QAction("记录", this);
     addAction(add_warning_records_settings);
 
     connect ( add_warning_records_settings

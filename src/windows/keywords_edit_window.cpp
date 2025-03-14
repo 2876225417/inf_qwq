@@ -19,7 +19,7 @@
 keywords_edit_window::keywords_edit_window(QWidget* parent)
     : QWidget{parent, Qt::Window}
     {
-    setWindowTitle("Keywords Editor");
+    setWindowTitle("关键词编辑器");
     
 
     m_settings = new QSettings("Chun Hui", "inf_qwq", this);
@@ -38,14 +38,14 @@ void keywords_edit_window::setup_UI() {
     m_main_layout->setSpacing(10);
     m_main_layout->setContentsMargins(10, 10, 10, 10);
 
-    m_keywords_group = new QGroupBox(tr("Keywords Edit"), this);
+    m_keywords_group = new QGroupBox(tr("关键词编辑"), this);
     m_keywords_layout = new QVBoxLayout();
 
     m_input_layout = new QHBoxLayout();
-    m_keyword_label = new QLabel(tr("Keywords"), this);
+    m_keyword_label = new QLabel(tr("关键词"), this);
     m_keyword_input = new QLineEdit(this);
-    m_keyword_input->setPlaceholderText("Please enter keywords");
-    m_add_button = new QPushButton(tr("Add"), this);
+    m_keyword_input->setPlaceholderText("请输入关键字");
+    m_add_button = new QPushButton(tr("添加"), this);
     m_add_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogYesButton));
 
     m_input_layout->addWidget(m_keyword_label);
@@ -56,9 +56,9 @@ void keywords_edit_window::setup_UI() {
     m_keywords_list->setSelectionMode(QAbstractItemView::SingleSelection);
 
     m_button_layout = new QHBoxLayout();
-    m_remove_button = new QPushButton(tr("Remove"), this);
-    m_confirm_button = new QPushButton(tr("Comfirm"), this);
-    m_cancel_button = new QPushButton(tr("Cancel")/*, this */);
+    m_remove_button = new QPushButton(tr("移除"), this);
+    m_confirm_button = new QPushButton(tr("确认"), this);
+    m_cancel_button = new QPushButton(tr("取消")/*, this */);
 
     m_remove_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogNoButton));
     m_confirm_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogOkButton));
@@ -149,14 +149,14 @@ void keywords_edit_window::on_add_button_clicked() {
     QString keyword = m_keyword_input->text().trimmed();
 
     if (keyword.isEmpty()) {
-        m_status_label->setText(tr("Keywords can not be empty"));
+        m_status_label->setText(tr("关键字不能为空"));
         m_status_label->setStyleSheet("color: red;");
         return;
     }
 
     for (const QString& existing_keyword: m_keywords) {
         if (existing_keyword.toLower() == keyword.toLower()) {
-            m_status_label->setText(tr("Keyword '%1' has been already existed").arg(keyword));
+            m_status_label->setText(tr("关键字 '%1' 已经存在").arg(keyword));
             m_status_label->setStyleSheet("color: red;");
             return;
         }
@@ -167,7 +167,7 @@ void keywords_edit_window::on_add_button_clicked() {
 
     m_keyword_input->clear();
 
-    m_status_label->setText(tr("Keyword '%1' has been added").arg(keyword));
+    m_status_label->setText(tr("关键字 '%1' 已经被添加").arg(keyword));
     m_status_label->setStyleSheet("color: green;");
 
 }
@@ -184,7 +184,7 @@ void keywords_edit_window::on_remove_button_clicked() {
     m_keywords_list->takeItem(row);
     m_keywords.removeAt(row);
 
-    m_status_label->setText(tr("Keyword '%1' has been removed").arg(keyword));
+    m_status_label->setText(tr("关键字 '%1' 已经被移除").arg(keyword));
     m_status_label->setStyleSheet("color: green");
 }
 
@@ -193,7 +193,7 @@ void keywords_edit_window::on_confirm_button_clicked() {
 
     save_keywords();
 
-    m_status_label->setText(tr("Keywords updated"));
+    m_status_label->setText(tr("关键字已更新"));
     m_status_label->setStyleSheet("color: green");
 
     close();

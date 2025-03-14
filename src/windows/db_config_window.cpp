@@ -23,7 +23,7 @@
 db_config_window::db_config_window(QWidget* parent)
     : QWidget{parent, Qt::Window}
     {
-    setWindowTitle(tr("Database Connection"));
+    setWindowTitle(tr("数据库连接配置"));
 
     m_settings = new QSettings("Chun Hui", "inf_qwq", this);
     
@@ -43,7 +43,7 @@ void db_config_window::setup_UI() {
     m_database_edit->setPlaceholderText(tr("database name"));
  
     m_username_edit = new QLineEdit(this);
-    m_username_edit->setPlaceholderText(tr("database name"));
+    m_username_edit->setPlaceholderText(tr("username "));
 
     m_password_edit = new QLineEdit(this);
     m_password_edit->setPlaceholderText(tr("password"));
@@ -53,17 +53,17 @@ void db_config_window::setup_UI() {
     m_port_spinbox->setRange(1, 65535);
     m_port_spinbox->setValue(5432);
 
-    db_config_form_layout->addRow(tr("Host:"), m_host_edit);
-    db_config_form_layout->addRow(tr("Database: "), m_database_edit);
-    db_config_form_layout->addRow(tr("Username: "), m_username_edit);
-    db_config_form_layout->addRow(tr("Password: "), m_password_edit);
-    db_config_form_layout->addRow(tr("Port: "), m_port_spinbox);
+    db_config_form_layout->addRow(tr("主机:"), m_host_edit);
+    db_config_form_layout->addRow(tr("数据库: "), m_database_edit);
+    db_config_form_layout->addRow(tr("用户名: "), m_username_edit);
+    db_config_form_layout->addRow(tr("密码: "), m_password_edit);
+    db_config_form_layout->addRow(tr("端口: "), m_port_spinbox);
 
 
-    m_test_btn = new QPushButton(tr("Test Connection"), this);
-    m_save_btn = new QPushButton(tr("Save Config"), this);
-    m_connenction_btn = new QPushButton(tr("Connect"), this);
-    m_cancle_btn = new QPushButton(tr("Cancel"), this);
+    m_test_btn = new QPushButton(tr("连接测试"), this);
+    m_save_btn = new QPushButton(tr("保存配置"), this);
+    m_connenction_btn = new QPushButton(tr("连接"), this);
+    m_cancle_btn = new QPushButton(tr("取消"), this);
 
     m_test_btn->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogApplyButton));
     m_save_btn->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
@@ -82,7 +82,7 @@ void db_config_window::setup_UI() {
 
     QVBoxLayout* main_layout = new QVBoxLayout(this);
 
-    QGroupBox* connection_group = new QGroupBox(tr("Connction Settings"), this);
+    QGroupBox* connection_group = new QGroupBox(tr("连接设置"), this);
     connection_group->setLayout(db_config_form_layout);
 
     main_layout->addWidget(connection_group);
@@ -107,11 +107,11 @@ void db_config_window::create_connections() {
 }
 
 void db_config_window::on_test_connection() {
-    m_status_label->setText(tr("Testing connection..."));
+    m_status_label->setText(tr("测试连接中..."));
     QApplication::processEvents();
 
     if (test_connection()) {
-        m_status_label->setText(tr("Connection successful!"));
+        m_status_label->setText(tr("连接成功!"));
         m_status_label->setStyleSheet("color: green");
     } else {
         m_status_label->setStyleSheet("color: red;");
@@ -120,13 +120,13 @@ void db_config_window::on_test_connection() {
 
 void db_config_window::on_save_config() {
     save_settings();
-    m_status_label->setText(tr("Configuration saved."));
+    m_status_label->setText(tr("配置已保存。"));
     m_status_label->setStyleSheet("color: black;");
 
 }
 
 void db_config_window::on_connect() {
-    m_status_label->setText(tr("Connecting to database..."));
+    m_status_label->setText(tr("连接至数据库中..."));
     QApplication::processEvents();
 
     qDebug() << "Try to connect";
@@ -146,12 +146,12 @@ void db_config_window::on_connect() {
 
     if (success) {
         save_settings();
-        m_status_label->setText(tr("Connection successful!"));
+        m_status_label->setText(tr("连接成功!"));
         m_status_label->setStyleSheet("color: green;");
         emit connection_established();
         
     } else {
-        m_status_label->setText(tr("Connection failed"));
+        m_status_label->setText(tr("连接失败"));
         m_status_label->setStyleSheet("color: red;");
     }
 }

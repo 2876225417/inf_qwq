@@ -191,17 +191,23 @@ mainwindow::mainwindow(QWidget* parent)
                                 m_expanded_window2_inf_res[cam_id] = result_set;
 
                                 for (int i = 0; i < m_expanded_window2_inf_res.size(); i++) {
-                                    if (i == cam->get_cam_id()) cam->set_do_inf_result(m_expanded_window2_inf_res[i]);
-                                } // should clear the coords before detect again 
-                                //cam->set_do_inf_result(m_expanded_window2_inf_res[cam_id]);
-                                qDebug() << "Inf result: " << m_expanded_window2_inf_res;
-                                cam->get_draw_overlay()->update_keywords_no_args();
-                                cam->get_draw_overlay()->set_status();
-                                cam->get_draw_overlay()->hint_warning();
-                                cam->get_draw_overlay()->record_warning2db();
-                                if (db_manager::instance().is_connected()) {
-                                        db_manager::instance().add_inf_result(cam_id, "keywords", result_set);
+                                    if (i == cam->get_cam_id() && !m_expanded_window2_inf_res[i].isEmpty()) {
+                                        cam->set_do_inf_result(m_expanded_window2_inf_res[i]);
+                                        
+                                        qDebug() << "Inf result: " << m_expanded_window2_inf_res;
+                                        cam->get_draw_overlay()->update_keywords_no_args();
+                                        cam->get_draw_overlay()->set_status();
+                                        int record_id = cam->get_draw_overlay()->record_warning2db();
+                                        cam->get_draw_overlay()->set_last_record_id(record_id);
+                                        cam->get_draw_overlay()->hint_warning();
+
+                                        if (db_manager::instance().is_connected()) {
+                                            db_manager::instance().add_inf_result(cam_id, "keywords", result_set);
+                                        }
+                                    }
                                 }
+                                // should clear the coords before detect again 
+                                //cam->set_do_inf_result(m_expanded_window2_inf_res[cam_id]);
                             });
                     
 
@@ -241,7 +247,7 @@ mainwindow::mainwindow(QWidget* parent)
                 if (m_sidebar) m_sidebar->set_current_group(group_index);
             });
 
-    int m_total_cams = 50;
+    int m_total_cams = 48;
     
     const int per_page = grouping_rtsp_stream::get_MAX_PER_PAGE();
 
@@ -339,7 +345,7 @@ mainwindow::mainwindow(QWidget* parent)
 
     m_mainwindow_layout_wrapper->addWidget(splitter);
 
-    setWindowTitle("Detector");
+    setWindowTitle("关键词监视器@春晖");
     m_mainwindow_layout->setLayout(m_mainwindow_layout_wrapper);    // mainwindow  
     resize(1400, 700);  // windows size w: 1400 h: 700
     setCentralWidget(m_mainwindow_layout);

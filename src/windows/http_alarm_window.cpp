@@ -40,7 +40,7 @@
 http_alarm_window::http_alarm_window(QWidget* parent)
     : QWidget{parent, Qt::Window}
     {
-
+    setWindowTitle("HTTP配置");
     setup_UI();
     setup_connections();
 
@@ -57,41 +57,41 @@ void http_alarm_window::setup_UI() {
     m_main_layout->setSpacing(10);
     m_main_layout->setContentsMargins(10, 10, 10, 10);
 
-    m_server_group = new QGroupBox(tr("Server Config"), this);
+    m_server_group = new QGroupBox(tr("服务器配置"), this);
     m_server_layout = new QGridLayout();
 
-    m_host_label = new QLabel(tr("Domain/IP"), this);
+    m_host_label = new QLabel(tr("域名/IP"), this);
     m_host_edit = new QLineEdit(this);
     m_host_edit->setPlaceholderText(tr("target.com or xxx.xxx.xxx.xxx"));
 
-    m_port_label = new QLabel(tr("Port"), this);
+    m_port_label = new QLabel(tr("端口"), this);
     m_port_spinbox = new QSpinBox(this);
     m_port_spinbox->setRange(1, 65535);
     m_port_spinbox->setValue(80);
-    m_port_spinbox->setSpecialValueText(tr("Default"));
+    m_port_spinbox->setSpecialValueText(tr("默认：80"));
 
     m_path_label = new QLabel(tr("Path: "), this);
     m_path_edit = new QLineEdit(this);
     m_path_edit->setPlaceholderText("/api/alarms");
 
-    m_method_label = new QLabel(tr("Request Method"), this);
+    m_method_label = new QLabel(tr("请求方法"), this);
     m_method_combo = new QComboBox(this);
     m_method_combo->addItems({"GET", "POST", "PUT", "DELETE"});
     m_method_combo->setCurrentText("POST");
 
-    m_auth_label = new QLabel(tr("Auth Token"), this);
+    m_auth_label = new QLabel(tr("验证令牌"), this);
     m_auth_edit = new QLineEdit(this);
-    m_auth_edit->setPlaceholderText("Optional");
+    m_auth_edit->setPlaceholderText("可选");
     m_auth_edit->setEchoMode(QLineEdit::Password);
 
-    m_interval_label = new QLabel(tr("Interval(s): "), this);
+    m_interval_label = new QLabel(tr("测试请求间隔(s): "), this);
     m_interval_spinbox = new QSpinBox(this);
     m_interval_spinbox->setRange(1, 3600);
     m_interval_spinbox->setValue(30);
 
-    m_enabled_check = new QCheckBox(tr("Enable HTTP Alarm"), this);
-    m_auto_start_check = new QCheckBox(tr("Auto Start"), this);
-    m_radiated_for_all_check = new QCheckBox(tr("Keep Http"), this);
+    m_enabled_check = new QCheckBox(tr("启用HTTP警报"), this);
+    m_auto_start_check = new QCheckBox(tr("自动启动"), this);
+    m_radiated_for_all_check = new QCheckBox(tr("保持Http警报开启"), this);
 
     m_server_layout->addWidget(m_host_label, 0, 0);
     m_server_layout->addWidget(m_host_edit, 0, 1, 1, 3);
@@ -111,7 +111,7 @@ void http_alarm_window::setup_UI() {
 
     m_server_group->setLayout(m_server_layout);
 
-    m_json_group = new QGroupBox(tr("Json Config"), this);
+    m_json_group = new QGroupBox(tr("Json配置"), this);
     m_json_layout = new QVBoxLayout();
 
     m_json_edit = new QTextEdit(this);
@@ -119,7 +119,7 @@ void http_alarm_window::setup_UI() {
     m_json_edit->setPlaceholderText("{\n  \"key\": \"value\",\n  \"array\": [1, 2, 3]\n}");
     m_json_edit->setFont(QFont("Courier New", 10));
 
-    m_validate_json_button = new QPushButton(tr("Validate JSON"), this);
+    m_validate_json_button = new QPushButton(tr("JSON验证"), this);
     m_validate_json_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogHelpButton));
 
     m_json_layout->addWidget(m_json_edit);
@@ -129,10 +129,10 @@ void http_alarm_window::setup_UI() {
 
     m_control_layout = new QHBoxLayout();
 
-    m_test_button = new QPushButton(tr("Connection Test"), this);
+    m_test_button = new QPushButton(tr("连接测试"), this);
     m_test_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogApplyButton));
 
-    m_save_button = new QPushButton(tr("Save"), this);
+    m_save_button = new QPushButton(tr("保存配置"), this);
     m_save_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
 
     m_control_layout->addWidget(m_test_button);
@@ -140,7 +140,7 @@ void http_alarm_window::setup_UI() {
     m_control_layout->addWidget(m_save_button);
 
 
-    m_log_group = new QGroupBox(tr("Test Log"), this);
+    m_log_group = new QGroupBox(tr("测试日志"), this);
     m_log_layout = new QVBoxLayout();
 
     m_log_edit = new QTextEdit(this);
@@ -148,7 +148,7 @@ void http_alarm_window::setup_UI() {
     m_log_edit->setFont(QFont("Courier New", 9));
 
 
-    m_clear_log_button = new QPushButton(tr("Clear Log"), this);
+    m_clear_log_button = new QPushButton(tr("清除日志"), this);
     m_clear_log_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogResetButton));
 
     m_log_layout->addWidget(m_log_edit);
@@ -219,7 +219,7 @@ void http_alarm_window::load_config() {
     m_test_button->setEnabled(enabled);
 
     on_request_method_changed(m_method_combo->currentIndex());
-    log_message(tr("Config loaded"));
+    log_message(tr("配置已加载"));
 }
 
 void http_alarm_window::save_config() {
@@ -246,28 +246,28 @@ void http_alarm_window::on_save_config() {
         QJsonDocument::fromJson(m_json_edit->toPlainText().toUtf8(), &error);
         if (error.error != QJsonParseError::NoError) {
             QMessageBox::warning( this
-                                , tr("Invalid Json format")
-                                , tr("Invalid Json params format, please justify:\n%1")
+                                , tr("无效Json格式")
+                                , tr("无效Json参数, 请修正:\n%1")
                                             .arg(error.errorString())
                                 );
             return;
         }
     }   
     save_config();
-    log_message(tr("Config Saved"));
+    log_message(tr("配置已保存"));
 
-    QMessageBox::warning(this, tr("Config saved"), tr("HTTP configs saved"));
+    QMessageBox::warning(this, tr("配置已保存"), tr("HTTP配置已保存"));
 }
 
 
 void http_alarm_window::on_test_connection() {
     if (m_host_edit->text().isEmpty()) {
-        QMessageBox::warning(this, tr("Connection test"), tr("Enter a valid domain/IP"));
+        QMessageBox::warning(this, tr("连接测试"), tr("请输入一个有效的域名/IP"));
         return;
     }
     
     QString url = get_full_url();
-    log_message(tr("Connect to %1").arg(url));
+    log_message(tr("连接至 %1").arg(url));
 
     QNetworkRequest request = create_request();
     QByteArray request_body = get_request_body();
@@ -281,28 +281,28 @@ void http_alarm_window::on_test_connection() {
     else if (method == "DELETE")reply = m_network_mgr->deleteResource(request);
 
     if (!reply) {
-        log_message(tr("Failed to create request"), true);
+        log_message(tr("请求创建失败"), true);
         return;
     }
 
-    log_message(tr("Request method: %1").arg(method));
-    if (!request_body.isEmpty()) log_message(tr("Request body: %1").arg(QString(request_body)));
+    log_message(tr("请求方法: %1").arg(method));
+    if (!request_body.isEmpty()) log_message(tr("请求体: %1").arg(QString(request_body)));
 
     connect (reply, &QNetworkReply::finished, [reply, this]() {
         if (reply->error() == QNetworkReply::NoError) {
             QByteArray response_data = reply->readAll();
-            log_message(tr("Connect successfully!"));
-            log_message(tr("Status code: %1")
+            log_message(tr("连接成功!"));
+            log_message(tr("状态码: %1")
                             .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()));
 
-            log_message(tr("Response body: %1").arg(QString(response_data)));
+            log_message(tr("响应体: %1").arg(QString(response_data)));
 
-            QMessageBox::information(this, tr("Connection test"), tr("Connect successfully!"));
+            QMessageBox::information(this, tr("连接测试"), tr("连接成功!"));
         } else {
-            QString error_msg = tr("Failed to connect: %1").arg(reply->errorString());
+            QString error_msg = tr("连接至: %1失败").arg(reply->errorString());
             log_message(error_msg, true);
-            log_message(tr("Status code: %1").arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()));
-            QMessageBox::critical(this, tr("Connection test"), error_msg);
+            log_message(tr("状体码: %1").arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()));
+            QMessageBox::critical(this, tr("连接测试"), error_msg);
         }
         reply->deleteLater();
     });
@@ -310,13 +310,13 @@ void http_alarm_window::on_test_connection() {
 
 void http_alarm_window::on_clear_log() {
     m_log_edit->clear();
-    log_message(tr("Logs cleared"));
+    log_message(tr("日志已清除"));
 }
 
 void http_alarm_window::on_validate_json() {
     QString json_text = m_json_edit->toPlainText().trimmed();
     if (json_text.isEmpty()) {
-        QMessageBox::information(this, tr("Json Authorize"), tr("Json Content is empty"));
+        QMessageBox::information(this, tr("Json验证"), tr("Json内容为空"));
         return;
     }
 
@@ -325,14 +325,14 @@ void http_alarm_window::on_validate_json() {
 
     if (error.error != QJsonParseError::NoError) {
         QMessageBox::critical( this
-                             , tr("Invalid JSON format")
-                             , tr("JSON format is invalid: %1 position: %2")
+                             , tr("无效Json格式")
+                             , tr("JSON格式无效: %1 位置: %2")
                                 .arg(error.errorString())
                                 .arg(error.offset));
     } else {
         QString formatted_json = QString::fromUtf8(doc.toJson(QJsonDocument::Indented));
         m_json_edit->setPlainText(formatted_json);
-        QMessageBox::information(this, tr("Json Vadliation"), tr("Valid Json format"));
+        QMessageBox::information(this, tr("Json验证"), tr("验证Json格式"));
     }
 }
 

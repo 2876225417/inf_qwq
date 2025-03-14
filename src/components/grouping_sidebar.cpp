@@ -12,7 +12,6 @@ void grouping_sidebar::set_checked(int index) {
 grouping_sidebar::grouping_sidebar(int groups_num, QWidget* parent)
     : QToolBar{parent}
 {
-    
   setStyleSheet(R"(
         QToolBar {
             background: #2D2D2D;
@@ -26,8 +25,8 @@ grouping_sidebar::grouping_sidebar(int groups_num, QWidget* parent)
             padding: 15px 6px;
             border-top: 1px solid #383838;
             border-bottom: 1px solid #222;
-            min-width: 70px;
-            min-height: 54px;
+            min-width: 60px;
+            min-height: 15px;
         }
         QToolButton:hover {
             background: #353535;
@@ -42,12 +41,13 @@ grouping_sidebar::grouping_sidebar(int groups_num, QWidget* parent)
 
     setOrientation(Qt::Vertical);
     setMovable(false);
-    setIconSize(QSize(24,24));
+    setIconSize(QSize(12,12));
 
     
     for (int i = 0; i < groups_num; ++i) {
         QAction* act = new QAction(
-            QString("Group %1\nCh %2-%3").arg(i+1).arg(i*4+1).arg(i*4+4),
+            //QString("Group %1\nCh %2-%3").arg(i+1).arg(i*4+1).arg(i*4+4),
+            QString("第%1组").arg(i+1),
             this
         );
         act->setData(i);

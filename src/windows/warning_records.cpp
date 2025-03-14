@@ -27,7 +27,9 @@
 warning_records_window::warning_records_window(QWidget* parent)
     : QWidget{parent, Qt::Window}
     {
-    setWindowTitle("Warning Records");
+    setWindowTitle("异常记录");
+    
+    resize(700, 600); 
 
     setup_UI();
     setup_connections();
@@ -51,15 +53,15 @@ void warning_records_window::setup_UI() {
     m_main_layout->setContentsMargins(10, 10, 10, 10);
     
     // filter group
-    m_filter_group = new QGroupBox(tr("Filter Options"), this);
+    m_filter_group = new QGroupBox(tr("筛选选项"), this);
     m_filter_layout = new QGridLayout();
 
-    m_only_abnormal_check = new QCheckBox(tr("Abnormal Records"), this);
-    m_keyword_label = new QLabel(tr("Keywords:"), this);
+    m_only_abnormal_check = new QCheckBox(tr("异常记录"), this);
+    m_keyword_label = new QLabel(tr("关键字:"), this);
     m_keyword_edit = new QLineEdit(this);
-    m_keyword_edit->setPlaceholderText(tr("Enter keywords to filter"));
+    m_keyword_edit->setPlaceholderText(tr("关键字筛选"));
 
-    m_date_range_label = new QLabel(tr("Date Range: "), this);
+    m_date_range_label = new QLabel(tr("时间范围: "), this);
     m_start_time_edit = new QDateEdit(this);
     m_start_time_edit->setCalendarPopup(true);
     m_start_time_edit->setDisplayFormat("yyyy-MM-dd");
@@ -67,13 +69,13 @@ void warning_records_window::setup_UI() {
     m_end_time_edit->setCalendarPopup(true);
     m_end_time_edit->setDisplayFormat("yyyy-MM-dd");
 
-    m_camera_label = new QLabel(tr("Camera: "), this);
+    m_camera_label = new QLabel(tr("视频流"), this);
     m_camera_combo = new QComboBox(this);
     m_camera_combo->setMinimumWidth(150);
 
-    m_filter_button = new QPushButton(tr("Apply Filter"), this);
+    m_filter_button = new QPushButton(tr("应用筛选"), this);
     m_filter_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogApplyButton));
-    m_reset_button = new QPushButton(tr("Reset"), this);
+    m_reset_button = new QPushButton(tr("重置"), this);
     m_reset_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogResetButton));
 
 
@@ -82,7 +84,7 @@ void warning_records_window::setup_UI() {
     m_filter_layout->addWidget(m_keyword_edit, 0, 3);
     m_filter_layout->addWidget(m_date_range_label, 1, 0);
     m_filter_layout->addWidget(m_start_time_edit, 1, 1);
-    m_filter_layout->addWidget(new QLabel(tr("To"), this), 1, 2, Qt::AlignCenter);
+    m_filter_layout->addWidget(new QLabel(tr("至"), this), 1, 2, Qt::AlignCenter);
     m_filter_layout->addWidget(m_end_time_edit, 1, 3);
     m_filter_layout->addWidget(m_camera_label, 2, 0);
     m_filter_layout->addWidget(m_camera_combo, 2, 1);
@@ -98,16 +100,16 @@ void warning_records_window::setup_UI() {
     setup_table_headers();
 
 
-    m_pagination_group = new QGroupBox(tr("Pagination"), this);
+    m_pagination_group = new QGroupBox(tr("分页"), this);
     m_pagination_layout = new QHBoxLayout();
 
-    m_page_info_label = new QLabel(tr("Page 1 / 1 (0 records)"), this);
-    m_prev_page_button = new QPushButton(tr("Prev"), this);
+    m_page_info_label = new QLabel(tr(" 1 页/ 1 页(0 条记录)"), this);
+    m_prev_page_button = new QPushButton(tr("上一页"), this);
     m_prev_page_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowLeft));
-    m_next_page_button = new QPushButton(tr("Next"), this);
+    m_next_page_button = new QPushButton(tr("下一页"), this);
     m_next_page_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowRight));
 
-    m_page_size_label = new QLabel(tr("Records per page: "), this);
+    m_page_size_label = new QLabel(tr("每页记录数量: "), this);
     m_page_size_combo = new QComboBox(this);
 
     m_page_size_combo->addItems({"10", "20", "50", "100"});
@@ -123,9 +125,9 @@ void warning_records_window::setup_UI() {
     m_pagination_group->setLayout(m_pagination_layout);
     
     m_actions_layout = new QHBoxLayout();
-    m_export_button = new QPushButton(tr("Export"), this);
+    m_export_button = new QPushButton(tr("导出为CSV"), this);
     m_export_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
-    m_view_details_button = new QPushButton(tr("Details"), this);
+    m_view_details_button = new QPushButton(tr("详情"), this);
     m_view_details_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogDetailedView));
 
     m_actions_layout->addWidget(m_export_button);
@@ -180,8 +182,8 @@ void warning_records_window::setup_connections() {
 
 void warning_records_window::setup_table_headers() {
     QStringList headers = {
-        tr("ID"), tr("Camera ID"), tr("Camera Name"), tr("Status"),
-        tr("Keywords"), tr("RTSP Name"), tr("Timestamp")
+        tr("ID"), tr("视频流ID"), tr("视频流信息"), tr("状态"),
+        tr("关键字"), tr("RTSP信息"), tr("时间戳"), tr("推送状态")
     };
 
     m_records_table->setColumnCount(headers.size());
@@ -192,10 +194,10 @@ void warning_records_window::setup_table_headers() {
 
 void warning_records_window::load_cameras() {
     m_camera_combo->clear();
-    m_camera_combo->addItem(tr("All cameras"), -1);
+    m_camera_combo->addItem(tr("所有视频流"), -1);
 
     if (!db_manager::instance().is_connected()) {
-        show_status_message(tr("Database not connected, can not load cameras list"), true);
+        show_status_message(tr("数据库未连接, 无法加载数据"), true);
         return;
     }
 
@@ -209,7 +211,7 @@ void warning_records_window::load_cameras() {
         int id = camera["id"].toInt();
         QString name = camera["rtsp_name"].toString();
         if (name.isEmpty()) {
-            name = QString("Camera %1").arg(id);
+            name = QString("视频流 %1").arg(id);
         }
         m_camera_combo->addItem(name, id);
     }
@@ -224,7 +226,7 @@ void warning_records_window::refresh_data() {
 void warning_records_window::load_data()
 {
     if (!db_manager::instance().is_connected()) {
-        show_status_message(tr("Database not connected，can not load data"), true);
+        show_status_message(tr("数据库未连接，无法加载数据"), true);
         return;
     }
     
@@ -296,7 +298,7 @@ void warning_records_window::update_table() {
         m_records_table->setItem(i, 2, new QTableWidgetItem(record["cam_name"].toString()));
 
         bool status = record["status"].toBool();
-        QTableWidgetItem* status_item = new QTableWidgetItem(status ? tr("Normal") : tr("Abnormal"));
+        QTableWidgetItem* status_item = new QTableWidgetItem(status ? tr("正常") : tr("异常"));
         status_item->setForeground(status ? Qt::green : Qt::red);
         status_item->setTextAlignment(Qt::AlignCenter);
         m_records_table->setItem(i, 3, status_item);
@@ -305,9 +307,17 @@ void warning_records_window::update_table() {
         m_records_table->setItem(i, 5, new QTableWidgetItem(record["rtsp_name"].toString()));
         QDateTime record_time = record["record_time"].toDateTime();
         m_records_table->setItem(i, 6, new QTableWidgetItem(format_date_time(record_time)));
+        
+        bool push_status = record["push_status"].toBool();
+        QString push_message = record["push_message"].toString();
+        QTableWidgetItem* push_status_item = new QTableWidgetItem(push_status ? tr("成功") : tr("失败"));
+        push_status_item->setForeground(push_status ? Qt::green : Qt::red);
+        push_status_item->setTextAlignment(Qt::AlignCenter);
+        push_status_item->setToolTip(push_message);
+        m_records_table->setItem(i, 7, push_status_item);
     }
 
-    if (m_current_records.isEmpty()) show_status_message(tr("No matched records found"));
+    if (m_current_records.isEmpty()) show_status_message(tr("无匹配的记录"));
     else m_status_label->clear();
 }
 
@@ -315,7 +325,7 @@ void warning_records_window::update_page_info() {
     int total_pages = (m_total_records + m_page_size - 1) / m_page_size;
     if (total_pages == 0) total_pages = 1;
     
-    m_page_info_label->setText(tr("Page %1 / %2 (%3 Records)")
+    m_page_info_label->setText(tr("%1 页/ %2 页(%3 记录数)")
                                .arg(m_current_page)
                                .arg(total_pages)
                                .arg(m_total_records));
@@ -377,11 +387,11 @@ void warning_records_window::on_page_size_changed(int size) {
 
 void warning_records_window::on_export_data() {
     if (m_current_records.isEmpty()) {
-        QMessageBox::warning(this, tr("Export Data"), tr("No Data to Export"));
+        QMessageBox::warning(this, tr("导出数据"), tr("无数据导出"));
         return;
     }
 
-    QString file_name = QFileDialog::getSaveFileName(this, tr("Export Data"), QString("warning_records_%1.csv")
+    QString file_name = QFileDialog::getSaveFileName(this, tr("导出数据"), QString("warning_records_%1.csv")
                                                                                 .arg( QDateTime::currentDateTime()
                                                                                 .toString("yyyyMMdd_hhmmss")), tr("CSVFile (*csv)"));
 
@@ -396,7 +406,7 @@ void warning_records_window::on_view_details() {
     QModelIndexList selection = m_records_table->selectionModel()->selectedRows();
 
     if (selection.isEmpty()) {
-        QMessageBox::warning(this, tr("Check details"), tr("Select a records"));
+        QMessageBox::warning(this, tr("查看详情"), tr("请选择一条记录"));
         return;
     }
     int row = selection.first().row();
@@ -409,7 +419,7 @@ void warning_records_window::export2CSV(const QString& filename)
 {
     QFile file(filename);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, tr("Error occurred when exporting"), tr("Cant not open file to wirte"));
+        QMessageBox::critical(this, tr("导出时发生错误"), tr("无法对打开的文件进行写入"));
         return;
     }
     
@@ -434,8 +444,8 @@ void warning_records_window::export2CSV(const QString& filename)
     
     file.close();
     
-    QMessageBox::information(this, tr("Export Successfully"), 
-                            tr("Exported file saved at: %1").arg(filename));
+    QMessageBox::information(this, tr("导出成功"),
+                            tr("导出文件保存在: %1").arg(filename));
 }
 
 

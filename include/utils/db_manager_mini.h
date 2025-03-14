@@ -64,7 +64,7 @@ public:
                            , const QString& rtsp_url
                            );
 
-    bool add_warning_record( int cam_id
+    int add_warning_record( int cam_id
                            , const QString& cam_name
                            , const QString& inf_res
                            , bool status
@@ -72,7 +72,12 @@ public:
                            , const QString& rtsp_name
                            , const QString& rtsp_url
                            );
-    
+       
+    bool update_warning_record_push_status( int id
+                                           , bool status
+                                           , const QString& message = QString()
+                                           );
+
 
     bool delete_rtsp_config(int id);
 

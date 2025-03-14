@@ -15,7 +15,7 @@
 camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
     : QWidget{parent}
     , m_camera_layout{new QHBoxLayout()}
-    , m_video_stream{new QLabel("Wait for streaming...", this)}
+    , m_video_stream{new QLabel("等待视频流...", this)}
     , m_draw_overlay{new draw_overlay(cam_id)}
     , m_timer{new QTimer(this)}
     , m_cam_id{cam_id}

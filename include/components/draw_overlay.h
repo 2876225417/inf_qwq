@@ -47,7 +47,7 @@ public:
     void set_rtsp_config(const rtsp_config& rtsp_cfg) { m_rtsp_config = rtsp_cfg; }
 
     void hint_warning();    // warning relatives
-    void record_warning2db();   
+    int record_warning2db();   
    
     bool is_inferrable() { return m_is_inf; } 
 
@@ -93,9 +93,13 @@ public:
     bool m_enable_http_url;
 
     QNetworkAccessManager* m_network_mgr;
-    void send_http_alarm();
+    void send_http_alarm(int record_id);
     void handle_http_response(QNetworkReply* reply);
     
+    void set_last_record_id(int record_id) { m_last_record_id = record_id; }
+
+    int m_last_record_id;
+
     bool m_is_inf = true;
     
     int m_cam_id;

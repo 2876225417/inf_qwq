@@ -9,6 +9,7 @@
 #include <qevent.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
+#include <qlogging.h>
 #include <qnamespace.h>
 #include <qnetworkaccessmanager.h>
 #include <qnetworkreply.h>
@@ -44,26 +45,30 @@ void draw_overlay::set_cam_name(const QString& cam_name) {
 }
 
 void draw_overlay::hint_warning() {
+    qDebug() << "Last record id: " << m_last_record_id;
     // trigger keywords
     if (!m_keywords.isEmpty() && m_is_inf /* forbid hint repeatedly */) {
         m_show_warning = true;
         update();
         m_warning_timer->start(5000);
+        // stop inferring
         m_rects.clear();
         m_is_inf = false;
-        send_http_alarm();
+         
+        if (m_last_record_id > 0) send_http_alarm(m_last_record_id);
+        
         emit reset_inf_result_after_hint(m_cam_id); 
     }
 }
 
-void draw_overlay::record_warning2db() {
+int draw_overlay::record_warning2db() {
 
     // but need to record all records
-    // if (m_keywords.isEmpty()) return;
+    // if (m_keywords.isEmpty()) return -1;
     
     if (!db_manager::instance().is_connected()) {
         qWarning() << "Database not connected, warning record not saved";
-        return;
+        return -1;
     }
     
     // data postprocess
@@ -75,7 +80,7 @@ void draw_overlay::record_warning2db() {
     QString rtsp_url_2db      = m_rtsp_config.config2url();
     
 
-    bool success 
+    int record_id 
         = db_manager::instance().add_warning_record( cam_id_2db
                                                    , rtsp_name_2db
                                                    , inference_res_2db
@@ -84,8 +89,11 @@ void draw_overlay::record_warning2db() {
                                                    , rtsp_name_2db
                                                    , rtsp_url_2db
                                                    ) ;
-    if (success) qDebug() << "Warning record saved to database for camera " << m_cam_id;
+    if (record_id > 0) qDebug() << "Warning record saved to database for camera " << m_cam_id
+                                << "with ID: " << record_id;
     else qDebug() << "Failed to save warning record to database";
+
+    return record_id;
 }
 
 void draw_overlay::draw_warning(QPainter& painter) {
@@ -98,7 +106,7 @@ void draw_overlay::draw_warning(QPainter& painter) {
     QFont warning_font("Arial", 16, QFont::Bold);
     painter.setFont(warning_font);
 
-    QString warning_text = QString("Detected keywords: %1").arg(m_keywords);
+    QString warning_text = QString("检测到关键字: %1").arg(m_keywords);
 
     QFontMetrics fm(warning_font);
     QSize text_size = fm.size(Qt::TextSingleLine, warning_text);
@@ -129,7 +137,7 @@ void draw_overlay::draw_camera_id(QPainter& painter) {
     QFont id_font("Arial", 10, QFont::Bold);
     painter.setFont(id_font);
 
-    QString id_text = QString("Camera ID: %1").arg(m_cam_id);
+    QString id_text = QString("视频流ID: %1").arg(m_cam_id);
 
     QFontMetrics fm(id_font);
     QSize text_size = fm.size(Qt::TextSingleLine, id_text);
@@ -156,7 +164,7 @@ void draw_overlay::draw_camera_name(QPainter& painter) {
     QFont name_font("Arial", 10, QFont::Bold);
     painter.setFont(name_font);
 
-    QString name_text = QString("Camera Name: %1").arg(m_cam_name);
+    QString name_text = QString("视频流信息: %1").arg(m_cam_name);
 
     QFontMetrics fm(name_font);
     QSize text_size = fm.size(Qt::TextSingleLine, name_text);
@@ -186,7 +194,7 @@ void draw_overlay::draw_status_indicator(QPainter& painter) {
     QFont status_font("Arial", 12, QFont::Bold);
     painter.setFont(status_font);
 
-    QString status_text = m_is_normal_status ? "Normal" : "Abnormal";
+    QString status_text = m_is_normal_status ? "正常" : "异常";
     QColor status_color = m_is_normal_status ? Qt::green : Qt::red;
 
     int status_width = width() / 5;
@@ -226,7 +234,7 @@ void draw_overlay::draw_inference_result(QPainter& painter) {
                                  , 2 * line_height + 10), 5, 5);
 
     painter.setPen(Qt::white);
-    QString result_text = "Result: " + (m_inference_result.isEmpty() ? "Null" : m_inference_result);
+    QString result_text = "识别内容: " + (m_inference_result.isEmpty() ? " " : m_inference_result);
 
     QFontMetrics fm(result_font);
     result_text = fm.elidedText(result_text, Qt::ElideRight, text_width);
@@ -234,7 +242,7 @@ void draw_overlay::draw_inference_result(QPainter& painter) {
 
     painter.setPen(m_is_normal_status ? Qt::white : Qt::yellow);
     QString all_keywords; for(auto& keyword: m_keywords) all_keywords += keyword;
-    QString keywords_text = "Keywords: " + (all_keywords.isEmpty() ? "Null" : all_keywords);
+    QString keywords_text = "关键字: " + (all_keywords.isEmpty() ? " " : all_keywords);
 
     keywords_text = fm.elidedText(keywords_text, Qt::ElideRight, text_width);
     painter.drawText(keywords_rect, Qt::AlignLeft | Qt::AlignVCenter, keywords_text);
@@ -291,14 +299,25 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     m_network_mgr = new QNetworkAccessManager(this); 
 }
 
-void draw_overlay::send_http_alarm() {
+void draw_overlay::send_http_alarm(int record_id) {
     if (!m_enable_http_url || m_http_url.isEmpty()) return;
 
-    if (m_is_normal_status) return;
+    // if (m_is_normal_status) return;
+
+
+    if (record_id <= 0) {
+        qWarning() << "Invalid record ID for HTTP alarm";
+        return;
+    }
+
 
     QUrl url(m_http_url);
     if (!url.isValid()) {
         qWarning() << "Invalid HTTP alarm URL: " << m_http_url;
+
+        if (db_manager::instance().is_connected()) {
+            db_manager::instance().update_warning_record_push_status(record_id, false, "Invalid HTTP alarm URL");
+        }
         return;
     }
 
@@ -316,7 +335,7 @@ void draw_overlay::send_http_alarm() {
     if (!m_rtsp_config.rtsp_name.isEmpty()) {
         alarm_msg = tr("Camera %1 (%2) detected abnormal content: %3")
                             .arg(m_cam_id)
-                            .arg(m_rtsp_config.rtsp_name.isEmpty() ? "Null" : m_rtsp_config.rtsp_name)
+                            .arg(m_rtsp_config.rtsp_name.isEmpty() ? " " : m_rtsp_config.rtsp_name)
                             .arg(m_keywords);
 
         json_data["deviceId"] = m_rtsp_config.rtsp_name;
@@ -329,25 +348,50 @@ void draw_overlay::send_http_alarm() {
 
     QNetworkReply* reply = m_network_mgr->post(request, json_bytes);
 
+    reply->setProperty("record_id", record_id);
+
     connect (reply, &QNetworkReply::finished, [this, reply]() {
         handle_http_response(reply);
     });
 }
 
 void draw_overlay::handle_http_response(QNetworkReply* reply) {
+    int record_id = reply->property("record_id").toInt();
+    bool push_success = false;
+    QString push_msg;
+
     if (reply->error() == QNetworkReply::NoError) {
         QByteArray response_data = reply->readAll();
         QJsonDocument response_doc = QJsonDocument::fromJson(response_data);
-        
+
         if (response_doc.isObject()) {
             QJsonObject response_obj = response_doc.object();
             QString code = response_obj["code"].toString();
             QString message = response_obj["message"].toString();
 
-            if (code == "200") qDebug() << "HTTP alarm sent successfully: " << message;
-            else qWarning() << "HTTP alarm failed with code: " << code << message;
+            push_msg = code + ": " + message;
+
+            if (code == "200") {
+                qDebug() << "HTTP alarm sent successfully: " << message;
+                push_success = true;
+            }
+            else { 
+                qWarning() << "HTTP alarm failed with code: " << code << message;
+                push_success = false;
+            }
+        } else {
+            push_msg = "Invalid response format";
+            push_success = false;
         }
-    } else qWarning() << "HTTP alarm request failed: " << reply->errorString();
+    } else {
+        push_msg = "Request failed: " + reply->errorString();
+        qWarning() << "HTTP alarm request failed: " << reply->errorString();
+        push_success = false;
+    }
+
+    if (record_id > 0 && db_manager::instance().is_connected()) {
+        db_manager::instance().update_warning_record_push_status(record_id, push_success, push_msg);
+    }
     
     reply->deleteLater();
 }

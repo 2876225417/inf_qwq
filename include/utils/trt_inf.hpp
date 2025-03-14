@@ -1,6 +1,6 @@
 
 
-#ifndef TRT_INF_HPP
+#ifdef TRT_INF_HPP
 #define TRT_INF_HPP
 
 #include "utils/ort_inf.hpp"

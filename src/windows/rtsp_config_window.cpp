@@ -11,7 +11,7 @@
 rtsp_config_window::rtsp_config_window(QWidget* parent)
     : QWidget(parent, Qt::Window)
     {
-    setWindowTitle(tr("RTSP Configuration"));
+    setWindowTitle(tr("RTSP配置"));
     setMinimumWidth(500);
     setMinimumHeight(350);
     
@@ -34,7 +34,7 @@ void rtsp_config_window::setup_UI() {
 
     // RTSP Protocal Type
     m_rtsp_proto_layout = new QHBoxLayout();
-    m_rtsp_proto_label = new QLabel(tr("Protocol:"));
+    m_rtsp_proto_label = new QLabel(tr("协议类型:"));
     m_rtsp_proto_combo = new QComboBox();
     m_rtsp_proto_combo->addItem("HIKVISION", static_cast<int>(rtsp_proto_type::HIKVISION));
     m_rtsp_proto_combo->addItem("ALHUA", static_cast<int>(rtsp_proto_type::ALHUA));
@@ -43,9 +43,9 @@ void rtsp_config_window::setup_UI() {
      
     // RTSP stream name
     m_rtsp_stream_name_layout = new QHBoxLayout();
-    m_rtsp_stream_name_label = new QLabel(tr("name"));
+    m_rtsp_stream_name_label = new QLabel(tr("RTSP信息"));
     m_rtsp_stream_name_edit = new QLineEdit();
-    m_rtsp_stream_name_edit->setPlaceholderText(tr("Stream Name"));
+    m_rtsp_stream_name_edit->setPlaceholderText(tr("RTSP信息（可选）"));
     m_rtsp_stream_name_layout->addWidget(m_rtsp_stream_name_label);
     m_rtsp_stream_name_layout->addWidget(m_rtsp_stream_name_edit);
     
@@ -59,7 +59,7 @@ void rtsp_config_window::setup_UI() {
     
     // Username
     m_username_layout = new QHBoxLayout();
-    m_username_label = new QLabel(tr("Username:"));
+    m_username_label = new QLabel(tr("用户名:"));
     m_username_edit = new QLineEdit();
     m_username_edit->setPlaceholderText(tr("username"));
     m_username_layout->addWidget(m_username_label);
@@ -67,7 +67,7 @@ void rtsp_config_window::setup_UI() {
     
     // Password
     m_password_layout = new QHBoxLayout();
-    m_password_label = new QLabel(tr("Password:"));
+    m_password_label = new QLabel(tr("密码:"));
     m_password_edit = new QLineEdit();
     m_password_edit->setPlaceholderText(tr("password"));
     m_password_edit->setEchoMode(QLineEdit::Password);
@@ -82,7 +82,7 @@ void rtsp_config_window::setup_UI() {
     
     // IP
     m_ip_layout = new QHBoxLayout();
-    m_ip_label = new QLabel(tr("IP:"));
+    m_ip_label = new QLabel(tr("IP地址:"));
     m_ip_edit = new QLineEdit();
     m_ip_edit->setPlaceholderText(tr("192.168.1.100"));
     m_ip_layout->addWidget(m_ip_label);
@@ -90,7 +90,7 @@ void rtsp_config_window::setup_UI() {
     
     // Port
     m_port_layout = new QHBoxLayout();
-    m_port_label = new QLabel(tr("Port:"));
+    m_port_label = new QLabel(tr("端口:"));
     m_port_edit = new QLineEdit();
     m_port_edit->setPlaceholderText(tr("554"));
     m_port_layout->addWidget(m_port_label);
@@ -104,7 +104,7 @@ void rtsp_config_window::setup_UI() {
     
     // Channel
     m_channel_layout = new QHBoxLayout();
-    m_channel_label = new QLabel(tr("Channel:"));
+    m_channel_label = new QLabel(tr("频道:"));
     m_channel_edit = new QLineEdit();
     m_channel_edit->setText("101");
     m_channel_layout->addWidget(m_channel_label);
@@ -112,7 +112,7 @@ void rtsp_config_window::setup_UI() {
     
     // Subtype
     m_subtype_layout = new QHBoxLayout();
-    m_subtype_label = new QLabel(tr("Subtype:"));
+    m_subtype_label = new QLabel(tr("码流类型:"));
     m_subtype_edit = new QLineEdit();
     m_subtype_edit->setText("0");
     m_subtype_layout->addWidget(m_subtype_label);
@@ -123,7 +123,7 @@ void rtsp_config_window::setup_UI() {
     
     // RTSP URL
     m_rtsp_url_layout = new QHBoxLayout();
-    m_rtsp_rrl_label = new QLabel(tr("RTSP URL:"));
+    m_rtsp_rrl_label = new QLabel(tr("RTSP链接:"));
     m_rtsp_url_edit = new QLineEdit();
     m_rtsp_url_edit->setReadOnly(false);
     m_rtsp_url_layout->addWidget(m_rtsp_rrl_label);
@@ -131,10 +131,10 @@ void rtsp_config_window::setup_UI() {
     
     // buttons
     m_button_layout = new QHBoxLayout();
-    m_test_button = new QPushButton(tr("Test Connection"));
-    m_save_button = new QPushButton(tr("Save Config"));
-    m_connect_button = new QPushButton(tr("Connect"));
-    m_cancel_button = new QPushButton(tr("Cancel"));
+    m_test_button = new QPushButton(tr("测试连接"));
+    m_save_button = new QPushButton(tr("保存配置"));
+    m_connect_button = new QPushButton(tr("连接"));
+    m_cancel_button = new QPushButton(tr("取消"));
     
     m_test_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay));
     m_save_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
@@ -151,7 +151,7 @@ void rtsp_config_window::setup_UI() {
     m_status_label = new QLabel();
     m_status_label->setWordWrap(true);
     
-    QGroupBox* rtspGroup = new QGroupBox(tr("RTSP Connection Settings"));
+    QGroupBox* rtspGroup = new QGroupBox(tr("RTSP连接设置"));
     QVBoxLayout* groupLayout = new QVBoxLayout();
     groupLayout->addLayout(m_rtsp_protocal__name_layout);
     groupLayout->addLayout(m_user_pass_layout);
@@ -240,16 +240,16 @@ void rtsp_config_window::update_rtsp_url() {
 }
 
 void rtsp_config_window::on_test_connection() {
-    m_status_label->setText(tr("Testing RTSP connection..."));
+    m_status_label->setText(tr("RTSP连接测试中..."));
     QApplication::processEvents();
     
     bool success = true;
     
     if (success) {
-        m_status_label->setText(tr("Connection successful!"));
+        m_status_label->setText(tr("连接成功!"));
         m_status_label->setStyleSheet("color: green;");
     } else {
-        m_status_label->setText(tr("Connection failed!"));
+        m_status_label->setText(tr("连接失败!"));
         m_status_label->setStyleSheet("color: red;");
     }
    
@@ -259,14 +259,14 @@ void rtsp_config_window::on_test_connection() {
 
 void rtsp_config_window::on_save_config() {
     save_settings();
-    m_status_label->setText(tr("Configuration saved."));
+    m_status_label->setText(tr("配置已保存。"));
     m_status_label->setStyleSheet("color: black;");
     
     emit rtsp_config_saved(m_rtsp_config);
 }
 
 void rtsp_config_window::on_connect() {
-    m_status_label->setText(tr("Connecting to RTSP stream..."));
+    m_status_label->setText(tr("连接至RTSP流中..."));
     QApplication::processEvents();
     
     save_settings();

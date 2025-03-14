@@ -430,7 +430,7 @@ bool db_manager::create_warning_records_table() {
     );
 }
 
-bool db_manager::add_warning_record( int cam_id
+int db_manager::add_warning_record( int cam_id
                                    , const QString& cam_name
                                    , const QString& inf_res
                                    , bool status
@@ -451,17 +451,21 @@ bool db_manager::add_warning_record( int cam_id
     params[":keywords"] = keywords;
     params[":rtsp_name"] = rtsp_name;
     params[":rtsp_url"] = rtsp_url;
+    params[":push_status"] = false;
 
-    bool success = execute_non_query(
-        "INSERT INTO warning_records (cam_id, cam_name, inf_res, status, keywords, rtsp_name, rtsp_url) "
-        "VALUES (:cam_id, :cam_name, :inf_res, :status, :keywords, :rtsp_name, :rtsp_url)",
+    QSqlQuery query = execute_query(
+        "INSERT INTO warning_records (cam_id, cam_name, inf_res, status, keywords, rtsp_name, rtsp_url, push_status) "
+        "VALUES (:cam_id, :cam_name, :inf_res, :status, :keywords, :rtsp_name, :rtsp_url, :push_status)"
+        "RETURNING id",
         params
     );
 
-    if (!success) emit database_error("Failed to add warning record");
+    int record_id = -1;
+
+    if (query.next()){ record_id = query.value(0).toInt();  emit database_error("Failed to add warning record"); }
     else operation_completed("Add Warning Record", true);
     
-    return success;
+    return record_id;
 }
 
 
@@ -522,4 +526,29 @@ QVector<QMap<QString, QVariant>> db_manager::get_warning_records( int cam_id
     }
     
     return result;
+}
+
+
+
+bool db_manager::update_warning_record_push_status(int id, bool status, const QString& message) {
+    if (!is_connected()) {
+        emit database_error("Database not connected");
+        return false;
+    }
+    
+    QMap<QString, QVariant> params;
+    params[":id"] = id;
+    params[":status"] = status;
+    params[":message"] = message;
+    
+    bool success = execute_non_query(
+        "UPDATE warning_records SET push_status = :status, push_message = :message WHERE id = :id",
+        params
+    );
+    
+    if (!success) {
+        emit database_error("Failed to update warning record push status");
+    }
+    
+    return success;
 }
