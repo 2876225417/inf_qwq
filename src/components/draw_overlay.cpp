@@ -1,6 +1,7 @@
 
 #include "HCNetSDK.h"
 #include "utils/db_manager_mini.h"
+#include "windows/rtsp_config_window.h"
 #include <components/draw_overlay.h>
 #include <QTimer>
 #include <qcombobox.h>
@@ -408,6 +409,20 @@ QRect draw_overlay::get_expand_btn_rect() const {
     );
 }
 
+QRect draw_overlay::get_switch_btn_rect() const {
+    const int btn_size = 24;
+    const int margin = 10;
+
+    return QRect (
+        width() - btn_size - margin,
+        margin + btn_size + 5,
+        btn_size,
+        btn_size
+    );
+}
+
+
+
 void draw_overlay::handle_rect_number_changed(int idx) {
     if (m_edit_idx >= 0 && m_edit_idx < m_rects.size()) {
         m_rects[m_edit_idx].number = idx + 1;
@@ -431,6 +446,7 @@ QRect draw_overlay::paint_close_btn(const QRect& rect) const {
 
 void draw_overlay::update_hover_state(const QPoint& pos) {
     m_expand_btn_hovered = get_expand_btn_rect().contains(pos);
+    m_switch_btn_hovered = get_switch_btn_rect().contains(pos);
 
     m_hover_idx = -1;
     for (int i = 0; i < m_rects.size(); ++i) {
@@ -530,6 +546,41 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
 
         if (m_expand_btn_hovered) {
             emit expand_camera_request(m_cam_id);
+            return;
+        }
+
+        QRect switch_btn = get_switch_btn_rect();
+            
+        if (switch_btn.contains(e->pos()))  {   // switch down camera
+            m_rects.clear();
+             
+            if (!m_rtsp_config_window) {
+                m_rtsp_config_window = new rtsp_config_window();
+                m_rtsp_config_window->setWindowTitle(tr("Config Cam%1").arg(m_cam_id));
+                
+                m_rtsp_config_window->m_close_conn_button->setEnabled(true);
+                m_rtsp_config_window->m_save_button->setEnabled(false);
+                connect ( m_rtsp_config_window
+                        , &rtsp_config_window::send_rtsp_url
+                        , this, [this](const QString& rtsp_url, const rtsp_config& rtsp_cfg){
+                            set_cam_name(rtsp_cfg.rtsp_name);
+                            emit switch_cam(rtsp_url, rtsp_cfg); 
+                            qDebug() << "rtsp_url: " << rtsp_url; 
+                        });
+
+                connect ( m_rtsp_config_window
+                        , &rtsp_config_window::on_close_conn
+                        , this, [this]() {
+                            qDebug() << "Close button";
+                            emit suspend_cam();
+                        });
+
+
+            }
+            m_rtsp_config_window->show();
+            m_rtsp_config_window->raise();
+            m_rtsp_config_window->activateWindow();
+
             return;
         }
         
@@ -649,10 +700,7 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
 
     QRect expand_btn = get_expand_btn_rect();
     painter.setPen(Qt::NoPen);
-
-    if (m_expand_btn_hovered) painter.setBrush(QColor(100, 100, 255, 180));
-    else painter.setBrush(QColor(70, 70, 200, 150));
-
+    painter.setBrush(m_expand_btn_hovered ? QColor(100, 100, 100, 180) : QColor(60, 60, 60, 180));
     painter.drawEllipse(expand_btn);
 
     painter.setPen(QPen(Qt::white, 2));
@@ -663,6 +711,22 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
     painter.drawEllipse(QPoint(center_X - 2, center_Y - 2), icon_size / 2, icon_size / 2);
    
     painter.drawLine(center_X + icon_size / 3, center_Y + icon_size / 3, center_X + icon_size / 2, center_Y + icon_size / 2);
+
+
+    QRect switch_btn = get_switch_btn_rect();
+    painter.setPen(QPen(Qt::white, 2)); 
+    painter.setBrush(m_switch_btn_hovered ? QColor(100, 100, 100, 180) : QColor(60, 60, 60, 180));
+    painter.drawRoundedRect(switch_btn, 4, 4);
+
+    int cx = switch_btn.center().x();
+    int cy = switch_btn.center().y();
+
+   
+    QPolygon arrow;
+    arrow << QPoint(cx, cy - 6) << QPoint(cx - 6, cy + 2) << QPoint(cx + 6, cy + 2);
+    painter.setBrush(Qt::white);
+    painter.drawPolygon(arrow);
+
 
     draw_status_indicator(painter);
     draw_inference_result(painter);

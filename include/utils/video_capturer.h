@@ -27,6 +27,8 @@ public:
     bool switch_camera(int camera_index);
     bool switch_rtsp_stream(const QString& rtsp_url);
     bool is_running() const { return QThread::isRunning(); }
+    
+    void suspend_cam();
 
     void set_scale_factor(double factor);
     double get_scale_factor() const;
@@ -35,8 +37,11 @@ signals:
     void frame_captured(QImage frame);
     void camera_error(const QString& error_msg);
 private:
+    #ifdef ENABLE_GPU
     cv::cuda::GpuMat m_gpu_frame;
+    #endif
     bool m_use_cuda = true;
+
 
     int m_cam_id;
     QString m_rtsp_url;

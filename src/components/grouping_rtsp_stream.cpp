@@ -1,9 +1,12 @@
 
 #include "components/camera_wrapper.h"
 #include <components/grouping_rtsp_stream.h>
+#include <qcoreevent.h>
 #include <qevent.h>
 #include <qgridlayout.h>
 #include <qnamespace.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
 #include <qwidget.h>
 
 grouping_rtsp_stream::grouping_rtsp_stream( int start_cam_id
@@ -44,13 +47,12 @@ void grouping_rtsp_stream::setup_cam(int cam_id, int grid_pos) {
                 , this, [this, cam_id](int id){
                    emit cam_expand_req(id);
                 });
-
-        
-
         m_id2cam.insert(cam_id, cam);
         m_widget2id.insert(cam, cam_id);
         m_cam_pool.append(cam);
         widget = cam;
+
+
     } else {
         widget = create_placeholder();
     }
@@ -96,9 +98,6 @@ QWidget* grouping_rtsp_stream::create_placeholder() {
     return placeholder;
 }
 
-
-
-
 void grouping_rtsp_stream::resizeEvent(QResizeEvent*) {
     int content_width = width() - 5;
     int content_height = height() - 5;
@@ -112,5 +111,5 @@ void grouping_rtsp_stream::resizeEvent(QResizeEvent*) {
     foreach(auto video, findChildren<QWidget*>()) {
         video->setFixedSize(final_width, final_height);
     }
-
 }
+

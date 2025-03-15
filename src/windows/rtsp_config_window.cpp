@@ -5,8 +5,11 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <qboxlayout.h>
+#include <qcheckbox.h>
+#include <qcombobox.h>
 #include <qendian.h>
 #include <qlineedit.h>
+#include <qpushbutton.h>
 
 rtsp_config_window::rtsp_config_window(QWidget* parent)
     : QWidget(parent, Qt::Window)
@@ -123,27 +126,42 @@ void rtsp_config_window::setup_UI() {
     
     // RTSP URL
     m_rtsp_url_layout = new QHBoxLayout();
+    m_enable_custom_rtsp_url = new QCheckBox();
     m_rtsp_rrl_label = new QLabel(tr("RTSP链接:"));
     m_rtsp_url_edit = new QLineEdit();
-    m_rtsp_url_edit->setReadOnly(false);
+    m_rtsp_url_edit->setReadOnly(true);
+    m_rtsp_url_layout->addWidget(m_enable_custom_rtsp_url);
     m_rtsp_url_layout->addWidget(m_rtsp_rrl_label);
     m_rtsp_url_layout->addWidget(m_rtsp_url_edit);
+   
+    // RTSP URL combobox
+    m_rtsp_url_combo_layout = new QHBoxLayout();
+    m_rtsp_url_combo_lable = new QLabel("RTSP Link: ");
+    m_rtsp_url_combo = new QComboBox();
+
+    m_rtsp_url_combo_layout->addWidget(m_rtsp_url_combo_lable);
+    m_rtsp_url_combo_layout->addWidget(m_rtsp_url_combo);
     
+
     // buttons
     m_button_layout = new QHBoxLayout();
     m_test_button = new QPushButton(tr("测试连接"));
     m_save_button = new QPushButton(tr("保存配置"));
+    m_close_conn_button = new QPushButton(tr("Disconnect"));
     m_connect_button = new QPushButton(tr("连接"));
     m_cancel_button = new QPushButton(tr("取消"));
-    
+   
+    m_close_conn_button->setEnabled(false);
+
     m_test_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay));
     m_save_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
+    m_close_conn_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogCloseButton)); 
     m_connect_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogOkButton));
     m_cancel_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogCancelButton));
     
     m_button_layout->addWidget(m_test_button);
     m_button_layout->addWidget(m_save_button);
-    m_button_layout->addStretch();
+    m_button_layout->addWidget(m_close_conn_button);
     m_button_layout->addWidget(m_connect_button);
     m_button_layout->addWidget(m_cancel_button);
     
@@ -158,6 +176,7 @@ void rtsp_config_window::setup_UI() {
     groupLayout->addLayout(m_ip_port_layout);
     groupLayout->addLayout(m_channel_subtype_layout);
     groupLayout->addLayout(m_rtsp_url_layout);
+    groupLayout->addLayout(m_rtsp_url_combo_layout);
     rtspGroup->setLayout(groupLayout);
     
     m_main_layout->addWidget(rtspGroup);
@@ -229,14 +248,37 @@ void rtsp_config_window::create_connections() {
                 update_rtsp_url();
             });
     
+    // Enable customized RTSP url
+    connect ( m_enable_custom_rtsp_url
+            , &QCheckBox::toggled
+            , this, [this](bool enable_customized){ 
+                if (enable_customized) m_rtsp_url_edit->setReadOnly(false);
+                else m_rtsp_url_edit->setReadOnly(true);
+            });
+    
+    // RTSP URL
+    connect ( m_rtsp_url_edit
+            , &QLineEdit::textChanged
+            , this, [this]() {
+                m_rtsp_url4conn = m_rtsp_url_edit->text();
+            });
+
     connect(m_test_button, &QPushButton::clicked, this, &rtsp_config_window::on_test_connection);
     connect(m_save_button, &QPushButton::clicked, this, &rtsp_config_window::on_save_config);
+    connect(m_close_conn_button, &QPushButton::clicked, this, [this](){ emit on_close_conn(); });
     connect(m_connect_button, &QPushButton::clicked, this, &rtsp_config_window::on_connect);
     connect(m_cancel_button, &QPushButton::clicked, this, &rtsp_config_window::on_cancel);
+    
+
 }
 
+
+
 void rtsp_config_window::update_rtsp_url() {
-    m_rtsp_url_edit->setText(m_rtsp_config.config2url());
+    m_rtsp_url_edit->setText(m_rtsp_config.config2url_mask());
+    
+    
+    m_rtsp_url4conn = m_rtsp_config.config2url();
 }
 
 void rtsp_config_window::on_test_connection() {
@@ -254,7 +296,7 @@ void rtsp_config_window::on_test_connection() {
     }
    
     // proceed connecting
-    emit send_rtsp_url(m_rtsp_url_edit->text(), m_rtsp_config);
+    emit send_rtsp_url(m_rtsp_url4conn, m_rtsp_config);
 }
 
 void rtsp_config_window::on_save_config() {
@@ -271,7 +313,7 @@ void rtsp_config_window::on_connect() {
     
     save_settings();
     
-    emit send_rtsp_url(m_rtsp_url_edit->text(), m_rtsp_config);
+    emit send_rtsp_url(m_rtsp_url4conn, m_rtsp_config);
     
     close();
 }
@@ -288,7 +330,7 @@ void rtsp_config_window::save_settings() {
     m_settings->setValue("RTSP/Port", m_rtsp_config.port);
     m_settings->setValue("RTSP/Channel", m_rtsp_config.channel);
     m_settings->setValue("RTSP/Subtype", m_rtsp_config.subtype);
-    m_settings->setValue("RTSP/URL", m_rtsp_url_edit->text());
+    m_settings->setValue("RTSP/URL", m_rtsp_url4conn);
     m_settings->sync();
 }
 
@@ -302,7 +344,7 @@ void rtsp_config_window::load_settings() {
     m_rtsp_config.port = m_settings->value("RTSP/Port", "554").toString();
     m_rtsp_config.channel = m_settings->value("RTSP/Channel", "101").toString();
     m_rtsp_config.subtype = m_settings->value("RTSP/Subtype", "0").toString();
-    
+     
     
     m_rtsp_proto_combo->setCurrentIndex(m_rtsp_proto_combo->findData(protocol));
     m_username_edit->setText(m_rtsp_config.username);
@@ -320,7 +362,7 @@ rtsp_config rtsp_config_window::get_config() const {
 }
 
 QString rtsp_config_window::get_rtsp_url() const {
-    return m_rtsp_url_edit->text();
+    return m_rtsp_url4conn;
 }
 
 bool rtsp_config_window::has_saved_config() const {

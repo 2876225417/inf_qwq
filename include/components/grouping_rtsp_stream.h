@@ -5,8 +5,10 @@
 
 
 #include <qboxlayout.h>
+#include <qcoreevent.h>
 #include <qevent.h>
 #include <qgridlayout.h>
+#include <qobject.h>
 #include <qpushbutton.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
@@ -41,10 +43,8 @@ public:
 
 signals:
     void cam_expand_req(int cma_id); 
-
 protected:
     void resizeEvent(QResizeEvent*) override;
-    
 
 private:
     QGridLayout* cams_grid;

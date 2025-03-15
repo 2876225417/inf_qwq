@@ -18,6 +18,8 @@
 #include <qnetworkreply.h>
 
 
+#include <windows/rtsp_config_window.h>
+
 struct rect_data {
     QRect rect;
     int number =1;
@@ -60,6 +62,14 @@ signals:
     void expand_camera_request(int cam_id);
     
     void reset_inf_result_after_hint(int cam_id);
+
+    void change_cam_rtsp_configs();
+
+    // rtsp configs signals
+    void suspend_cam();
+    void resume_cam();
+    void switch_cam(const QString& rtsp_url, const rtsp_config& rtsp_cfg);
+
 
 private:
     void mousePressEvent(QMouseEvent* e) override;
@@ -114,6 +124,8 @@ public:
     int m_edit_idx = -1;
     QTimer* m_timer;
     bool m_expand_btn_hovered = false;
+    bool m_switch_btn_hovered = false;
+
 
     resize_handle m_resize_handle = none;
     int m_resize_idx = -1;
@@ -140,6 +152,8 @@ public:
     void update_hover_state(const QPoint& pos);
     QRect paint_close_btn(const QRect& rect) const;
     QRect get_expand_btn_rect() const;
+    QRect get_switch_btn_rect() const;
+
     void handle_rect_number_changed(int idx);
     
     void check_resize_handles(const QPoint& pos);
@@ -147,6 +161,8 @@ public:
     void update_rect_with_resize(const QPoint& pos);
     
     void draw_resize_handles(QPainter& painter, const QRect& rect);
+
+    rtsp_config_window* m_rtsp_config_window = nullptr; 
 
 };
 

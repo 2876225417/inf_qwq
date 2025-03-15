@@ -29,6 +29,13 @@ void video_capturer::set_scale_factor(double factor) {
     if (factor > 0.1 && factor <= 5.0) m_scale_factor = factor;
 }
 
+void video_capturer::suspend_cam() {
+    if (is_running()) {
+        m_stop = true;
+        wait();
+    }
+}
+
 double video_capturer::get_scale_factor() const {
     QMutexLocker lock(&m_scale_mutex);
     return m_scale_factor;

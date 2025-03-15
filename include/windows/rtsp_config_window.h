@@ -12,6 +12,8 @@
 #include <QGroupBox>
 #include <QSettings>
 #include <qboxlayout.h>
+#include <qcombobox.h>
+#include <qlabel.h>
 
 enum class rtsp_proto_type {
     HIKVISION,
@@ -34,7 +36,16 @@ struct rtsp_config {
             case rtsp_proto_type::ALHUA:     return rtsp_ah();
             default: return "";
         }
-    } 
+    }
+
+    QString config2url_mask() const {
+        switch(rpt) {
+            case rtsp_proto_type::HIKVISION: return rtsp_mask_hk();
+            case rtsp_proto_type::ALHUA:     return rtsp_mask_ah();
+            default:                         return "";
+        }
+
+    }
 private:
     QString rtsp_hk() const { 
         return "rtsp://" + username 
@@ -44,9 +55,25 @@ private:
              + "/Streaming/Channels/101";
     }
 
+    QString rtsp_mask_hk() const {
+        return "rtsp://" + username
+             + ":"       + "********"
+             + "@"       + ip
+             + ":"       + port
+             + "/Streaming/Channels/101";
+   }
+
     QString rtsp_ah() const {
         return "rtsp://" + username
              + ":"       + password
+             + "@"       + ip
+             + ":"       + port
+             + "cam/realmonitor?channel=1@subtype=0";
+    }
+
+    QString rtsp_mask_ah() const {
+        return "rtsp://" + username
+             + ":"       + "********"
              + "@"       + ip
              + ":"       + port
              + "cam/realmonitor?channel=1@subtype=0";
@@ -65,10 +92,11 @@ public:
     bool has_saved_config() const;
     
     void load_saved_config();
-
 signals:
     void send_rtsp_url(const QString& rtsp_url, const rtsp_config& rtsp_cfg);
     void rtsp_config_saved(const rtsp_config& config);
+
+    void on_close_conn(); 
 
 private slots:
     void on_test_connection();
@@ -76,8 +104,7 @@ private slots:
     void on_connect();
     void on_cancel();
     void update_rtsp_url();
-
-private:
+public:
     void setup_UI();
     void create_connections();
     void save_settings();
@@ -138,21 +165,32 @@ private:
     QLabel* m_subtype_label;
     QLineEdit* m_subtype_edit;
     
-    // RTSP URL
+    // RTSP URL LineEdit
     QHBoxLayout* m_rtsp_url_layout;
+    QCheckBox* m_enable_custom_rtsp_url;
     QLabel* m_rtsp_rrl_label;
     QLineEdit* m_rtsp_url_edit;
     
+    // RTSP URL Combobox
+    QHBoxLayout* m_rtsp_url_combo_layout;
+    QLabel* m_rtsp_url_combo_lable;
+    QComboBox* m_rtsp_url_combo;
+
+
+
     // buttons layout
     QHBoxLayout* m_button_layout;
     QPushButton* m_test_button;
     QPushButton* m_save_button;
     QPushButton* m_connect_button;
     QPushButton* m_cancel_button;
-    
+    QPushButton* m_close_conn_button;
+
     // Status label
     QLabel* m_status_label;
     
+
+    QString m_rtsp_url4conn;
     rtsp_config m_rtsp_config;
     QSettings* m_settings;
 };

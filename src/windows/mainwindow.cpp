@@ -1,4 +1,3 @@
-#include "components/actions_wrapper.h"
 #include "components/camera_wrapper.h"
 #include "components/cropped_wrapper.h"
 #include "components/grouping_rtsp_stream.h"
@@ -247,6 +246,8 @@ mainwindow::mainwindow(QWidget* parent)
                 if (m_sidebar) m_sidebar->set_current_group(group_index);
             });
 
+  
+
     int m_total_cams = 48;
     
     const int per_page = grouping_rtsp_stream::get_MAX_PER_PAGE();
@@ -259,7 +260,8 @@ mainwindow::mainwindow(QWidget* parent)
         int currentTotal = isLastPage ? m_total_cams : (startCam + per_page);
         
         auto grid = new grouping_rtsp_stream(startCam,  currentTotal);
-        m_stream_group->addWidget(grid);
+
+       m_stream_group->addWidget(grid);
     }
     
     // for (int i = 0; i < m_stream_group->count(); ++i) {

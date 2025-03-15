@@ -1,6 +1,7 @@
 
 
 #include "components/draw_overlay.h"
+#include "utils/db_manager_mini.h"
 #include "utils/video_capturer.h"
 #include <components/camera_wrapper.h>
 #include <memory>
@@ -79,7 +80,18 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
                 }
             });
 
+    connect ( m_draw_overlay
+            , &draw_overlay::suspend_cam
+            , this, [this](){
+               m_video_capturer->suspend_cam(); 
+            }); 
 
+    connect ( m_draw_overlay
+            , &draw_overlay::switch_cam
+            , this, [this](const QString& rtsp_url){
+                bool success = m_video_capturer->switch_rtsp_stream(rtsp_url);
+             /* proceed insert */ 
+             });
 
     // camera stream  
     connect( m_video_capturer 
