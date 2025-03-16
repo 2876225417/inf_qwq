@@ -14,6 +14,7 @@
 #include <qboxlayout.h>
 #include <qcombobox.h>
 #include <qlabel.h>
+#include <qpushbutton.h>
 
 enum class rtsp_proto_type {
     HIKVISION,
@@ -175,8 +176,7 @@ public:
     QHBoxLayout* m_rtsp_url_combo_layout;
     QLabel* m_rtsp_url_combo_lable;
     QComboBox* m_rtsp_url_combo;
-
-
+    QPushButton* m_refresh_rtsp_url_list;
 
     // buttons layout
     QHBoxLayout* m_button_layout;

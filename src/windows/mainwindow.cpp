@@ -106,7 +106,15 @@ mainwindow::mainwindow(QWidget* parent)
                 //bool success = current_grid->get_cam_by_id(cam_nums)->set_rtsp_stream(rtsp_url); 
                 cam->get_draw_overlay()->set_cam_id(cam->get_cam_id() + 1);
                 cam->get_draw_overlay()->set_cam_name(rtsp_cfg.rtsp_name);
-                if (success) {
+                
+                if (success) { 
+                    db_manager::instance().add_rtsp_config( rtsp_cfg.username
+                                                          , rtsp_cfg.ip
+                                                          , rtsp_cfg.port
+                                                          , rtsp_cfg.channel
+                                                          , rtsp_cfg.subtype
+                                                          , rtsp_url
+                                                          ); 
                     m_expands_window2rtsp_config[cam_nums] = rtsp_cfg;
                     connect ( cam
                             , &camera_wrapper::img_cropped4inf
@@ -168,6 +176,8 @@ mainwindow::mainwindow(QWidget* parent)
                             , &tool_bar::send_http_url
                             , this, [this, cam](const QString& http_url, bool radiated){
                                 qDebug() << "Received here";
+                                // force enabled
+                                radiated = true;
                                 cam->get_draw_overlay()->set_http_url(http_url);
                                 cam->get_draw_overlay()->set_http_url_status(radiated);
                                 qDebug() << "Received http url: " << http_url 

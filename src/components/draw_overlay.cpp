@@ -272,6 +272,9 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     {
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
     setAttribute(Qt::WA_TranslucentBackground);
+    
+    // default http alarm url
+    m_http_url = "http://32.121.0.166:8018/TOOLS-M-AlarmMessage/send" ;
 
     m_number_combobox->addItems({"1", "2", "3", "4"});
     m_number_combobox->hide();
@@ -301,6 +304,9 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
 }
 
 void draw_overlay::send_http_alarm(int record_id) {
+    // force http alarm enabled
+    m_enable_http_url = true;
+    
     if (!m_enable_http_url || m_http_url.isEmpty()) return;
 
     // if (m_is_normal_status) return;
@@ -321,6 +327,8 @@ void draw_overlay::send_http_alarm(int record_id) {
         }
         return;
     }
+    
+    qDebug() << "Alarming HTTP URL: " << m_http_url;
 
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -329,18 +337,25 @@ void draw_overlay::send_http_alarm(int record_id) {
     json_data["deviceId"] = QString::number(m_cam_id);
     json_data["alarmTime"] = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     
-    QString alarm_msg = tr("Camera %1 detected abnormal content: %2")
-                            .arg(m_cam_id)
-                            .arg(m_keywords);
+    QDateTime alarm_time = QDateTime::currentDateTime();
+    QString time_str = alarm_time.toString(Qt::ISODate);
+
+    QString alarm_msg = tr("地点 %1 检测到异常内容: %2 时间 %3")
+                            .arg(m_rtsp_config.rtsp_name)
+                            .arg(m_keywords)
+                            .arg(time_str);
 
     if (!m_rtsp_config.rtsp_name.isEmpty()) {
-        alarm_msg = tr("Camera %1 (%2) detected abnormal content: %3")
+        alarm_msg = tr("设备 %1 地点(%2) 检测到异常内容: %3 时间: %4")
                             .arg(m_cam_id)
                             .arg(m_rtsp_config.rtsp_name.isEmpty() ? " " : m_rtsp_config.rtsp_name)
-                            .arg(m_keywords);
+                            .arg(m_keywords)
+                            .arg(time_str);
 
         json_data["deviceId"] = m_rtsp_config.rtsp_name;
     }
+
+    qDebug() << "Alarm msg: " << alarm_msg;
 
     json_data["alarmMsg"] = alarm_msg;
 
@@ -372,7 +387,7 @@ void draw_overlay::handle_http_response(QNetworkReply* reply) {
 
             push_msg = code + ": " + message;
 
-            if (code == "200") {
+            if (code == "200" || code.toInt() == 200){
                 qDebug() << "HTTP alarm sent successfully: " << message;
                 push_success = true;
             }
@@ -448,7 +463,7 @@ void draw_overlay::update_hover_state(const QPoint& pos) {
     m_expand_btn_hovered = get_expand_btn_rect().contains(pos);
     m_switch_btn_hovered = get_switch_btn_rect().contains(pos);
 
-    m_hover_idx = -1;
+    // m_hover_idx = -1;
     for (int i = 0; i < m_rects.size(); ++i) {
         QRect btn_rect = paint_close_btn(m_rects[i].rect);
         if (btn_rect.contains(pos)) {
@@ -556,7 +571,7 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
              
             if (!m_rtsp_config_window) {
                 m_rtsp_config_window = new rtsp_config_window();
-                m_rtsp_config_window->setWindowTitle(tr("Config Cam%1").arg(m_cam_id));
+                m_rtsp_config_window->setWindowTitle(tr("视频流 %1 配置").arg(m_cam_id));
                 
                 m_rtsp_config_window->m_close_conn_button->setEnabled(true);
                 m_rtsp_config_window->m_save_button->setEnabled(false);

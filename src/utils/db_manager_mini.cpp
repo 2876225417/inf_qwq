@@ -1,5 +1,6 @@
 
 
+#include <qsqlquery.h>
 #include <utils/db_manager_mini.h>
 #include <QSettings>
 
@@ -38,9 +39,6 @@ bool db_manager::database_initialize() {
 
     return success;
 }
-
-
-
 
 bool db_manager::connect( const QString& host
                         , const QString& db_name
@@ -152,13 +150,45 @@ bool db_manager::create_recognition_results_table() {
     );
 }
 
-bool db_manager::add_rtsp_config(const QString& username, const QString& ip, const QString& port,
-                            const QString& channel, const QString& subtype, const QString& rtsp_url) {
+bool db_manager::check_rtsp_url_exists(const QString& rtsp_url) {
+    if (!is_connected()) {
+        emit database_error("Database not connected");
+        return false;
+    }
+
+    QMap<QString, QVariant> params;
+    params[":rtsp_url"] = rtsp_url;
+
+    QSqlQuery query = execute_query(
+        "SELECT COUNT(*) FROM rtsp_sources WHERE rtsp_url = :rtsp_url",
+        params
+    );
+
+    if (query.next()) {
+        int count = query.value(0).toInt();
+        qDebug() << "count: " << count;
+        return count > 0;
+    }
+    return false;
+}
+
+bool db_manager::add_rtsp_config( const QString& username
+                                , const QString& ip
+                                , const QString& port
+                                , const QString& channel
+                                , const QString& subtype
+                                , const QString& rtsp_url
+                                ) {
     if (!is_connected()) {
         emit database_error("Database not connected");
         return false;
     }
     
+    if (check_rtsp_url_exists(rtsp_url)) {
+        emit operation_completed("RTSP URL already exists", false);
+        return false;
+    }
+
     QMap<QString, QVariant> params;
     params[":username"] = username;
     params[":ip"] = ip;
@@ -168,7 +198,7 @@ bool db_manager::add_rtsp_config(const QString& username, const QString& ip, con
     params[":rtsp_url"] = rtsp_url;
     
     QSqlQuery query = execute_query(
-        "INSERT INTO rtsp_config (username, ip, port, channel, subtype, rtsp_url) "
+        "INSERT INTO rtsp_sources (username, ip, port, channel, subtype, rtsp_url) "
         "VALUES (:username, :ip, :port, :channel, :subtype, :rtsp_url) RETURNING id",
         params
     );
@@ -184,8 +214,14 @@ bool db_manager::add_rtsp_config(const QString& username, const QString& ip, con
     return success;
 }
 
-bool db_manager::update_rtsp_config(int id, const QString& username, const QString& ip, const QString& port,
-                               const QString& channel, const QString& subtype, const QString& rtsp_url) {
+bool db_manager::update_rtsp_config( int id
+                                   , const QString& username
+                                   , const QString& ip
+                                   , const QString& port
+                                   , const QString& channel
+                                   , const QString& subtype
+                                   , const QString& rtsp_url
+                                   ) {
     if (!is_connected()) {
         emit database_error("Database not connected");
         return false;
@@ -247,10 +283,11 @@ QVector<QMap<QString, QVariant>> db_manager::get_all_rtsp_configs() {
     
     if (!is_connected()) {
         emit database_error("Database not connected");
+        qDebug() << "Database not connected";
         return result;
     }
  
-    QSqlQuery query = execute_query("SELECT * FROM rtsp_config ORDER BY id");
+    QSqlQuery query = execute_query("SELECT * FROM rtsp_sources ORDER BY id");
     
     while (query.next()) {
         QMap<QString, QVariant> row;

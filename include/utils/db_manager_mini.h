@@ -46,7 +46,9 @@ public:
                           , const QMap<QString, QVariant>& params 
                             = QMap<QString, QVariant>()
                           );
-    
+   
+    bool check_rtsp_url_exists(const QString& rtsp_url);
+
     bool add_rtsp_config( const QString& username
                         , const QString& ip
                         , const QString& port

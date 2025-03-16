@@ -43,7 +43,7 @@ public:
     void set_keywords(const QVector<QString>& keywords);
     void set_status();
     void set_cam_name(const QString& cam_name);
-
+    
     void update_keywords_no_args();
     void set_cam_id(int cam_id) { m_cam_id = cam_id; }
     void set_rtsp_config(const rtsp_config& rtsp_cfg) { m_rtsp_config = rtsp_cfg; }
@@ -60,7 +60,10 @@ signals:
     void update_frame_moving(QVector<rect_data>& rects);
     void timer_timeout_update(QVector<rect_data>& rects);
     void expand_camera_request(int cam_id);
-    
+
+
+    void close_conn();
+
     void reset_inf_result_after_hint(int cam_id);
 
     void change_cam_rtsp_configs();
