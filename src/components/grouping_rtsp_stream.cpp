@@ -18,8 +18,9 @@ grouping_rtsp_stream::grouping_rtsp_stream( int start_cam_id
                                           {
     // 2 x 2 grid
     cams_grid = new QGridLayout(this);
-    cams_grid->setSpacing(5);
-    cams_grid->setContentsMargins(5, 5, 5, 5);
+    int spacing_n_margin = 1;
+    cams_grid->setSpacing(spacing_n_margin);
+    cams_grid->setContentsMargins(spacing_n_margin, spacing_n_margin, spacing_n_margin, spacing_n_margin);
     
     m_cam_pool.reserve(MAX_PER_PAGE);
     
@@ -99,11 +100,11 @@ QWidget* grouping_rtsp_stream::create_placeholder() {
 }
 
 void grouping_rtsp_stream::resizeEvent(QResizeEvent*) {
-    int content_width = width() - 5;
-    int content_height = height() - 5;
+    int content_width = width() - 2;
+    int content_height = height() - 2;
     
-    int cell_width = content_width / 2 - 2 * 2;
-    int cell_height = content_height / 2 - 2 * 2;
+    int cell_width = content_width / 2 - 2 * 1;
+    int cell_height = content_height / 2 - 2 * 1;
     
     int final_height = qMin(cell_height, cell_width * 9 / 16);
     int final_width = final_height * 16 / 9;

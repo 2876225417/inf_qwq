@@ -52,7 +52,8 @@ mainwindow::mainwindow(QWidget* parent)
 
     // initialize database when launch
     
-    db_manager::instance().database_initialize();
+   
+
 
     m_chars_rec_inferer = new rec_inferer();
     m_chars_det_inferer = new det_inferer();
@@ -62,7 +63,18 @@ mainwindow::mainwindow(QWidget* parent)
     addToolBar(Qt::TopToolBarArea, m_tool_bar);
     m_status_bar = new status_bar();
     setStatusBar(m_status_bar);
-    
+
+    connect ( &db_manager::instance()
+            , &db_manager::database_conn_status
+            , this, [this](bool status) {
+               m_status_bar->update_database_conn_status(status); 
+            });
+
+
+    db_manager::instance().database_initialize();
+ 
+
+
     m_chars_ort_inferer = new chars_ort_inferer();
 
     QSplitter* splitter = new QSplitter(Qt::Horizontal);
@@ -136,7 +148,7 @@ mainwindow::mainwindow(QWidget* parent)
                             , this, [this, cam]() {
                                 qDebug() << "expanding window request received!";
 
-                                expanded_camera_window* expanded_window = new expanded_camera_window(cam);
+                                expanded_camera_window* expanded_window = new expanded_camera_window(1, cam);
                                 expanded_window->show();
                                 expanded_window->activateWindow();
                                 expanded_window->raise();
@@ -222,6 +234,7 @@ mainwindow::mainwindow(QWidget* parent)
 
 
                     emit conn_cnt_changed(cam_nums++);
+                    m_status_bar->update_conn_cnts(cam_nums);
                 }
                 // update sidebar
                 if (m_sidebar) {

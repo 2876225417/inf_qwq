@@ -6,7 +6,7 @@
 #include "windows/rtsp_config_window.h"
 #include <QWidget>
 #include <QVBoxLayout>
-#include <components/camera_wrapper.h>
+//#include <components/camera_wrapper.h>
 #include <QPushButton>
 #include <qboxlayout.h>
 #include <QSplitter>
@@ -27,7 +27,7 @@
 
 #include <QTextEdit>
 
-
+#include <components/camera_wrapper.h>
 #include <QSyntaxHighlighter>
 #include <algorithm>
 #include <QTextBrowser>
@@ -50,13 +50,15 @@ private:
 class expanded_camera_window: public QWidget {
     Q_OBJECT
 public:
-    explicit expanded_camera_window( camera_wrapper* cam
-                                   , QWidget* parent = nullptr);
+    explicit expanded_camera_window( int cam_id,
+                                     QWidget* parent = nullptr);
     ~expanded_camera_window() = default;
 
     void set_cropped_image(const QImage& image);
     void set_rstp_info(const rtsp_config& rstp_cfg);
     
+    void set_rtsp_url(const QString& rtsp_url) { m_camera->set_rtsp_stream(rtsp_url); }
+
     void inline set_inf_result(const QString& inf_res) { 
         m_inf_result->setText(highlight_text(inf_res));
     }
@@ -140,19 +142,16 @@ private:
     // comfirm 
     QPushButton* m_comfirm_config_btn;
 
-    camera_wrapper* m_org_camera;
+    //camera_wrapper* m_org_camera;
     rtsp_config m_rtsp_config;
     
-
-
     void setup_UI();
     void create_left_panel();
     void create_right_panel();
     void create_right_top_panel();
     void create_right_bottom_panel();
     void connect_signals();
-    
-    
+     
     QString format_keywords_display() {
         if (m_keywords.isEmpty()) return "No keywords";
         return m_keywords.join("<font color='#FF5252'> • </font>");
@@ -191,8 +190,6 @@ private:
 
         return highlighted;
     }
-
-
 };
 
 #endif  // EXPANDED_CAMERA_WINDOW_H

@@ -19,6 +19,8 @@
 #include <qtimer.h>
 #include <qwidget.h>
 
+#include <windows/expanded_camera_window.h>
+
 void draw_overlay::set_inference_result(const QString& result) {
     m_inference_result = result;
     update();
@@ -51,7 +53,7 @@ void draw_overlay::hint_warning() {
     if (!m_keywords.isEmpty() && m_is_inf /* forbid hint repeatedly */) {
         m_show_warning = true;
         update();
-        m_warning_timer->start(5000);
+        m_warning_timer->start(10000);
         // stop inferring
         m_rects.clear();
         m_is_inf = false;
@@ -267,7 +269,7 @@ QString draw_overlay::detect_matched_keywords( const QString& text
 draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     : QWidget(parent)
     , m_cam_id{cam_id}
-    , m_number_combobox{new QComboBox(this)}
+    //, m_number_combobox{new QComboBox(this)}
     , m_timer{new QTimer(this)}
     {
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
@@ -275,16 +277,6 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     
     // default http alarm url
     m_http_url = "http://32.121.0.166:8018/TOOLS-M-AlarmMessage/send" ;
-
-    m_number_combobox->addItems({"1", "2", "3", "4"});
-    m_number_combobox->hide();
-    m_number_combobox->setWindowFlags(Qt::Popup);
-    m_number_combobox->installEventFilter(this);
-    connect ( m_number_combobox
-            , QOverload<int>::of(&QComboBox::activated)
-            , this
-            , &draw_overlay::handle_rect_number_changed
-            ) ;
 
     connect (m_timer, &QTimer::timeout, this, [this]() {
         if (!m_rects.isEmpty()) emit timer_timeout_update(m_rects);
@@ -445,7 +437,7 @@ void draw_overlay::handle_rect_number_changed(int idx) {
         qDebug() << "idx changed: " << m_rects[m_drag_idx].number;
         for(const auto& rd: m_rects) qDebug() << "number: " << rd.number;
     }
-    m_number_combobox->hide();
+
     m_edit_idx = -1;
 }
 
@@ -462,8 +454,10 @@ QRect draw_overlay::paint_close_btn(const QRect& rect) const {
 void draw_overlay::update_hover_state(const QPoint& pos) {
     m_expand_btn_hovered = get_expand_btn_rect().contains(pos);
     m_switch_btn_hovered = get_switch_btn_rect().contains(pos);
+    
+    int old_hover_idx = m_hover_idx;
+    m_hover_idx = -1;
 
-    // m_hover_idx = -1;
     for (int i = 0; i < m_rects.size(); ++i) {
         QRect btn_rect = paint_close_btn(m_rects[i].rect);
         if (btn_rect.contains(pos)) {
@@ -471,7 +465,14 @@ void draw_overlay::update_hover_state(const QPoint& pos) {
             return;
         }
         if (m_rects[i].rect.contains(pos)) m_hover_idx = i;
-    } 
+    }
+    if (old_hover_idx != m_hover_idx) {
+        if (m_hover_idx == -1) {
+            setCursor(Qt::ArrowCursor);
+        } else if (m_resize_handle == none) {
+            setCursor(Qt::SizeAllCursor);
+        }
+    }
 }
 
 void draw_overlay::check_resize_handles(const QPoint& pos) {
@@ -547,20 +548,36 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
             m_edit_idx = m_hover_idx;
             QRect target_rect = m_rects[m_hover_idx].rect;
 
-            QPoint center_pos = mapToGlobal(target_rect.center());
-            QSize combobox_size = m_number_combobox->sizeHint();
-            m_number_combobox->move( center_pos - QPoint(combobox_size.width() / 2
-                                   , combobox_size.height())
-                                   ) ;
-            m_number_combobox->raise();
-            m_number_combobox->show();
-            m_number_combobox->setCurrentIndex(m_rects[m_hover_idx].number - 1);
+
         }
     } else if (e->button() == Qt::LeftButton) {
         update_hover_state(e->pos());
 
+        // expand window
         if (m_expand_btn_hovered) {
-            emit expand_camera_request(m_cam_id);
+             if (!m_expanded_camera_window) {
+                m_expanded_camera_window = new expanded_camera_window(m_cam_id);
+                m_expanded_camera_window->setWindowTitle(tr("Camera %1 Details").arg(m_cam_id));
+
+                m_expanded_camera_window->set_rtsp_url(m_current_rtsp_url);
+
+                m_expanded_camera_window->setAttribute(Qt::WA_DeleteOnClose);
+                
+                QObject::connect( m_expanded_camera_window
+                                , &expanded_camera_window::destroyed
+                                , this, [this]() { 
+                                    qDebug() << "m_expanded window destroyed";
+                                    m_expanded_camera_window = nullptr; 
+                                });
+
+                
+
+            }
+            m_expanded_camera_window->show();
+            m_expanded_camera_window->raise();
+            m_expanded_camera_window->activateWindow();
+
+            //emit expand_camera_request(m_cam_id);
             return;
         }
 
@@ -603,6 +620,8 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
             QRect btn_rect = paint_close_btn(m_rects[m_hover_idx].rect);
             if (btn_rect.contains(e->pos())) {
                 m_rects.remove(m_hover_idx);
+                m_hover_idx = -1;
+                setCursor(Qt::ArrowCursor);
                 update();
                 return;
             }
@@ -614,9 +633,15 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
                 m_drag_start_pos = e->pos();
             }
         } else {
+            m_hover_idx = -1;
+            m_resize_handle = none;
+            m_drag_idx = -1;
+            m_resize_idx = -1;
+             
             m_is_dragging = true;
             m_start = e->pos();
             m_current_rect = QRect();
+            setCursor(Qt::ArrowCursor);
         }
     } update();
 }
@@ -627,7 +652,10 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
             emit selected(m_rects);
             m_resize_idx = -1;
             m_resize_handle = none;
-            setCursor(Qt::ArrowCursor);
+            
+            update_hover_state(e->pos());
+            setCursor(m_hover_idx != -1 ? Qt::SizeAllCursor : Qt::ArrowCursor);
+            //setCursor(Qt::ArrowCursor);
         } else if (m_is_dragging && m_current_rect.isValid()) {
             rect_data new_rect;
             new_rect.rect = m_current_rect;
@@ -638,14 +666,90 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
             emit selected(m_rects);
             m_is_inf = true; 
             m_current_rect = QRect();
+            
+            emit selected(m_rects);
+            m_is_inf = true;
+            m_current_rect = QRect();
+
+            update_hover_state(e->pos());
+            setCursor(m_hover_idx != -1 ? Qt::SizeAllCursor : Qt::ArrowCursor);
+        } else {
+            update_hover_state(e->pos());
+            if (m_hover_idx == -1) setCursor(Qt::ArrowCursor);
         }
         m_is_dragging = false;
         m_drag_idx = -1;
+
+        update_hover_state(e->pos());
     } update();
 }
 
+// void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
+//     if (m_resize_idx != -1 && m_resize_handle != none) {
+//         switch (m_resize_handle) {
+//             case top_left:
+//             case bottom_right:  setCursor(Qt::SizeFDiagCursor); break;
+//             case top_right:
+//             case bottom_left:   setCursor(Qt::SizeBDiagCursor); break;
+//             case top:
+//             case bottom:        setCursor(Qt::SizeVerCursor); break;
+//             case left:
+//             case right:         setCursor(Qt::SizeHorCursor); break;
+//             default:            setCursor(Qt::ArrowCursor); break;
+//         }
+//         
+//         update_rect_with_resize(e->pos());
+//         emit update_frame_moving(m_rect);
+//         update();
+//         return;
+//     } else {
+//         update_hover_state(e->pos());
+//         check_resize_handles(e->pos());
+//         
+//         if (m_hover_idx != -1) {
+//             if (m_resize_handle != none) {
+//                 switch (m_resize_handle) {
+//                     case top_left:
+//                     case bottom_right:  setCursor(Qt::SizeFDiagCursor); break;
+//                     case top_right:
+//                     case bottom_left:   setCursor(Qt::SizeBDiagCursor); break;
+//                     case top:
+//                     case bottom:        setCursor(Qt::SizeVerCursor); break;
+//                     case left:
+//                     case right:         setCursor(Qt::SizeHorCursor); break;
+//                     default:            setCursor(Qt::SizeAllCursor); break;
+//                 }
+//             } else {
+//                 setCursor(Qt::SizeAllCursor);
+//             }
+//         } else if (!m_is_dragging && m_drag_idx == -1 && m_resize_idx == -1) {
+//             setCursor(Qt::ArrowCursor);
+//         }
+//     }
+//
+//     if (m_resize_idx != -1 && m_resize_handle != none) {
+//         update_rect_with_resize(e->pos());
+//         emit update_frame_moving(m_rects);
+//         update();
+//         return;
+//     }
+//
+//     if (m_drag_idx != -1) {
+//         QPoint delta = e->pos() - m_drag_start_pos;
+//         m_rects[m_drag_idx].rect.translate(delta);
+//         m_drag_start_pos = e->pos();
+//         emit update_frame_moving(m_rects);
+//         update();
+//     } else if (m_is_dragging) {
+//         m_current_rect = QRect(m_start, e->pos()).normalized();
+//         update();
+//     }
+// }
+
 void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
-    if (m_resize_handle != none) {
+    // 处理调整大小的鼠标指针
+    if (m_resize_idx != -1 && m_resize_handle != none) {
+        // 正在调整大小，设置对应的调整大小光标
         switch (m_resize_handle) {
             case top_left:
             case bottom_right:  setCursor(Qt::SizeFDiagCursor); break;
@@ -657,29 +761,70 @@ void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
             case right:         setCursor(Qt::SizeHorCursor); break;
             default:            setCursor(Qt::ArrowCursor); break;
         }
-    } else {
-        update_hover_state(e->pos());
-        setCursor(m_hover_idx != -1 ? Qt::SizeAllCursor : Qt::ArrowCursor);
-    }
-
-    if (m_resize_idx != -1 && m_resize_handle != none) {
+        
         update_rect_with_resize(e->pos());
         emit update_frame_moving(m_rects);
         update();
         return;
     }
-
+    
     if (m_drag_idx != -1) {
+        // 正在拖动框
         QPoint delta = e->pos() - m_drag_start_pos;
         m_rects[m_drag_idx].rect.translate(delta);
         m_drag_start_pos = e->pos();
-        qDebug() << "Moving";
         emit update_frame_moving(m_rects);
         update();
-    } else if (m_is_dragging) {
+        return;
+    } 
+    
+    if (m_is_dragging) {
+        // 正在创建新框
         m_current_rect = QRect(m_start, e->pos()).normalized();
         update();
+        return;
     }
+    
+    // 普通鼠标移动 - 更新悬停状态和光标
+    update_hover_state(e->pos());
+    
+    if (m_hover_idx != -1) {
+        // 鼠标在框内，检查是否在调整大小的手柄上
+        check_resize_handles(e->pos());
+        
+        if (m_resize_handle != none) {
+            // 设置调整大小的光标
+            switch (m_resize_handle) {
+                case top_left:
+                case bottom_right:  setCursor(Qt::SizeFDiagCursor); break;
+                case top_right:
+                case bottom_left:   setCursor(Qt::SizeBDiagCursor); break;
+                case top:
+                case bottom:        setCursor(Qt::SizeVerCursor); break;
+                case left:
+                case right:         setCursor(Qt::SizeHorCursor); break;
+                default:            setCursor(Qt::SizeAllCursor); break;
+            }
+        } else {
+            // 在框内但不在手柄上，显示移动光标
+            setCursor(Qt::SizeAllCursor);
+        }
+    } else {
+        // 鼠标在框外，显示普通箭头
+        setCursor(Qt::ArrowCursor);
+    }
+}
+
+void draw_overlay::leaveEvent(QEvent* event) {
+    m_hover_idx = -1;
+    m_expand_btn_hovered = false;
+    m_switch_btn_hovered = false;
+    
+    if (!m_is_dragging && m_drag_idx == -1 && m_resize_idx == -1) 
+        setCursor(Qt::ArrowCursor);
+
+    update();
+    QWidget::leaveEvent(event);
 }
 
 void draw_overlay::paintEvent(QPaintEvent* e) {
@@ -707,7 +852,7 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
         painter.drawText(rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft | Qt::AlignTop, QString::number(rd.number));
     }
 
-    if (m_is_dragging) {
+    if (m_is_dragging && m_current_rect.isValid()) {
         painter.setPen(QPen(Qt::blue, 2));
         painter.setBrush(QColor(0, 0, 255, 30));
         painter.drawRect(m_current_rect);
@@ -752,7 +897,7 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
 }
 
 bool draw_overlay::eventFilter(QObject* obj, QEvent* e) {
-    if (obj == m_number_combobox && e->type() == QEvent::Hide) m_edit_idx = -1;
+  
     return QWidget::eventFilter(obj, e); 
 }
 
@@ -760,15 +905,6 @@ bool draw_overlay::event(QEvent* e) {
     if (e->type() == QEvent::MouseButtonPress) {
         QMouseEvent* me = static_cast<QMouseEvent*>(e);
 
-        if (m_number_combobox->isVisible()) {
-            QPoint click_pos = me->globalPos();
-            QRect combobox_geo = m_number_combobox->geometry();
-
-            if (!combobox_geo.contains(click_pos)) {
-                m_number_combobox->hide();
-                update();
-            }
-        }
     }
     return QWidget::event(e);
 }

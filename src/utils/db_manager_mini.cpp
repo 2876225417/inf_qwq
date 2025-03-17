@@ -36,7 +36,8 @@ bool db_manager::database_initialize() {
 
     if (success) qDebug() << "Database connection intialized successfully!";
     else qDebug() << "Failed to initialize database connection";
-
+    
+    emit database_conn_status(success);
     return success;
 }
 
@@ -60,10 +61,11 @@ bool db_manager::connect( const QString& host
     if (!m_db.open()) {
         emit database_error("Failed to connect to database: " + m_db.lastError().text());
         return false;
+        emit database_conn_status(false);
     }
-    
+     
     m_connected = true;
-    
+    emit database_conn_status(m_connected);
     //bool tablesCreated = ensureTablesExist();
     bool tablesCreated = true;
     if (tablesCreated) {

@@ -17,14 +17,14 @@
 #include <windows/expanded_camera_window.h>
 #include <QDebug>
 
-expanded_camera_window::expanded_camera_window(camera_wrapper* org_cam, QWidget* parent)
+expanded_camera_window::expanded_camera_window(int cam_id, QWidget* parent)
     : QWidget{parent, Qt::Window}
-    , m_org_camera{org_cam}
-{
+    {
+    m_camera = new camera_wrapper(cam_id);
     setup_UI();
     connect_signals();
-
-    setWindowTitle("Expanded Camera View - Camera " + QString::number(org_cam->get_cam_id()));
+     
+    //setWindowTitle("Expanded Camera View - Camera " + QString::number(org_cam->get_cam_id()));
     resize(1200, 800);
     setAttribute(Qt::WA_DeleteOnClose);
 }
@@ -103,9 +103,9 @@ void expanded_camera_window::create_left_panel() {
     m_left_layout = new QVBoxLayout(m_left_widget);
     m_left_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_camera = new camera_wrapper(m_org_camera->get_cam_id(), m_left_widget);
+    //m_camera = new camera_wrapper(m_org_camera->get_cam_id(), m_left_widget);
     
-    m_camera->set_rtsp_stream(m_org_camera->get_rtsp_url());
+    //m_camera->set_rtsp_stream(m_org_camera->get_rtsp_url());
     
     m_camera->hide_draw_overlay();
 

@@ -116,6 +116,7 @@ public:
                        );
     
 signals:
+    void database_conn_status(bool status);
     void database_error(const QString& error);
     void operation_completed( const QString& operation
                             , bool success

@@ -5,7 +5,6 @@
 #define DRAW_OVERLAY_H
 
 
-#include "windows/rtsp_config_window.h"
 #include <QWidget>
 #include <QPainter>
 #include <QMouseEvent>
@@ -17,8 +16,8 @@
 #include <qnetworkaccessmanager.h>
 #include <qnetworkreply.h>
 
-
 #include <windows/rtsp_config_window.h>
+
 
 struct rect_data {
     QRect rect;
@@ -26,6 +25,8 @@ struct rect_data {
 };
 
 class QTimer;
+
+class expanded_camera_window;
 
 class draw_overlay: public QWidget {
     Q_OBJECT
@@ -52,7 +53,8 @@ public:
     int record_warning2db();   
    
     bool is_inferrable() { return m_is_inf; } 
-
+    
+    void set_current_rtsp_url(const QString& rtsp_url) { m_current_rtsp_url = rtsp_url; }
     void set_http_url(const QString& url) { m_http_url = url; qDebug() << "update url: " << m_http_url;}
     void set_http_url_status(bool radiated) { m_enable_http_url = radiated; }
 signals:
@@ -72,7 +74,7 @@ signals:
     void suspend_cam();
     void resume_cam();
     void switch_cam(const QString& rtsp_url, const rtsp_config& rtsp_cfg);
-
+     
 
 private:
     void mousePressEvent(QMouseEvent* e) override;
@@ -81,7 +83,7 @@ private:
     void paintEvent(QPaintEvent* e) override;
     bool eventFilter(QObject* obj, QEvent* e) override;
     bool event(QEvent* e) override;
-    
+    void leaveEvent(QEvent* event) override;
 
     bool is_allerted() const { return m_keywords.isEmpty(); }
     
@@ -166,7 +168,8 @@ public:
     void draw_resize_handles(QPainter& painter, const QRect& rect);
 
     rtsp_config_window* m_rtsp_config_window = nullptr; 
-
+    expanded_camera_window* m_expanded_camera_window = nullptr;
+    QString m_current_rtsp_url;
 };
 
 #endif

@@ -135,6 +135,7 @@ void camera_wrapper::set_scale_factor(double factor) {
 
 bool camera_wrapper::set_rtsp_stream(const QString& rtsp_url) {
     qDebug() << "Try to switch to rtsp_url: " << rtsp_url;
+    m_draw_overlay->set_current_rtsp_url(rtsp_url);
     return m_video_capturer->switch_rtsp_stream(rtsp_url);
 }
 

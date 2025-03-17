@@ -32,7 +32,7 @@
 #include <utils/ort_inf.hpp>
 
 #include <components/cropped_wrapper.h>
-
+#include <windows/expanded_camera_window.h>
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -42,7 +42,7 @@
 
 #include <QObject>
 
-#include <windows/expanded_camera_window.h>
+//#include <windows/expanded_camera_window.h>
 
 class mainwindow: public QMainWindow {
     Q_OBJECT
@@ -132,7 +132,7 @@ private:
     // @ inf result
     // @ inf cropped
     // @ keywords
-    QMap<int, expanded_camera_window*> m_expanded_windows;
+    //QMap<int, expanded_camera_window*> m_expanded_windows;
     QMap<int, rtsp_config> m_expands_window2rtsp_config; 
     QMap<int, QString> m_expanded_window2_inf_res;
     QMap<int, QImage> m_expanded_window2_inf_cropped;
