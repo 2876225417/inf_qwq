@@ -648,35 +648,22 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
 
 void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
     if (e->button() == Qt::LeftButton) {
-        if (m_resize_idx != -1 && m_resize_handle != none) {
+        bool was_resizing = (m_resize_idx != -1 && m_resize_handle != none);
+        bool was_dragging = m_is_dragging && m_current_rect.isValid();
+
+        if (was_resizing) {
             emit selected(m_rects);
             m_resize_idx = -1;
             m_resize_handle = none;
-            
-            update_hover_state(e->pos());
-            setCursor(m_hover_idx != -1 ? Qt::SizeAllCursor : Qt::ArrowCursor);
-            //setCursor(Qt::ArrowCursor);
-        } else if (m_is_dragging && m_current_rect.isValid()) {
+        } else if (was_dragging) {
             rect_data new_rect;
             new_rect.rect = m_current_rect;
             m_rects.append(new_rect);
-            qDebug() << "Rect added, count of rects: "
-                     << m_rects.size()
-                     << "rect: " << new_rect.rect;
-            emit selected(m_rects);
-            m_is_inf = true; 
-            m_current_rect = QRect();
-            
             emit selected(m_rects);
             m_is_inf = true;
             m_current_rect = QRect();
-
-            update_hover_state(e->pos());
-            setCursor(m_hover_idx != -1 ? Qt::SizeAllCursor : Qt::ArrowCursor);
-        } else {
-            update_hover_state(e->pos());
-            if (m_hover_idx == -1) setCursor(Qt::ArrowCursor);
         }
+
         m_is_dragging = false;
         m_drag_idx = -1;
 
@@ -684,72 +671,8 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
     } update();
 }
 
-// void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
-//     if (m_resize_idx != -1 && m_resize_handle != none) {
-//         switch (m_resize_handle) {
-//             case top_left:
-//             case bottom_right:  setCursor(Qt::SizeFDiagCursor); break;
-//             case top_right:
-//             case bottom_left:   setCursor(Qt::SizeBDiagCursor); break;
-//             case top:
-//             case bottom:        setCursor(Qt::SizeVerCursor); break;
-//             case left:
-//             case right:         setCursor(Qt::SizeHorCursor); break;
-//             default:            setCursor(Qt::ArrowCursor); break;
-//         }
-//         
-//         update_rect_with_resize(e->pos());
-//         emit update_frame_moving(m_rect);
-//         update();
-//         return;
-//     } else {
-//         update_hover_state(e->pos());
-//         check_resize_handles(e->pos());
-//         
-//         if (m_hover_idx != -1) {
-//             if (m_resize_handle != none) {
-//                 switch (m_resize_handle) {
-//                     case top_left:
-//                     case bottom_right:  setCursor(Qt::SizeFDiagCursor); break;
-//                     case top_right:
-//                     case bottom_left:   setCursor(Qt::SizeBDiagCursor); break;
-//                     case top:
-//                     case bottom:        setCursor(Qt::SizeVerCursor); break;
-//                     case left:
-//                     case right:         setCursor(Qt::SizeHorCursor); break;
-//                     default:            setCursor(Qt::SizeAllCursor); break;
-//                 }
-//             } else {
-//                 setCursor(Qt::SizeAllCursor);
-//             }
-//         } else if (!m_is_dragging && m_drag_idx == -1 && m_resize_idx == -1) {
-//             setCursor(Qt::ArrowCursor);
-//         }
-//     }
-//
-//     if (m_resize_idx != -1 && m_resize_handle != none) {
-//         update_rect_with_resize(e->pos());
-//         emit update_frame_moving(m_rects);
-//         update();
-//         return;
-//     }
-//
-//     if (m_drag_idx != -1) {
-//         QPoint delta = e->pos() - m_drag_start_pos;
-//         m_rects[m_drag_idx].rect.translate(delta);
-//         m_drag_start_pos = e->pos();
-//         emit update_frame_moving(m_rects);
-//         update();
-//     } else if (m_is_dragging) {
-//         m_current_rect = QRect(m_start, e->pos()).normalized();
-//         update();
-//     }
-// }
-
 void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
-    // 处理调整大小的鼠标指针
     if (m_resize_idx != -1 && m_resize_handle != none) {
-        // 正在调整大小，设置对应的调整大小光标
         switch (m_resize_handle) {
             case top_left:
             case bottom_right:  setCursor(Qt::SizeFDiagCursor); break;
@@ -769,7 +692,6 @@ void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
     }
     
     if (m_drag_idx != -1) {
-        // 正在拖动框
         QPoint delta = e->pos() - m_drag_start_pos;
         m_rects[m_drag_idx].rect.translate(delta);
         m_drag_start_pos = e->pos();
@@ -779,21 +701,17 @@ void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
     } 
     
     if (m_is_dragging) {
-        // 正在创建新框
         m_current_rect = QRect(m_start, e->pos()).normalized();
         update();
         return;
     }
     
-    // 普通鼠标移动 - 更新悬停状态和光标
     update_hover_state(e->pos());
     
     if (m_hover_idx != -1) {
-        // 鼠标在框内，检查是否在调整大小的手柄上
         check_resize_handles(e->pos());
         
         if (m_resize_handle != none) {
-            // 设置调整大小的光标
             switch (m_resize_handle) {
                 case top_left:
                 case bottom_right:  setCursor(Qt::SizeFDiagCursor); break;
@@ -806,11 +724,9 @@ void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
                 default:            setCursor(Qt::SizeAllCursor); break;
             }
         } else {
-            // 在框内但不在手柄上，显示移动光标
             setCursor(Qt::SizeAllCursor);
         }
     } else {
-        // 鼠标在框外，显示普通箭头
         setCursor(Qt::ArrowCursor);
     }
 }
@@ -858,19 +774,19 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
         painter.drawRect(m_current_rect);
     }
 
-    QRect expand_btn = get_expand_btn_rect();
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(m_expand_btn_hovered ? QColor(100, 100, 100, 180) : QColor(60, 60, 60, 180));
-    painter.drawEllipse(expand_btn);
-
-    painter.setPen(QPen(Qt::white, 2));
-    int center_X = expand_btn.center().x();
-    int center_Y = expand_btn.center().y();
-    int icon_size = expand_btn.width() / 3;
-
-    painter.drawEllipse(QPoint(center_X - 2, center_Y - 2), icon_size / 2, icon_size / 2);
-   
-    painter.drawLine(center_X + icon_size / 3, center_Y + icon_size / 3, center_X + icon_size / 2, center_Y + icon_size / 2);
+   //  QRect expand_btn = get_expand_btn_rect();
+   //  painter.setPen(Qt::NoPen);
+   //  painter.setBrush(m_expand_btn_hovered ? QColor(100, 100, 100, 180) : QColor(60, 60, 60, 180));
+   //  painter.drawEllipse(expand_btn);
+   //
+   //  painter.setPen(QPen(Qt::white, 2));
+   //  int center_X = expand_btn.center().x();
+   //  int center_Y = expand_btn.center().y();
+   //  int icon_size = expand_btn.width() / 3;
+   //
+   //  painter.drawEllipse(QPoint(center_X - 2, center_Y - 2), icon_size / 2, icon_size / 2);
+   // 
+   //  painter.drawLine(center_X + icon_size / 3, center_Y + icon_size / 3, center_X + icon_size / 2, center_Y + icon_size / 2);
 
 
     QRect switch_btn = get_switch_btn_rect();

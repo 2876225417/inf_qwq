@@ -138,9 +138,9 @@ void rtsp_config_window::setup_UI() {
    
     // RTSP URL combobox
     m_rtsp_url_combo_layout = new QHBoxLayout();
-    m_rtsp_url_combo_lable = new QLabel("RTSP Link: ");
+    m_rtsp_url_combo_lable = new QLabel("RTSP链接: ");
     m_rtsp_url_combo = new QComboBox();
-    m_refresh_rtsp_url_list = new QPushButton("Refresh");
+    m_refresh_rtsp_url_list = new QPushButton("刷新");
 
     m_rtsp_url_combo_layout->addWidget(m_refresh_rtsp_url_list, 1);
     m_rtsp_url_combo_layout->addWidget(m_rtsp_url_combo_lable, 1);
@@ -152,7 +152,7 @@ void rtsp_config_window::setup_UI() {
     m_button_layout = new QHBoxLayout();
     m_test_button = new QPushButton(tr("测试连接"));
     m_save_button = new QPushButton(tr("保存配置"));
-    m_close_conn_button = new QPushButton(tr("Disconnect"));
+    m_close_conn_button = new QPushButton(tr("断开连接"));
     m_connect_button = new QPushButton(tr("连接"));
     m_cancel_button = new QPushButton(tr("取消"));
    

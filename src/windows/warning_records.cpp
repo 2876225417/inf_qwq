@@ -479,7 +479,7 @@ void warning_records_window::show_details_dialog(int record_index)
     details += tr("<p><b>RTSP URL:</b> %1</p>").arg(record["rtsp_url"].toString());
     details += tr("<p><b>时间:</b> %1</p>").arg(format_date_time(record["record_time"].toDateTime()));
     details += tr("<p><b>推理内容:</b></p>");
-    details += tr("<div style='background-color: #f0f0f0; padding: 10px; border-radius: 5px;'>%1</div>")
+    details += tr("<div style='padding: 10px; border-radius: 5px;'>%1</div>")
               .arg(record["inf_res"].toString());
     
     details_text->setHtml(details);
