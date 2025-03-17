@@ -333,14 +333,14 @@ void draw_overlay::send_http_alarm(int record_id) {
     QString time_str = alarm_time.toString(Qt::ISODate);
 
     QString alarm_msg = tr("地点 %1 检测到异常内容: %2 时间 %3")
-                            .arg(m_rtsp_config.rtsp_name)
+                            .arg(m_cam_name)
                             .arg(m_keywords)
                             .arg(time_str);
 
     if (!m_rtsp_config.rtsp_name.isEmpty()) {
         alarm_msg = tr("设备 %1 地点(%2) 检测到异常内容: %3 时间: %4")
                             .arg(m_cam_id)
-                            .arg(m_rtsp_config.rtsp_name.isEmpty() ? " " : m_rtsp_config.rtsp_name)
+                            .arg(m_cam_name.isEmpty() ? " " : m_cam_name)
                             .arg(m_keywords)
                             .arg(time_str);
 
