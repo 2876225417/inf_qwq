@@ -69,7 +69,7 @@ private:
              + ":"       + password
              + "@"       + ip
              + ":"       + port
-             + "cam/realmonitor?channel=1@subtype=0";
+             + "/cam/realmonitor?channel=1@subtype=0";
     }
 
     QString rtsp_mask_ah() const {
@@ -77,7 +77,7 @@ private:
              + ":"       + "********"
              + "@"       + ip
              + ":"       + port
-             + "cam/realmonitor?channel=1@subtype=0";
+             + "/cam/realmonitor?channel=1@subtype=0";
     }
 };
 

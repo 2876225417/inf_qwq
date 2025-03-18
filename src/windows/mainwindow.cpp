@@ -1,3 +1,6 @@
+
+
+
 #include "components/camera_wrapper.h"
 #include "components/cropped_wrapper.h"
 #include "components/grouping_rtsp_stream.h"
@@ -48,11 +51,6 @@ mainwindow::mainwindow(QWidget* parent)
     {        
     m_mainwindow_layout_wrapper->setContentsMargins(0, 0, 0, 0);
     m_mainwindow_layout_wrapper->setSpacing(0);
-
-
-    // initialize database when launch
-    
-   
 
 
     m_chars_rec_inferer = new rec_inferer();
@@ -339,12 +337,6 @@ mainwindow::mainwindow(QWidget* parent)
     //                                     expanded_window->set_inf_result(m_expanded_window2_inf_res[cam_id]);
     //                                 }
     //                            }, Qt::DirectConnection);
-    //
-    //
-    //                     rtsp_config rc = m_expands_window2rtsp_config[cam_id];
-    //
-    //                     qDebug() << "Send id: " << rc.ip << '\n';
-    //
     //                     expanded_window->show();
     //                     expanded_window->set_rstp_info(m_expands_window2rtsp_config[cam_id]);
     //                 } else {

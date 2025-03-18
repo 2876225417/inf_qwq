@@ -23,6 +23,7 @@ expanded_camera_window::expanded_camera_window(int cam_id, QWidget* parent)
     m_camera = new camera_wrapper(cam_id);
     setup_UI();
     connect_signals();
+    setWindowTitle(QString("Expanded RTSP ").arg(cam_id));
      
     //setWindowTitle("Expanded Camera View - Camera " + QString::number(org_cam->get_cam_id()));
     resize(1200, 800);

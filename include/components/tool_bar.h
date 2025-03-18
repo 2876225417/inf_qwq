@@ -10,7 +10,7 @@
 #include <windows/warning_records_window.h>
 
 #include <windows/http_alarm_window.h>
-
+#include <windows/settings_window.h>
 
 class tool_bar: public QToolBar{ 
     Q_OBJECT
@@ -34,4 +34,6 @@ private:
     keywords_edit_window* m_keywords_edit_window = nullptr;
     warning_records_window* m_record_warnings_window = nullptr;
     http_alarm_window* m_http_alarm_window = nullptr;
+    settings_window* m_settings_window = nullptr;
+
 };

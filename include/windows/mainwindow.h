@@ -1,8 +1,8 @@
 #pragma once
 
-#include "components/grouping_sidebar.h"
-#include "utils/chars_ort_inferer.h"
-#include "windows/rtsp_config_window.h"
+#include <components/grouping_sidebar.h>
+#include <utils/chars_ort_inferer.h>
+#include <windows/rtsp_config_window.h>
 #include <GL/gl.h>
 #include <QMainWindow>
 #include <QCamera>
@@ -42,7 +42,6 @@
 
 #include <QObject>
 
-//#include <windows/expanded_camera_window.h>
 
 class mainwindow: public QMainWindow {
     Q_OBJECT
@@ -73,9 +72,7 @@ private:
 
     // croppeds wrapper
     QHBoxLayout*            m_cropped_img_wrapper;
-    // camera croppeds layout
-    cropped_wrapper<4>*     m_4_croppeds_img;
-    cropped_wrapper<1>*     m_1_cropped_img;
+    
 
     QImage tmp;
     QPushButton* test_inf = new QPushButton("test_inf");
@@ -83,30 +80,6 @@ private:
     QPushButton* test_class = new QPushButton("test_class");
 
     cv::Mat qimage2mat(QImage& qimage);
-
-    struct {
-        QString username;
-        QString password;
-        QString ip;
-        QString port;
-        
-        rtsp_protocal_type rtp;
-        
-        QString comb_rtsp_url() {
-            switch(rtp) {
-                case rtsp_protocal_type::HIKVISION: return comb_hk();
-                case rtsp_protocal_type::ALHUA:     return comb_ah();
-                default: return "";
-            }
-        }
-    private:
-        QString comb_hk() {
-            return "rtsp://" + username + ":" + password + "@" + ip + ":" + port + "/Streaming/Channels/101";
-        }
-        QString comb_ah() {
-            return "rtsp://" + username + ":" + password + "@" + ip + ":" + port + "/cam/realmonitor?channel=1&subtype=0";
-        }
-    } m_config;
 
    
 
@@ -132,7 +105,6 @@ private:
     // @ inf result
     // @ inf cropped
     // @ keywords
-    //QMap<int, expanded_camera_window*> m_expanded_windows;
     QMap<int, rtsp_config> m_expands_window2rtsp_config; 
     QMap<int, QString> m_expanded_window2_inf_res;
     QMap<int, QImage> m_expanded_window2_inf_cropped;

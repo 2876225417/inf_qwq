@@ -310,7 +310,13 @@ void warning_records_window::update_table() {
         
         bool push_status = record["push_status"].toBool();
         QString push_message = record["push_message"].toString();
-        QTableWidgetItem* push_status_item = new QTableWidgetItem(push_status ? tr("成功") : tr("失败"));
+        QTableWidgetItem* push_status_item;
+        if (status) {
+            push_status_item = new QTableWidgetItem(tr("无需推送"));
+        } else
+        {
+            push_status_item = new QTableWidgetItem(push_status ? tr("成功") : tr("失败"));
+        }
         push_status_item->setForeground(push_status ? Qt::green : Qt::red);
         push_status_item->setTextAlignment(Qt::AlignCenter);
         push_status_item->setToolTip(push_message);
@@ -478,7 +484,7 @@ void warning_records_window::show_details_dialog(int record_index)
     details += tr("<p><b>RTSP名称:</b> %1</p>").arg(record["rtsp_name"].toString());
     details += tr("<p><b>RTSP URL:</b> %1</p>").arg(record["rtsp_url"].toString());
     details += tr("<p><b>时间:</b> %1</p>").arg(format_date_time(record["record_time"].toDateTime()));
-    details += tr("<p><b>推理内容:</b></p>");
+    details += tr("<p><b>识别内容:</b></p>");
     details += tr("<div style='padding: 10px; border-radius: 5px;'>%1</div>")
               .arg(record["inf_res"].toString());
     

@@ -14,6 +14,7 @@
 
 #include <utils/chars_ort_inferer.h>
 
+
 struct cropped_image{
     int number;
     QImage image;
@@ -75,6 +76,8 @@ private:
     QTimer* m_timer;
     
     int m_cam_id;
+    
+    expanded_camera_window* m_expanded_camera_widnow = nullptr;
 
     //chars_ort_inferer* m_chars_inferer;
 };

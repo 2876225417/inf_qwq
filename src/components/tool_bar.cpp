@@ -4,6 +4,7 @@
 #include "windows/http_alarm_window.h"
 #include "windows/keywords_edit_window.h"
 #include "windows/rtsp_config_window.h"
+#include "windows/settings_window.h"
 #include "windows/stream_settings_window.h"
 #include <components/tool_bar.h>
 #include <opencv2/calib3d.hpp>
@@ -26,7 +27,26 @@ tool_bar::tool_bar(QWidget* parent)
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     addWidget(spacer);
-
+    
+    // QAction* add_settings = new QAction("Settings", this);
+    // addAction(add_settings);
+    //
+    // connect ( add_settings
+    //         , &QAction::triggered
+    //         , this, [this]() {
+    //            
+    //             if (!m_settings_window)  {
+    //                 m_settings_window = new settings_window(this);
+    //
+    //                 
+    //             }
+    //
+    //             m_settings_window->show();
+    //             m_settings_window->raise();
+    //             m_settings_window->activateWindow();
+    //
+    //         });
+    //
     QAction* add_rtsp_stream_config = new QAction("RTSP配置", this);
     addAction(add_rtsp_stream_config);
 

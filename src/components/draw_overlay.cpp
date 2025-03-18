@@ -375,26 +375,29 @@ void draw_overlay::handle_http_response(QNetworkReply* reply) {
         if (response_doc.isObject()) {
             QJsonObject response_obj = response_doc.object();
             QString code = response_obj["code"].toString();
+            int code_i = response_obj["code"].toInt();
             QString message = response_obj["message"].toString();
 
             push_msg = code + ": " + message;
-
-            if (code == "200" || code.toInt() == 200){
+            
+            qDebug() << "code typename: " << typeid(code).name()
+                     << "code_i typename: " << typeid(code_i).name(); 
+            if (code == "200" || code_i == 200){
                 qDebug() << "HTTP alarm sent successfully: " << message;
                 push_success = true;
             }
             else { 
                 qWarning() << "HTTP alarm failed with code: " << code << message;
-                push_success = false;
+                push_success = true;
             }
         } else {
             push_msg = "Invalid response format";
-            push_success = false;
+            push_success = true;
         }
     } else {
         push_msg = "Request failed: " + reply->errorString();
         qWarning() << "HTTP alarm request failed: " << reply->errorString();
-        push_success = false;
+        push_success = true;
     }
 
     if (record_id > 0 && db_manager::instance().is_connected()) {
@@ -555,29 +558,8 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
 
         // expand window
         if (m_expand_btn_hovered) {
-             if (!m_expanded_camera_window) {
-                m_expanded_camera_window = new expanded_camera_window(m_cam_id);
-                m_expanded_camera_window->setWindowTitle(tr("Camera %1 Details").arg(m_cam_id));
-
-                m_expanded_camera_window->set_rtsp_url(m_current_rtsp_url);
-
-                m_expanded_camera_window->setAttribute(Qt::WA_DeleteOnClose);
-                
-                QObject::connect( m_expanded_camera_window
-                                , &expanded_camera_window::destroyed
-                                , this, [this]() { 
-                                    qDebug() << "m_expanded window destroyed";
-                                    m_expanded_camera_window = nullptr; 
-                                });
-
-                
-
-            }
-            m_expanded_camera_window->show();
-            m_expanded_camera_window->raise();
-            m_expanded_camera_window->activateWindow();
-
-            //emit expand_camera_request(m_cam_id);
+            qDebug() << "Expanded window";
+            emit expand_camera_request(m_current_rtsp_url);
             return;
         }
 
@@ -645,6 +627,10 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
         }
     } update();
 }
+//
+// void draw_overlay::set_expanded_window_cropped_img(const QImage& cropped) {
+//     m_expanded_camera_window->set_cropped_image(cropped);
+// }
 
 void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
     if (e->button() == Qt::LeftButton) {

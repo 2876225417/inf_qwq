@@ -26,6 +26,7 @@ struct rect_data {
 
 class QTimer;
 
+
 class expanded_camera_window;
 
 class draw_overlay: public QWidget {
@@ -61,7 +62,7 @@ signals:
     void selected(QVector<rect_data>& rects);
     void update_frame_moving(QVector<rect_data>& rects);
     void timer_timeout_update(QVector<rect_data>& rects);
-    void expand_camera_request(int cam_id);
+    void expand_camera_request(const QString& rtsp_url);
 
 
     void close_conn();
@@ -75,7 +76,8 @@ signals:
     void resume_cam();
     void switch_cam(const QString& rtsp_url, const rtsp_config& rtsp_cfg);
      
-
+    // expanded window
+    //void set_expanded_window_cropped_img(const QImage& cropped);  
 private:
     void mousePressEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
@@ -168,7 +170,6 @@ public:
     void draw_resize_handles(QPainter& painter, const QRect& rect);
 
     rtsp_config_window* m_rtsp_config_window = nullptr; 
-    expanded_camera_window* m_expanded_camera_window = nullptr;
     QString m_current_rtsp_url;
 };
 

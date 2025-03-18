@@ -27,23 +27,6 @@
 #include <QSqlQuery>
 #include <QDebug>
 
-bool create_connection() {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
-    db.setHostName("localhost");
-    db.setDatabaseName("det_qwq");
-    db.setUserName("postgres");
-    db.setPassword("20041025");
-    db.setPort(5432);
-
-    if (!db.open()) {
-        return false;
-    }
-
-    qDebug() << "Database connection established!";
-    return true;
-}
-
-
 
 int main(int argc, char* argv[]) {
     

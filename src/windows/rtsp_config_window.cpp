@@ -42,7 +42,7 @@ void rtsp_config_window::setup_UI() {
     m_rtsp_proto_label = new QLabel(tr("协议类型:"));
     m_rtsp_proto_combo = new QComboBox();
     m_rtsp_proto_combo->addItem("HIKVISION", static_cast<int>(rtsp_proto_type::HIKVISION));
-    m_rtsp_proto_combo->addItem("ALHUA", static_cast<int>(rtsp_proto_type::ALHUA));
+    m_rtsp_proto_combo->addItem("DAHUA", static_cast<int>(rtsp_proto_type::ALHUA));
     m_rtsp_proto_layout->addWidget(m_rtsp_proto_label);
     m_rtsp_proto_layout->addWidget(m_rtsp_proto_combo);
      

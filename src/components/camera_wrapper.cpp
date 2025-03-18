@@ -8,11 +8,14 @@
 #include <memory>
 #include <qimage.h>
 #include <qnamespace.h>
+#include <qobject.h>
 #include <qpixmap.h>
 
 #include <QResizeEvent>
 
 #include <QLabel>
+
+#include <windows/expanded_camera_window.h>
 
 camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
     : QWidget{parent}
@@ -39,8 +42,28 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
    
     connect ( m_draw_overlay
             , &draw_overlay::expand_camera_request
-            , this, [this](int cam_id){
-                emit cam_expand_req(cam_id); 
+            , this, [this](const QString& url){
+                if (!m_expanded_camera_widnow) {
+                    m_expanded_camera_widnow = new expanded_camera_window(m_cam_id);
+                    
+
+                    m_expanded_camera_widnow->set_rtsp_url(url);
+                    QObject::connect( m_expanded_camera_widnow
+                                    ,  &QObject::destroyed
+                                    , this, [this]() {
+                                        qDebug() << "m_expanded window destroyed";
+                                        m_expanded_camera_widnow = nullptr;
+                                    });
+                    
+                }   
+
+
+                m_expanded_camera_widnow->show();
+                m_expanded_camera_widnow->raise();
+                m_expanded_camera_widnow->activateWindow();
+             
+
+
             });
     
     connect ( m_draw_overlay
@@ -56,6 +79,8 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
             , &draw_overlay::selected
             , [this](QVector<rect_data>& rects) {
                 rect2image(rects);
+                if (m_expanded_camera_widnow) 
+                    m_expanded_camera_widnow->set_cropped_image(m_cropped_images[0].image);
                 emit img_cropped(m_cropped_images);
             });
 
@@ -68,6 +93,8 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
                 // qDebug() << "video rect number: " 
                 //          << rect.number 
                 //          << "and coords: " << video_rect;
+                if (m_expanded_camera_widnow) 
+                    m_expanded_camera_widnow->set_cropped_image(m_cropped_images[0].image);
                 emit img_cropped(m_cropped_images);
             });
 
@@ -77,6 +104,8 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
                 if (!rects.empty()) {
                     qDebug() << "Frame updated";
                     rect2image(rects);
+                    if (m_expanded_camera_widnow)
+                        m_expanded_camera_widnow->set_cropped_image(m_cropped_images[0].image);
                     emit img_cropped4inf(m_cropped_images); 
                 }
             });
@@ -91,9 +120,7 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
     connect ( m_draw_overlay
             , &draw_overlay::switch_cam
             , this, [this](const QString& rtsp_url, const rtsp_config& rtsp_cfg){
-                bool success = m_video_capturer->switch_rtsp_stream(rtsp_url);
-                
-
+                bool success = m_video_capturer->switch_rtsp_stream(rtsp_url); 
              });
 
     
