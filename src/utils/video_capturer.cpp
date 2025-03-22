@@ -36,6 +36,8 @@ void video_capturer::suspend_cam() {
     }
 }
 
+
+
 double video_capturer::get_scale_factor() const {
     QMutexLocker lock(&m_scale_mutex);
     return m_scale_factor;

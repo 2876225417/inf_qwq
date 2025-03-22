@@ -51,42 +51,11 @@ public:
 signals:
     void keywords_changed(const QString& keywords);
     void conn_cnt_changed(int cnt);
-    void test_inside();
 private:
     // mainwindow layout
     QWidget*                m_mainwindow_layout;
     QHBoxLayout*            m_mainwindow_layout_wrapper;
-    // camera layout
-    QVBoxLayout*            m_camera_rel_layout;
-    QGridLayout*            m_camera_rel_layout_grid;
-    QGroupBox*              m_mainwindow_camera_layout;
-    QHBoxLayout*            m_mainwindow_camera_layout_wrapper;
-    // actions relatives 
-    actions_wrapper*        m_actions_wrapper;
-    // camera croppeds
-    QGroupBox*              m_camera_cropped_layout;
-    QVBoxLayout*            m_camera_cropped_layout_wrapper;
-    // camera capturer
-    camera_wrapper*         m_camera;
-    camera_config_wrapper*  m_camera_config;
-
-    // croppeds wrapper
-    QHBoxLayout*            m_cropped_img_wrapper;
     
-
-    QImage tmp;
-    QPushButton* test_inf = new QPushButton("test_inf");
-
-    QPushButton* test_class = new QPushButton("test_class");
-
-    cv::Mat qimage2mat(QImage& qimage);
-
-   
-
-    //ort_inferer* m_inferer;
-    cv::Mat for2{};
-    det_inferer* m_chars_det_inferer;
-    rec_inferer* m_chars_rec_inferer;
     tool_bar*               m_tool_bar;
     status_bar*             m_status_bar;
 
@@ -96,20 +65,18 @@ private:
     // rtsp stream group
     QStackedWidget* m_stream_group;  
 
-    static int cam_nums;
+    static inline int cam_nums = 0;
    
     chars_ort_inferer* m_chars_ort_inferer;
     
     // todo struct expanded map data 
-    // @ rstp_config
-    // @ inf result
-    // @ inf cropped
-    // @ keywords
     QMap<int, rtsp_config> m_expands_window2rtsp_config; 
     QMap<int, QString> m_expanded_window2_inf_res;
     QMap<int, QImage> m_expanded_window2_inf_cropped;
     QMap<int, QString> m_expanded_window2_keywords;
+
+    void setup_UI();
+    void setup_connections();
 };
 
-inline int mainwindow::cam_nums = 0;
 
