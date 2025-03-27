@@ -9,3 +9,5 @@ inf_src/onnx/*
 onnxruntime_gpu
 tmp.*
 /src/tmp.md
+
+compile_commnands.json

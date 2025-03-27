@@ -46,28 +46,55 @@ void draw_overlay::resizeEvent(QResizeEvent* event) {
         int base_width = static_cast<int>(m_rects[i].rect.width() / m_rects[i].x_ratio);
         int base_height = static_cast<int>(m_rects[i].rect.height() / m_rects[i].y_ratio);
         
-        m_rects[i].rect.setRect(
-            static_cast<int>(base_x * width_ratio),
-            static_cast<int>(base_y * height_ratio),
-            static_cast<int>(base_width * width_ratio),
-            static_cast<int>(base_height * height_ratio)
+        m_rects[i].rect = QRect(
+            qRound(base_x * width_ratio),
+            qRound(base_y * height_ratio),
+            qRound(base_width * width_ratio),
+            qRound(base_height * height_ratio)
         );
-        
+
         m_rects[i].x_ratio = width_ratio;
         m_rects[i].y_ratio = height_ratio;
     }
     
     if (m_is_dragging && m_current_rect.isValid()) {
-        m_current_rect.setRect(
-            static_cast<int>(m_current_rect.x() * width_ratio / m_current_rect_x_ratio),
-            static_cast<int>(m_current_rect.y() * height_ratio / m_current_rect_y_ratio),
-            static_cast<int>(m_current_rect.width() * width_ratio / m_current_rect_x_ratio),
-            static_cast<int>(m_current_rect.height() * height_ratio / m_current_rect_y_ratio)
+        float base_x = m_current_rect.x() / m_current_rect_x_ratio;
+        float base_y = m_current_rect.y() / m_current_rect_y_ratio;
+
+        float base_width = m_current_rect.width() / m_current_rect_x_ratio;
+        float base_height = m_current_rect.height() / m_current_rect_y_ratio;
+
+        m_current_rect = QRect(
+            qRound(base_x * width_ratio),
+            qRound(base_y * height_ratio),
+            qRound(base_width * width_ratio),
+            qRound(base_height * height_ratio)
         );
+        
         m_current_rect_x_ratio = width_ratio;
         m_current_rect_y_ratio = height_ratio;
     }
-    
+
+    if (m_drag_idx != -1) {
+        float base_x = m_drag_start_pos.x() / m_current_rect_x_ratio;
+        float base_y = m_drag_start_pos.y() / m_current_rect_y_ratio;
+        
+        m_drag_start_pos = QPoint(
+            qRound(base_x * width_ratio),
+            qRound(base_y * height_ratio)
+        );
+    }
+
+    if (m_is_dragging) {
+        float base_x = m_start.x() / m_current_rect_x_ratio;
+        float base_y = m_start.y() / m_current_rect_y_ratio;
+
+        m_start = QPoint(
+            qRound(base_x * width_ratio),
+            qRound(base_y * height_ratio)
+        );
+    }
+ 
     update();
 }
 
