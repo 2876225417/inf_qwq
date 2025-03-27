@@ -26,6 +26,8 @@ signals:
     void send_keywords(const QVector<QString>&);
     
     void send_http_url(const QString& http_url, bool radiated);
+
+    void send_rtsp_stream_num(int rtsp_stream_num);
 private:
     rtsp_config_window* m_rtsp_config_window = nullptr;
 

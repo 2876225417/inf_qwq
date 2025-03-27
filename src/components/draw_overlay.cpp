@@ -19,7 +19,58 @@
 #include <qtimer.h>
 #include <qwidget.h>
 
+#include <qwindowdefs.h>
 #include <windows/expanded_camera_window.h>
+
+void draw_overlay::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    
+    // firs scaling 
+    if (m_first_resize && width() > 10 && height() > 10) {
+        m_base_size = size();
+        m_first_resize = false;
+        return;
+    }
+    
+    // check base size valid
+    if (m_base_size.width() <= 0 || m_base_size.height() <= 0) {
+        return;
+    }
+    
+    float width_ratio = static_cast<float>(width()) / m_base_size.width();
+    float height_ratio = static_cast<float>(height()) / m_base_size.height();
+    
+    for (int i = 0; i < m_rects.size(); ++i) {
+        int base_x = static_cast<int>(m_rects[i].rect.x() / m_rects[i].x_ratio);
+        int base_y = static_cast<int>(m_rects[i].rect.y() / m_rects[i].y_ratio);
+        int base_width = static_cast<int>(m_rects[i].rect.width() / m_rects[i].x_ratio);
+        int base_height = static_cast<int>(m_rects[i].rect.height() / m_rects[i].y_ratio);
+        
+        m_rects[i].rect.setRect(
+            static_cast<int>(base_x * width_ratio),
+            static_cast<int>(base_y * height_ratio),
+            static_cast<int>(base_width * width_ratio),
+            static_cast<int>(base_height * height_ratio)
+        );
+        
+        m_rects[i].x_ratio = width_ratio;
+        m_rects[i].y_ratio = height_ratio;
+    }
+    
+    if (m_is_dragging && m_current_rect.isValid()) {
+        m_current_rect.setRect(
+            static_cast<int>(m_current_rect.x() * width_ratio / m_current_rect_x_ratio),
+            static_cast<int>(m_current_rect.y() * height_ratio / m_current_rect_y_ratio),
+            static_cast<int>(m_current_rect.width() * width_ratio / m_current_rect_x_ratio),
+            static_cast<int>(m_current_rect.height() * height_ratio / m_current_rect_y_ratio)
+        );
+        m_current_rect_x_ratio = width_ratio;
+        m_current_rect_y_ratio = height_ratio;
+    }
+    
+    update();
+}
+
 
 void draw_overlay::set_inference_result(const QString& result) {
     m_inference_result = result;
@@ -106,7 +157,9 @@ void draw_overlay::draw_warning(QPainter& painter) {
 
     painter.save();
 
-    QFont warning_font("Arial", 16, QFont::Bold);
+    float font_scale = width() / static_cast<float>(m_base_size.width());
+
+    QFont warning_font("Arial", static_cast<int>(16 * font_scale), QFont::Bold);
     painter.setFont(warning_font);
 
     QString warning_text = QString("检测到关键字: %1").arg(m_keywords);
@@ -136,8 +189,10 @@ void draw_overlay::draw_warning(QPainter& painter) {
 
 void draw_overlay::draw_camera_id(QPainter& painter) {
     painter.save();
+    
+    float font_scale = width() / static_cast<float>(m_base_size.width());
+    QFont id_font("Arial", static_cast<int>(10 * font_scale), QFont::Bold);
 
-    QFont id_font("Arial", 10, QFont::Bold);
     painter.setFont(id_font);
 
     QString id_text = QString("视频流ID: %1").arg(m_cam_id);
@@ -164,7 +219,10 @@ void draw_overlay::draw_camera_id(QPainter& painter) {
 void draw_overlay::draw_camera_name(QPainter& painter) {
     painter.save();
 
-    QFont name_font("Arial", 10, QFont::Bold);
+
+    float font_scale = width() / static_cast<float>(m_base_size.width());
+
+    QFont name_font("Arial", static_cast<int>(10 * font_scale), QFont::Bold);
     painter.setFont(name_font);
 
     QString name_text = QString("视频流信息: %1").arg(m_cam_name);
@@ -193,17 +251,27 @@ void draw_overlay::draw_camera_name(QPainter& painter) {
 
 void draw_overlay::draw_status_indicator(QPainter& painter) {
     painter.save();
+    
 
-    QFont status_font("Arial", 12, QFont::Bold);
+    float font_scale = width() / static_cast<float>(m_base_size.width());
+    QFont status_font("Arial", static_cast<int>(12 * font_scale), QFont::Bold);
     painter.setFont(status_font);
+
+    float width_ratio = width() / static_cast<float>(m_base_size.width());
+    float height_ratio = height() / static_cast<float>(m_base_size.height());
+
+    int status_width = width() / 5;
+    int status_height = static_cast<int>(30 * height_ratio);
+
+
 
     QString status_text = m_is_normal_status ? "正常" : "异常";
     QColor status_color = m_is_normal_status ? Qt::green : Qt::red;
 
-    int status_width = width() / 5;
     int status_X = (width() - status_width) / 2;
+    int status_Y = static_cast<int>(10 * height_ratio);
 
-    QRect status_rect(status_X, 10, status_width, 30);
+    QRect status_rect(status_X, status_Y, status_width, status_height);
 
     painter.setPen(Qt::NoPen);
     painter.setBrush(QColor(0, 0, 0, 150));
@@ -219,11 +287,16 @@ void draw_overlay::draw_status_indicator(QPainter& painter) {
 void draw_overlay::draw_inference_result(QPainter& painter) {
     painter.save();
 
-    QFont result_font("Arial", 10);
+    float font_scale = width() / static_cast<float>(m_base_size.width());
+
+    QFont result_font("Arial", static_cast<int>(10 * font_scale));
     painter.setFont(result_font);
-    
-    int margin = 10;
-    int line_height = 20;
+   
+    float width_ratio = width() / static_cast<float>(m_base_size.width());
+    float height_ratio = height() / static_cast<float>(m_base_size.height());
+
+    int margin = static_cast<int>(10 * width_ratio);
+    int line_height = static_cast<int>(20 * height_ratio);
     int text_width = width() / 2;
 
     QRect result_rect(margin, height() - 2 * line_height - margin, text_width, line_height);
@@ -271,6 +344,10 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     , m_cam_id{cam_id}
     //, m_number_combobox{new QComboBox(this)}
     , m_timer{new QTimer(this)}
+    , m_base_size(640, 480)
+    , m_first_resize(true)
+    , m_current_rect_x_ratio(1.f)
+    , m_current_rect_y_ratio(1.f)
     {
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -409,8 +486,12 @@ void draw_overlay::handle_http_response(QNetworkReply* reply) {
 
 
 QRect draw_overlay::get_expand_btn_rect() const {
-    const int btn_size = 24;
-    const int margin = 10;
+    const int btn_size = static_cast<int>(24 * (width() / static_cast<float>(m_base_size.width())));
+    const int margin = static_cast<int>(10 * (width() / static_cast<float>(m_base_size.width())));
+
+
+    //const int btn_size = 24;
+    //const int margin = 10;
     return QRect (
         width() - btn_size - margin,
         margin,
@@ -420,12 +501,17 @@ QRect draw_overlay::get_expand_btn_rect() const {
 }
 
 QRect draw_overlay::get_switch_btn_rect() const {
-    const int btn_size = 24;
-    const int margin = 10;
+    //const int btn_size = 24;
+    //const int margin = 10;
+
+    const int btn_size = static_cast<int>(24 * (width() / static_cast<float>(m_base_size.width())));
+    const int margin = static_cast<int>(10 * (width() / static_cast<float>(m_base_size.width())));
+
 
     return QRect (
         width() - btn_size - margin,
-        margin + btn_size + 5,
+        //margin + btn_size + 5,
+        margin + btn_size + static_cast<int>(5 * (height() / static_cast<float>(m_base_size.height()))),
         btn_size,
         btn_size
     );
@@ -445,7 +531,7 @@ void draw_overlay::handle_rect_number_changed(int idx) {
 }
 
 QRect draw_overlay::paint_close_btn(const QRect& rect) const {
-    const int btn_size = 12;
+    const int btn_size = static_cast<int>(12 * (width() / static_cast<float>(m_base_size.width())));
     return QRect (
         rect.right() - btn_size - 2,
         rect.top() + 2,
@@ -499,7 +585,7 @@ void draw_overlay::check_resize_handles(const QPoint& pos) {
 
 QRect draw_overlay::get_resize_handle_rect(const QRect& rect, resize_handle handle) const {
     QRect handle_rect;
-    int size = m_handle_size;
+    int size = static_cast<int>(m_handle_size * (width() / static_cast<float>(m_base_size.width()))); 
 
     switch (handle) {
         case top_left:      handle_rect = QRect(rect.left()         - size / 2, rect.top()          - size / 2, size, size); break;
@@ -532,6 +618,12 @@ void draw_overlay::update_rect_with_resize(const QPoint& pos) {
         default: break;
     }
     rect = rect.normalized();
+
+    if (!m_first_resize) {
+        m_rects[m_resize_idx].x_ratio = static_cast<float>(width()) / m_base_size.width();
+        m_rects[m_resize_idx].y_ratio = static_cast<float>(height()) / m_base_size.height();
+    }
+
 }
 
 void draw_overlay::draw_resize_handles(QPainter& painter, const QRect& rect) {
@@ -623,7 +715,16 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
             m_is_dragging = true;
             m_start = e->pos();
             m_current_rect = QRect();
+            
+            if (!m_first_resize) {
+                m_current_rect_x_ratio = static_cast<float>(width()) / m_base_size.width();
+                m_current_rect_y_ratio = static_cast<float>(height()) / m_base_size.height();
+            } else {
+                m_current_rect_x_ratio = 1.f;
+                m_current_rect_y_ratio = 1.f;
+            }
             setCursor(Qt::ArrowCursor);
+
         }
     } update();
 }
@@ -638,12 +739,29 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
         bool was_dragging = m_is_dragging && m_current_rect.isValid();
 
         if (was_resizing) {
+            
+            if (!m_first_resize) {
+                m_rects[m_resize_idx].x_ratio = static_cast<float>(width()) / m_base_size.width();
+                m_rects[m_resize_idx].y_ratio = static_cast<float>(height()) / m_base_size.height();
+            }
             emit selected(m_rects);
             m_resize_idx = -1;
             m_resize_handle = none;
+
+        
         } else if (was_dragging) {
             rect_data new_rect;
             new_rect.rect = m_current_rect;
+            
+            if (!m_first_resize) {
+                new_rect.x_ratio = static_cast<float>(width()) / m_base_size.width();
+                new_rect.y_ratio = static_cast<float>(height()) / m_base_size.height();
+            } else {
+                new_rect.x_ratio = 1.f;
+                new_rect.y_ratio = 1.f;
+            }
+
+
             m_rects.append(new_rect);
             emit selected(m_rects);
             m_is_inf = true;
@@ -732,11 +850,15 @@ void draw_overlay::leaveEvent(QEvent* event) {
 void draw_overlay::paintEvent(QPaintEvent* e) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
+    
+    float font_scale = width() / static_cast<float>(m_base_size.width());
 
     for (int i = 0; i < m_rects.size(); ++i) {
         const auto& rd = m_rects[i];
+            
+        float line_width_scale = width() / static_cast<float>(m_base_size.width());
 
-        painter.setPen(QPen(i == m_hover_idx ? Qt::cyan : Qt::red, 2));
+        painter.setPen(QPen(i == m_hover_idx ? Qt::cyan : Qt::red, 2 * line_width_scale));
         painter.setBrush(QColor(255, 0, 0, i == m_hover_idx ? 80 : 30));
         painter.drawRect(rd.rect);
 
@@ -748,9 +870,12 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
             
             draw_resize_handles(painter, rd.rect);
         }
+        
+        QFont font("Arial", static_cast<int>(10 * font_scale), QFont::Bold);
+
 
         painter.setPen(Qt::white);
-        painter.setFont(QFont("Arial", 10, QFont::Bold));
+        painter.setFont(font);
         painter.drawText(rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft | Qt::AlignTop, QString::number(rd.number));
     }
 
@@ -785,7 +910,10 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
 
    
     QPolygon arrow;
-    arrow << QPoint(cx, cy - 6) << QPoint(cx - 6, cy + 2) << QPoint(cx + 6, cy + 2);
+    float scale = width() / static_cast<float>(m_base_size.width());
+    int arrow_height = static_cast<int>(6 * scale);
+    int arrow_width = static_cast<int>(6 * scale);
+    arrow << QPoint(cx, cy - arrow_height) << QPoint(cx - arrow_width, cy + arrow_height / 2) << QPoint(cx + arrow_width, cy + arrow_height / 2);
     painter.setBrush(Qt::white);
     painter.drawPolygon(arrow);
 

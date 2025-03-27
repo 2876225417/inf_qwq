@@ -40,6 +40,9 @@ public:
     
     static inline int
     get_MAX_PER_PAGE() { return MAX_PER_PAGE; }
+   
+    static inline void
+    set_MAX_PER_PAGE(int value) { MAX_PER_PAGE = value; }
 
 signals:
     void cam_expand_req(int cma_id); 
@@ -50,7 +53,7 @@ private:
     QGridLayout* cams_grid;
     int m_start;
     int m_total;
-    static const int MAX_PER_PAGE = 4;
+    static inline int MAX_PER_PAGE = 4;
     
     QWidget* create_video_widget(int cam_id);   
     QWidget* create_placeholder();

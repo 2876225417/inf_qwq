@@ -1,6 +1,0 @@
-<!DOCTYPE RCC>
-<RCC version="1.0">
-    <qresource prefix="/i18n">
-        @QM_FILES_BINARY@
-    </qresource>
-</RCC>

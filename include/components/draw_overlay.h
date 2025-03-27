@@ -16,12 +16,18 @@
 #include <qnetworkaccessmanager.h>
 #include <qnetworkreply.h>
 
+#include <qsize.h>
+#include <qwindowdefs.h>
 #include <windows/rtsp_config_window.h>
 
 
 struct rect_data {
     QRect rect;
     int number =1;
+    
+    float x_ratio = 1.f;
+    float y_ratio = 1.f;
+
 };
 
 class QTimer;
@@ -58,6 +64,10 @@ public:
     void set_current_rtsp_url(const QString& rtsp_url) { m_current_rtsp_url = rtsp_url; }
     void set_http_url(const QString& url) { m_http_url = url; qDebug() << "update url: " << m_http_url;}
     void set_http_url_status(bool radiated) { m_enable_http_url = radiated; }
+
+protected:
+    void resizeEvent(QResizeEvent*) override;
+
 signals:
     void selected(QVector<rect_data>& rects);
     void update_frame_moving(QVector<rect_data>& rects);
@@ -171,6 +181,19 @@ public:
 
     rtsp_config_window* m_rtsp_config_window = nullptr; 
     QString m_current_rtsp_url;
+
+
+    QSize m_original_size;
+    bool m_size_initialized = false;
+
+
+
+    QSize m_base_size;
+    bool m_first_resize = true;
+    
+
+    float m_current_rect_x_ratio = 1.f;
+    float m_current_rect_y_ratio = 1.f;
 };
 
 #endif

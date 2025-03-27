@@ -28,7 +28,7 @@ tool_bar::tool_bar(QWidget* parent)
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     addWidget(spacer);
     
-    QAction* add_settings = new QAction("Settings", this);
+    QAction* add_settings = new QAction("设置", this);
     addAction(add_settings);
 
     connect ( add_settings
@@ -37,7 +37,14 @@ tool_bar::tool_bar(QWidget* parent)
                
                 if (!m_settings_window)  {
                     m_settings_window = new settings_window(this);
+                    connect ( m_settings_window
+                            , &settings_window::send_rtsp_stream_count_changed
+                            , this, [this](int rtsp_count) {
+                                   
+                                emit send_rtsp_stream_num(rtsp_count);
+                            });
 
+             
                     
                 }
 
@@ -73,7 +80,7 @@ tool_bar::tool_bar(QWidget* parent)
     });
 
     QAction* add_stream_settings = new QAction("Setting" /*, this*/);
-    //addAction(add_stream_settings);
+    addAction(add_stream_settings);
 
     connect ( add_stream_settings
             , &QAction::triggered
@@ -91,7 +98,7 @@ tool_bar::tool_bar(QWidget* parent)
                 m_stream_settings_window->raise();
                 m_stream_settings_window->activateWindow();
             });
-   
+    
     QAction* add_db_config_settings = new QAction("数据库配置", this);
     addAction(add_db_config_settings);
 

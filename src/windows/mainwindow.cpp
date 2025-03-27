@@ -15,17 +15,20 @@
 #include "utils/ort_inf.h"
 #include "utils/ort_inf.hpp"
 #include "windows/rtsp_config_window.h"
+#include <cmath>
+#include <qboxlayout.h>
 #include <qgridlayout.h>
 #include <qimage.h>
 #include <qnamespace.h>
 #include <qobject.h>
 #include <qpushbutton.h>
+#include <qsettings.h>
 #include <qsharedpointer.h>
 #include <qsplitter.h>
 #include <qstackedwidget.h>
+#include <qwidget.h>
 #include <windows/mainwindow.h>
 #include <grpc/grpc.h>
-#include <chrono>
 
 #include <components/grouping_sidebar.h>
 #include <QStackedWidget>
@@ -39,13 +42,19 @@
 /* ---- mainwindow layout ---- */
 mainwindow::mainwindow(QWidget* parent)
     : QMainWindow{parent}
+    , m_mainwindow_layout{new QWidget()}
+    , m_mainwindow_layout_wrapper{new QHBoxLayout()}
+    {     
 
-    {      
+    QSettings settings("ChunHui", "rtsp_monitor");
+    int saved_grid_size = settings.value("layout/grid_size", 4).toInt();
+
+    grouping_rtsp_stream::set_MAX_PER_PAGE(saved_grid_size);
+
     m_mainwindow_layout_wrapper->setContentsMargins(0, 0, 0, 0);
     m_mainwindow_layout_wrapper->setSpacing(0);
     
     
-
     // tool bar and status bar
     m_tool_bar = new tool_bar();
     addToolBar(Qt::TopToolBarArea, m_tool_bar);
@@ -163,46 +172,12 @@ mainwindow::mainwindow(QWidget* parent)
                                 cam->get_draw_overlay()->set_http_url_status(radiated);
                                 qDebug() << "Received http url: " << http_url 
                                          << " whether enable radiated all: " << (radiated ? "Enabled" : "Disabled"); 
-                                
                             });
 
-                
-
-                    connect ( m_chars_ort_inferer
-                            , &chars_ort_inferer::inference_completed
-                            , this, [this, cam](int cam_id, const std::vector<std::string> results) {
-                                QString result_set;
-                                for (const auto& result: results) {
-                                    result_set += result;
-                                }
-                                // update camera wrapper inf result
-                                cam->invoke();
-                                qDebug() << "cam id: " << cam_id;
-                                m_expanded_window2_inf_res[cam_id] = result_set;
-
-                                for (int i = 0; i < m_expanded_window2_inf_res.size(); i++) {
-                                    if (i == cam->get_cam_id() && !m_expanded_window2_inf_res[i].isEmpty()) {
-                                        cam->set_do_inf_result(m_expanded_window2_inf_res[i]);
-                                        
-                                        qDebug() << "Inf result: " << m_expanded_window2_inf_res;
-                                        cam->get_draw_overlay()->update_keywords_no_args();
-                                        cam->get_draw_overlay()->set_status();
-                                        int record_id = cam->get_draw_overlay()->record_warning2db();
-                                        cam->get_draw_overlay()->set_last_record_id(record_id);
-                                        cam->get_draw_overlay()->hint_warning();
-
-                                        if (db_manager::instance().is_connected()) {
-                                            db_manager::instance().add_inf_result(cam_id, "keywords", result_set);
-                                        }
-                                    }
-                                }
-                                // should clear the coords before detect again 
-                                //cam->set_do_inf_result(m_expanded_window2_inf_res[cam_id]);
-                            });
-                    
 
 
-                    emit conn_cnt_changed(cam_nums++);
+
+                                   emit conn_cnt_changed(cam_nums++);
                     m_status_bar->update_conn_cnts(cam_nums);
                 }
                 // update sidebar
@@ -227,7 +202,19 @@ mainwindow::mainwindow(QWidget* parent)
             });
     
 
-    
+
+    connect ( m_tool_bar
+            , &tool_bar::send_rtsp_stream_num
+            , this, [this](int rtsp_count) {
+                qDebug() << "rtsp_count: " << rtsp_count;
+                QSettings settings("ChunHui", "rtsp_monitor");
+                settings.setValue("layout/grid_size",rtsp_count);
+            
+                QMessageBox::information(this, "布局更改", QString("视频网格布局已更改 %1x%1, \n请重新启动应用程序以应用新的布局设置").arg(static_cast<int>(std::sqrt(rtsp_count))), QMessageBox::Ok);
+             
+             });
+
+
     m_sidebar = new grouping_sidebar(4);
 
     m_stream_group = new QStackedWidget();

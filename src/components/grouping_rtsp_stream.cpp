@@ -16,20 +16,27 @@ grouping_rtsp_stream::grouping_rtsp_stream( int start_cam_id
                                           , m_start(start_cam_id)
                                           , m_total(total_cams)
                                           {
-    // 2 x 2 grid
+    int grid_size = static_cast<int>(std::sqrt(MAX_PER_PAGE));
+
     cams_grid = new QGridLayout(this);
-    int spacing_n_margin = 1;
-    cams_grid->setSpacing(spacing_n_margin);
-    cams_grid->setContentsMargins(spacing_n_margin, spacing_n_margin, spacing_n_margin, spacing_n_margin);
+    // int spacing_n_margin = 1;
+    // cams_grid->setSpacing(spacing_n_margin);
+    // cams_grid->setContentsMargins(spacing_n_margin, spacing_n_margin, spacing_n_margin, spacing_n_margin);
     
+    cams_grid->setSpacing(0);
+    cams_grid->setContentsMargins(0, 0, 0, 0);
+
     m_cam_pool.reserve(MAX_PER_PAGE);
     
+    
+
+
     for (int pos = 0; pos < MAX_PER_PAGE; ++pos) {
         int cam_id = m_start + pos;
         setup_cam(cam_id, pos);
     }
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < grid_size; i++) {
         cams_grid->setRowStretch(i, 1);
         cams_grid->setColumnStretch(i, 1);
     }
@@ -37,8 +44,10 @@ grouping_rtsp_stream::grouping_rtsp_stream( int start_cam_id
 
 void grouping_rtsp_stream::setup_cam(int cam_id, int grid_pos) {
     QWidget* widget = nullptr;
-    int row = grid_pos / 2;
-    int col = grid_pos % 2;
+    int grid_size = static_cast<int>(std::sqrt(MAX_PER_PAGE));
+
+    int row = grid_pos / grid_size;
+    int col = grid_pos % grid_size; 
     
     if (cam_id < m_total) {
         camera_wrapper* cam = new camera_wrapper(cam_id);
@@ -75,7 +84,8 @@ QWidget* grouping_rtsp_stream::create_video_widget(int cam_id) {
     QWidget* container = new QWidget;
     container->setStyleSheet(R"(
         background: #111;
-        border: 2px solid #333
+        border: 2px solid #333;
+        margin: 0; padding: 0;
     )");
 
     QLabel* cam_label = new QLabel(QString("Cam %1").arg(cam_id + 1), container);
@@ -100,14 +110,17 @@ QWidget* grouping_rtsp_stream::create_placeholder() {
 }
 
 void grouping_rtsp_stream::resizeEvent(QResizeEvent*) {
-    int content_width = width() - 2;
-    int content_height = height() - 2;
+    int content_width = width();
+    int content_height = height();
     
-    int cell_width = content_width / 2 - 2 * 1;
-    int cell_height = content_height / 2 - 2 * 1;
+    int grid_size = static_cast<int>(std::sqrt(MAX_PER_PAGE));
+
+    int cell_width = content_width / grid_size;
+    int cell_height = content_height / grid_size;
     
-    int final_height = qMin(cell_height, cell_width * 9 / 16);
-    int final_width = final_height * 16 / 9;
+    int final_height = cell_height;
+    int final_width = cell_width;
+
     
     foreach(auto video, findChildren<QWidget*>()) {
         video->setFixedSize(final_width, final_height);
