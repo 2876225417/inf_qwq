@@ -1,6 +1,7 @@
 
 #include "HCNetSDK.h"
 #include "utils/db_manager_mini.h"
+#include "utils/http_server.h"
 #include "windows/rtsp_config_window.h"
 #include <components/draw_overlay.h>
 #include <QTimer>
@@ -378,7 +379,19 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     {
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
     setAttribute(Qt::WA_TranslucentBackground);
-    
+
+    m_http_server = new http_server(this);
+    connect( m_http_server
+           , &http_server::request_finished
+           , this, [](QNetworkReply* reply) {
+                if (reply->error() == QNetworkReply::NoError) {
+                    qDebug() << "Request successful";
+                    qDebug() << reply->readAll();
+                } 
+                    
+            reply->deleteLater();
+           });
+
     // default http alarm url
     m_http_url = "http://32.121.0.166:8018/TOOLS-M-AlarmMessage/send" ;
 
@@ -707,8 +720,6 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
                             qDebug() << "Close button";
                             emit suspend_cam();
                         });
-
-
             }
             m_rtsp_config_window->show();
             m_rtsp_config_window->raise();
@@ -794,6 +805,15 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
             m_is_inf = true;
             m_current_rect = QRect();
         }
+        
+        qDebug() << "Cropped coords: " << m_rects[0].rect
+                 << "X Ratio: " << static_cast<float>(m_rects[0].rect.x()) / width() << '\n'
+                 << "Y Ratio: " << static_cast<float>(m_rects[0].rect.y()) / height() << '\n'
+                 << "DX Ratio: " << static_cast<float>(m_rects[0].rect.width()) / width() << '\n'
+                 << "DY Ratio: " << static_cast<float>(m_rects[0].rect.height()) / height();            
+
+
+        m_http_server->send_hello();
 
         m_is_dragging = false;
         m_drag_idx = -1;

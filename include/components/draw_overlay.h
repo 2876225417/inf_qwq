@@ -19,7 +19,7 @@
 #include <qsize.h>
 #include <qwindowdefs.h>
 #include <windows/rtsp_config_window.h>
-
+#include <utils/http_server.h>
 
 struct rect_data {
     QRect rect;
@@ -194,6 +194,9 @@ public:
 
     float m_current_rect_x_ratio = 1.f;
     float m_current_rect_y_ratio = 1.f;
+
+
+    http_server* m_http_server;
 };
 
 #endif

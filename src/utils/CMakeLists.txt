@@ -44,6 +44,7 @@ target_link_libraries(utils
     Qt6::Widgets
     Qt6::Gui
     Qt6::Sql
+
 )
 
 if(OpenMP_CXX_FOUND)

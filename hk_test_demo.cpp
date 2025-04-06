@@ -7,6 +7,14 @@
 #include <cstring>
 #include <string>
 
+
+#include <iostream>
+
+
+
+
+
+
 int main() { 
     if (!NET_DVR_Init()) {
         std::cout << "Failed to initialize HKVISION SDK, error code: " << NET_DVR_GetLastError() << std::endl;

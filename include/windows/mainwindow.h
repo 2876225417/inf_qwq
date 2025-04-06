@@ -74,7 +74,8 @@ private:
     QMap<int, QString> m_expanded_window2_inf_res;
     QMap<int, QImage> m_expanded_window2_inf_cropped;
     QMap<int, QString> m_expanded_window2_keywords;
-
+    
+    
     void setup_UI();
     void setup_connections();
 };

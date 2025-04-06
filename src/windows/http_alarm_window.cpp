@@ -29,8 +29,6 @@
 #include <windows/http_alarm_window.h>
 
 
-
-
 #include <QStyle>
 #include <QMessageBox>
 #include <QJsonArray>
