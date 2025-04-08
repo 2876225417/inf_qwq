@@ -42,6 +42,7 @@
 
 #include <QObject>
 
+#include <utils/http_server.h>
 
 class mainwindow: public QMainWindow {
     Q_OBJECT
@@ -78,6 +79,9 @@ private:
     
     void setup_UI();
     void setup_connections();
+
+
+    http_server* m_http_server;
 };
 
 

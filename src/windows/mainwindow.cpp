@@ -12,6 +12,7 @@
 #include "utils/common_tools.hpp"
 #include "utils/db_manager.h"
 #include "utils/db_manager_mini.h"
+#include "utils/http_server.h"
 #include "utils/ort_inf.h"
 #include "utils/ort_inf.hpp"
 #include "windows/rtsp_config_window.h"
@@ -54,7 +55,8 @@ mainwindow::mainwindow(QWidget* parent)
     m_mainwindow_layout_wrapper->setContentsMargins(0, 0, 0, 0);
     m_mainwindow_layout_wrapper->setSpacing(0);
     
-    
+    m_http_server = new http_server(this);
+
     // tool bar and status bar
     m_tool_bar = new tool_bar();
     addToolBar(Qt::TopToolBarArea, m_tool_bar);
@@ -97,14 +99,17 @@ mainwindow::mainwindow(QWidget* parent)
                 cam->get_draw_overlay()->set_cam_id(cam->get_cam_id() + 1);
                 cam->get_draw_overlay()->set_cam_name(rtsp_cfg.rtsp_name);
                 
-                if (success) { 
+                if (success) {
+                    // 添加连接 rtsp 信息 
                     db_manager::instance().add_rtsp_config( rtsp_cfg.username
                                                           , rtsp_cfg.ip
                                                           , rtsp_cfg.port
                                                           , rtsp_cfg.channel
                                                           , rtsp_cfg.subtype
                                                           , rtsp_url
-                                                          ); 
+                                                          );
+                    m_http_server->add_rtsp_source("123", "123", "123", 123, "123", "123", "123");
+
                     m_expands_window2rtsp_config[cam_nums] = rtsp_cfg;
                     connect ( cam
                             , &camera_wrapper::img_cropped4inf
