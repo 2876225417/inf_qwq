@@ -30,6 +30,9 @@ struct rtsp_config {
     QString port;
     QString channel = "101";
     QString subtype = "0";
+    
+    bool is_hk() const { return rpt == rtsp_proto_type::HIKVISION; }
+    bool is_dh() const { return rpt == rtsp_proto_type::ALHUA;     }
 
     QString config2url() const {
         switch(rpt) {

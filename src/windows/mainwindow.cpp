@@ -108,7 +108,29 @@ mainwindow::mainwindow(QWidget* parent)
                                                           , rtsp_cfg.subtype
                                                           , rtsp_url
                                                           );
-                    m_http_server->add_rtsp_source("123", "123", "123", 123, "123", "123", "123");
+                    QString rtsp_protocal_type = rtsp_cfg.is_hk() ? "HKVISION" : "DAHUA"; 
+                    QString user_name = rtsp_cfg.username;
+                    QString rtsp_ip = rtsp_cfg.ip;
+                    int port = rtsp_cfg.ip.toInt();
+                    QString channel = rtsp_cfg.channel;
+                    QString subtype = rtsp_cfg.subtype;
+                    QString url = rtsp_url;
+
+
+                    m_http_server->add_rtsp_source(rtsp_protocal_type, user_name, rtsp_ip, port, channel, subtype, url);
+                    qDebug() << "Connection info: " 
+                             << "RTSP Protocal Type: " << rtsp_protocal_type << '\n'
+                             << "Username: " << user_name << '\n'
+                             << "rtsp_ip: " << rtsp_ip << '\n'
+                             << "port: " << port << '\n'
+                             << "channel: " << channel << '\n'
+                             << "subtype: " << subtype << '\n'
+                            << "url: " << url << '\n';
+
+                   connect ( m_http_server, &http_server::rtsp_source_added, this, [cam](int rtsp_id) {
+                    qDebug() << "rtsp_id: " << rtsp_id; 
+                    cam->get_draw_overlay()->cam_id = rtsp_id;
+             }); 
 
                     m_expands_window2rtsp_config[cam_nums] = rtsp_cfg;
                     connect ( cam
@@ -118,7 +140,7 @@ mainwindow::mainwindow(QWidget* parent)
                                     int inf_cam_id = cam->get_cam_id();
                                     cv::Mat cropped = qimage2cvmat(croppeds[0].image);
                                     m_expanded_window2_inf_cropped[inf_cam_id] = croppeds[0].image;
-                                    m_chars_ort_inferer->run_inf(inf_cam_id, cropped); // aysnc inf
+                                    //m_chars_ort_inferer->run_inf(inf_cam_id, cropped); // aysnc inf
                                 }
                              });
 

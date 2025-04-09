@@ -698,7 +698,7 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
         QRect switch_btn = get_switch_btn_rect();
             
         if (switch_btn.contains(e->pos()))  {   // switch down camera
-            m_rects.clear();
+            if (!m_rects.empty()) m_rects.clear();
              
             if (!m_rtsp_config_window) {
                 m_rtsp_config_window = new rtsp_config_window();
@@ -762,14 +762,10 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
                 m_current_rect_y_ratio = 1.f;
             }
             setCursor(Qt::ArrowCursor);
-
         }
-    } update();
+    }
+    update();
 }
-//
-// void draw_overlay::set_expanded_window_cropped_img(const QImage& cropped) {
-//     m_expanded_camera_window->set_cropped_image(cropped);
-// }
 
 void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
     if (e->button() == Qt::LeftButton) {
@@ -799,21 +795,27 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
                 new_rect.y_ratio = 1.f;
             }
 
-
             m_rects.append(new_rect);
             emit selected(m_rects);
             m_is_inf = true;
             m_current_rect = QRect();
         }
         
+        float coord_x = static_cast<float>(m_rects[0].rect.x()) / width();
+        float coord_y = static_cast<float>(m_rects[0].rect.y()) / height();
+        float coord_dx = static_cast<float>(m_rects[0].rect.width()) / width();
+        float coord_dy = static_cast<float>(m_rects[0].rect.height()) / height();
+
+
         qDebug() << "Cropped coords: " << m_rects[0].rect
-                 << "X Ratio: " << static_cast<float>(m_rects[0].rect.x()) / width() << '\n'
-                 << "Y Ratio: " << static_cast<float>(m_rects[0].rect.y()) / height() << '\n'
-                 << "DX Ratio: " << static_cast<float>(m_rects[0].rect.width()) / width() << '\n'
-                 << "DY Ratio: " << static_cast<float>(m_rects[0].rect.height()) / height();            
-
-
-        m_http_server->send_hello();
+                 << "X Ratio: "  << coord_x  << '\n'
+                 << "Y Ratio: "  << coord_y  << '\n'
+                 << "DX Ratio: " << coord_dx << '\n'
+                 << "DY Ratio: " << coord_dy << '\n';
+    
+        m_http_server->update_cropped_coords(cam_id, coord_x, coord_y, coord_dx, coord_dy);        
+        
+        
 
         m_is_dragging = false;
         m_drag_idx = -1;
