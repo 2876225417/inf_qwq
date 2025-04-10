@@ -11,17 +11,16 @@
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtNetwork/qnetworkreply.h>
 #include <QtNetwork/qnetworkrequest.h>
+#include <qjsonarray.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
 #include <qobject.h>
 #include <qstringview.h>
 
+#include <utils/common.h>
+
 class http_server: public QObject {
     Q_OBJECT
-
-signals:
-    void rtsp_source_added(int rtsp_id);    
-
 public:
     explicit http_server(QObject* parent = nullptr) 
         : QObject{parent}
@@ -147,11 +146,76 @@ public:
         
         QNetworkReply* reply = m_network_mgr->post(request, data);
     }
-    // 
+    // fetch all rtsp_stream_info
+    void fetch_all_rtsp_stream_info() {
+        QUrl url{m_api_route_header + "/inf_qwq/get_all_rtsp_sources"};
+        QNetworkRequest request{url};
+
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply* reply = m_network_mgr->get(request);
+
+        connect(reply, &QNetworkReply::finished, [this, reply]() {
+            QVector<rtsp_config> configs;
+
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray response_data = reply->readAll();
+                QJsonDocument response_doc = QJsonDocument::fromJson(response_data);
+                
+                if (!response_doc.isNull() && response_doc.isObject()) {
+                    QJsonObject response_obj = response_doc.object();
+
+                    if (response_obj.contains("success") && response_obj["success"].toBool() &&
+                        response_obj.contains("rtsp_sources") && response_obj["rtsp_sources"].isArray()
+                        ) {
+                        QJsonArray sources_array = response_obj["rtsp_sources"].toArray();
+
+                        for (const QJsonValue& value: sources_array) {
+                            if (value.isObject()) {
+                                QJsonObject source = value.toObject();
+                                
+                                rtsp_config config;
+                                config.rtsp_id = source["rtsp_id"].toInt();
+                                config.rtsp_name = source["rtsp_name"].toString();
+                                config.username = source["rtsp_username"].toString();
+                                config.password = "";
+                                config.ip = source["rtsp_ip"].toString();
+                                config.port = QString::number(source["rtsp_port"].toInt());
+                                config.channel = source["rtsp_channel"].toString();
+                                config.subtype = source["rtsp_subtype"].toString();
+                                config.rtsp_url = source["rtsp_url"].toString();
+
+                                QString rtsp_type = source["rtsp_type"].toString().toLower();
+                                if (rtsp_type == "hkvision") config.rpt = rtsp_proto_type::HIKVISION;
+                                else if (rtsp_type == "dahua") config.rpt = rtsp_proto_type::ALHUA;
+
+                                if (source.contains("rtsp_crop_coord_x") && !source["rtsp_crop_coord_x"].isNull()) 
+                                    config.cropped_pos.cropped_x = source["rtsp_crop_coord_x"].toDouble();
+                                if (source.contains("rtsp_crop_coord_y") && !source["rtsp_crop_coord_y"].isNull())
+                                    config.cropped_pos.cropped_y = source["rtsp_crop_coord_y"].toDouble();
+                                if (source.contains("rtsp_crop_coord_dx") && !source["rtsp_crop_coord_dx"].isNull())
+                                    config.cropped_pos.cropped_dx = source["rtsp_crop_coord_dx"].toDouble();
+                                if (source.contains("rtsp_crop_coord_dy") && !source["rtsp_crop_coord_dy"].isNull())
+                                    config.cropped_pos.cropped_dy = source["rtsp_crop_coord_dy"].toDouble();
+                                configs.push_back(config);
+                            }
+                        }
+                        qDebug() << "Fetched: " << configs.size() << "rtsp configs";
+                        emit send_all_rtsp_stream_info(configs);
+                    } else {}
+                } else {}
+            } else {}
+            reply->deleteLater();
+        });
+
+    }
     
+
 
 signals:
     void request_finished(QNetworkReply* reply);
+    void rtsp_source_added(int rtsp_id);    
+    void send_all_rtsp_stream_info(const QVector<rtsp_config>& rtsp_configs);
+
 private:
     QNetworkAccessManager* m_network_mgr;
     QString m_api_route_header{"http://localhost:8080"};

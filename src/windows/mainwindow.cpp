@@ -132,6 +132,7 @@ mainwindow::mainwindow(QWidget* parent)
                     cam->get_draw_overlay()->cam_id = rtsp_id;
              }); 
 
+
                     m_expands_window2rtsp_config[cam_nums] = rtsp_cfg;
                     connect ( cam
                             , &camera_wrapper::img_cropped4inf

@@ -1,5 +1,6 @@
 #include "windows/rtsp_config_window.h"
 #include "utils/db_manager_mini.h"
+#include "utils/http_server.h"
 #include <QApplication>
 #include <QStyle>
 #include <QGroupBox>
@@ -10,8 +11,11 @@
 #include <qcombobox.h>
 #include <qendian.h>
 #include <qlineedit.h>
+#include <qnamespace.h>
+#include <qobject.h>
 #include <qoverload.h>
 #include <qpushbutton.h>
+
 
 rtsp_config_window::rtsp_config_window(QWidget* parent)
     : QWidget(parent, Qt::Window)
@@ -19,9 +23,12 @@ rtsp_config_window::rtsp_config_window(QWidget* parent)
     setWindowTitle(tr("RTSP配置"));
     setMinimumWidth(500);
     setMinimumHeight(350);
-    
+   
+
     m_settings = new QSettings("Chun Hui", "inf_qwq", this);
-    
+    m_http_server = new http_server(this);
+
+
     setup_UI();
     create_connections();
     load_settings();
@@ -274,6 +281,7 @@ void rtsp_config_window::create_connections() {
             , this, [this](int idx) {
                 if (idx > 0) {
                     QString url = m_rtsp_url_combo->itemText(idx);
+                    
                     qDebug() << "Current rtsp url: " << url; 
                     m_rtsp_url4conn = url;
                     m_rtsp_url_edit->setText(url);
@@ -284,24 +292,29 @@ void rtsp_config_window::create_connections() {
     connect ( m_refresh_rtsp_url_list
             , &QPushButton::clicked
             , this, [this]() {
-                auto rtsp_url_set = db_manager::instance().get_all_rtsp_configs();
                 m_rtsp_url_combo->clear();
-    
-                for (const auto& rtsp_url: rtsp_url_set) {
-                    QString url = rtsp_url["rtsp_url"].toString();
+                
+                m_http_server->fetch_all_rtsp_stream_info();
+
+
+            });
+
+    connect ( m_http_server
+            , &http_server::send_all_rtsp_stream_info
+            , this, [this](const QVector<rtsp_config>& configs){
+                m_rtsp_configs = configs;
+                for (const auto& rtsp_url: m_rtsp_configs) {
+                    QString url = rtsp_url.rtsp_url;
                     if (!url.isEmpty()) m_rtsp_url_combo->addItem(url);
                     qDebug() << "Existing rtsp url: " << url;
                 }
             });
-
 
     connect(m_test_button, &QPushButton::clicked, this, &rtsp_config_window::on_test_connection);
     connect(m_save_button, &QPushButton::clicked, this, &rtsp_config_window::on_save_config);
     connect(m_close_conn_button, &QPushButton::clicked, this, [this](){ emit on_close_conn(); });
     connect(m_connect_button, &QPushButton::clicked, this, &rtsp_config_window::on_connect);
     connect(m_cancel_button, &QPushButton::clicked, this, &rtsp_config_window::on_cancel);
-    
-
 }
 
 
