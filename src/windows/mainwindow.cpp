@@ -46,6 +46,7 @@ mainwindow::mainwindow(QWidget* parent)
     , m_mainwindow_layout{new QWidget()}
     , m_mainwindow_layout_wrapper{new QHBoxLayout()}
     {     
+    auto& s_http_server = http_server::instance();
 
     QSettings settings("ChunHui", "rtsp_monitor");
     int saved_grid_size = settings.value("layout/grid_size", 4).toInt();
@@ -55,7 +56,6 @@ mainwindow::mainwindow(QWidget* parent)
     m_mainwindow_layout_wrapper->setContentsMargins(0, 0, 0, 0);
     m_mainwindow_layout_wrapper->setSpacing(0);
     
-    m_http_server = new http_server(this);
 
     // tool bar and status bar
     m_tool_bar = new tool_bar();
@@ -76,7 +76,6 @@ mainwindow::mainwindow(QWidget* parent)
             , &tool_bar::send_database_connected_established
             , this, [this]() {
                 qDebug() << "Connection established";
-
             });
 
     connect ( m_tool_bar
@@ -116,8 +115,13 @@ mainwindow::mainwindow(QWidget* parent)
                     QString subtype = rtsp_cfg.subtype;
                     QString url = rtsp_url;
 
+                    
 
-                    m_http_server->add_rtsp_source(rtsp_protocal_type, user_name, rtsp_ip, port, channel, subtype, url);
+                    s_http_server.add_rtsp_source(rtsp_protocal_type, user_name, rtsp_ip, port, channel, subtype, url);
+                    
+                    
+
+
                     qDebug() << "Connection info: " 
                              << "RTSP Protocal Type: " << rtsp_protocal_type << '\n'
                              << "Username: " << user_name << '\n'
@@ -125,13 +129,7 @@ mainwindow::mainwindow(QWidget* parent)
                              << "port: " << port << '\n'
                              << "channel: " << channel << '\n'
                              << "subtype: " << subtype << '\n'
-                            << "url: " << url << '\n';
-
-                   connect ( m_http_server, &http_server::rtsp_source_added, this, [cam](int rtsp_id) {
-                    qDebug() << "rtsp_id: " << rtsp_id; 
-                    cam->get_draw_overlay()->cam_id = rtsp_id;
-             }); 
-
+                             << "url: " << url << '\n';
 
                     m_expands_window2rtsp_config[cam_nums] = rtsp_cfg;
                     connect ( cam

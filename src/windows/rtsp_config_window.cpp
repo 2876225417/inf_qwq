@@ -26,7 +26,6 @@ rtsp_config_window::rtsp_config_window(QWidget* parent)
    
 
     m_settings = new QSettings("Chun Hui", "inf_qwq", this);
-    m_http_server = new http_server(this);
 
 
     setup_UI();
@@ -281,7 +280,7 @@ void rtsp_config_window::create_connections() {
             , this, [this](int idx) {
                 if (idx > 0) {
                     QString url = m_rtsp_url_combo->itemText(idx);
-                    
+                    // update the corresponding info
                     qDebug() << "Current rtsp url: " << url; 
                     m_rtsp_url4conn = url;
                     m_rtsp_url_edit->setText(url);
@@ -294,12 +293,15 @@ void rtsp_config_window::create_connections() {
             , this, [this]() {
                 m_rtsp_url_combo->clear();
                 
-                m_http_server->fetch_all_rtsp_stream_info();
+             http_server::instance().fetch_all_rtsp_stream_info();
 
 
             });
 
-    connect ( m_http_server
+    auto& e_http_server = http_server::instance();
+
+
+    connect ( e_http_server
             , &http_server::send_all_rtsp_stream_info
             , this, [this](const QVector<rtsp_config>& configs){
                 m_rtsp_configs = configs;

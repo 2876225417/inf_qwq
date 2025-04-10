@@ -80,8 +80,6 @@ private:
     void setup_UI();
     void setup_connections();
 
-
-    http_server* m_http_server;
 };
 
 

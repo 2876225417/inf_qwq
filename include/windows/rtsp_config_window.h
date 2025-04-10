@@ -132,7 +132,6 @@ public:
     rtsp_config m_rtsp_config;
     QSettings* m_settings;
 
-    http_server* m_http_server;
     QVector<rtsp_config> m_rtsp_configs;
 };
 

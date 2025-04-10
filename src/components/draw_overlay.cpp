@@ -380,18 +380,6 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     setAttribute(Qt::WA_TransparentForMouseEvents, false);
     setAttribute(Qt::WA_TranslucentBackground);
 
-    m_http_server = new http_server(this);
-    connect( m_http_server
-           , &http_server::request_finished
-           , this, [](QNetworkReply* reply) {
-                if (reply->error() == QNetworkReply::NoError) {
-                    qDebug() << "Request successful";
-                    qDebug() << reply->readAll();
-                } 
-                    
-            reply->deleteLater();
-           });
-
     // default http alarm url
     m_http_url = "http://32.121.0.166:8018/TOOLS-M-AlarmMessage/send" ;
 
@@ -813,7 +801,7 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
                  << "DX Ratio: " << coord_dx << '\n'
                  << "DY Ratio: " << coord_dy << '\n';
     
-        m_http_server->update_cropped_coords(cam_id, coord_x, coord_y, coord_dx, coord_dy);        
+        http_server::instance().update_cropped_coords(cam_id, coord_x, coord_y, coord_dx, coord_dy);        
         
         
 

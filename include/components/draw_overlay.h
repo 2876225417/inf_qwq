@@ -196,7 +196,6 @@ public:
     float m_current_rect_y_ratio = 1.f;
 
 
-    http_server* m_http_server;
 };
 
 #endif

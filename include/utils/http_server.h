@@ -16,18 +16,25 @@
 #include <qjsonobject.h>
 #include <qobject.h>
 #include <qstringview.h>
+#include <QMutex>
+#include <QMutexLocker>
 
 #include <utils/common.h>
 
 class http_server: public QObject {
     Q_OBJECT
 public:
-    explicit http_server(QObject* parent = nullptr) 
-        : QObject{parent}
-        {
-        m_network_mgr = new QNetworkAccessManager(this);
-        connect (m_network_mgr, &QNetworkAccessManager::finished, this, &http_server::request_finished);
+    http_server(const http_server&) = delete;
+    http_server& operator=(const http_server&) = delete; 
+
+    static http_server& instance() {
+        static QMutex mutex;
+        QMutexLocker locker(&mutex);
+        
+        static http_server instance;
+        return instance;
     }
+ 
     void send_hello() {
         QUrl url{m_api_route_header + "/inf_qwq/update_cropped_coords"};
         QNetworkRequest request{url};
@@ -53,14 +60,11 @@ public:
                         , const QString& rtsp_url
                         , const QString& rtsp_name = "无"
                         ) {
-        QUrl url{m_api_route_header + "/inf_qwq/add_rtsp_source"};
-        
+        QUrl url{m_api_route_header + "/inf_qwq/add_rtsp_source"};        
         QNetworkRequest request{url};
-        
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
         
         QJsonObject json_obj;
-        
         json_obj["rtsp_type"] = rtsp_type;
         json_obj["rtsp_username"] = rtsp_username;
         json_obj["rtsp_ip"] = rtsp_ip;
@@ -85,53 +89,22 @@ public:
                 if (response_obj.contains("success") && response_obj["success"].toBool()) {
                     int rtsp_id = response_obj["rtsp_id"].toInt();
                     qDebug() << "added rtsp source id: " << rtsp_id;
-                    emit rtsp_source_added(rtsp_id); 
+                    emit rtsp_source_added(rtsp_id);
+                    qDebug() << "Added rtsp id: " << rtsp_id; 
                 } else {
                     int existed_rtsp_id = response_obj["existing_rtsp_id"].toInt();
                     emit rtsp_source_added(existed_rtsp_id);
-                    
-                }
-                
+                    qDebug() << "Existed rtsp id: " << existed_rtsp_id;
+                } 
             }
-
-        
+            reply->deleteLater();
         });
-
-
-    //     connect(reply, &QNetworkReply::finished, [this, reply]() {
-    //     if (reply->error() == QNetworkReply::NoError) {
-    //         QByteArray response_data = reply->readAll();
-    //         QJsonDocument response_doc = QJsonDocument::fromJson(response_data);
-    //         
-    //         if (!response_doc.isNull() && response_doc.isObject()) {
-    //             QJsonObject response_obj = response_doc.object();
-    //             // 处理成功响应
-    //             if (response_obj.contains("success") && response_obj["success"].toBool()) {
-    //                 emit rtsp_source_added(response_obj["rtsp_id"].toInt());
-    //             } else {
-    //                 // 处理API返回的错误
-    //                 QString error_msg = response_obj.contains("error") ? 
-    //                     response_obj["error"].toString() : "Unknown error";
-    //                 emit rtsp_source_add_failed(error_msg);
-    //             }
-    //         }
-    //     } else {
-    //         // 处理网络错误
-    //         emit rtsp_source_add_failed(reply->errorString());
-    //     }
-    //     
-    //     reply->deleteLater();
-    // });
     }
-    // fetch all rtsp sources
-
-    // fetch all inf results
 
     // update cropped coords
     void update_cropped_coords(int cam_id, float x, float y, float dx, float dy) {
         QUrl url{m_api_route_header + "/inf_qwq/update_cropped_coords"};
         QNetworkRequest request{url};
-
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
         
         QJsonObject json_obj;
@@ -145,6 +118,28 @@ public:
         QByteArray data = json_doc.toJson();
         
         QNetworkReply* reply = m_network_mgr->post(request, data);
+        connect (reply, &QNetworkReply::finished, [this, reply, cam_id](){
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray response_data = reply->readAll();
+                QJsonDocument response_doc = QJsonDocument::fromJson(response_data);
+
+                if (!response_doc.isNull() && response_doc.isObject()) {
+                    QJsonObject response_obj = response_doc.object();
+                    if (response_obj.contains("success") && response_obj["success"].toBool()) {
+                        // emit somthing
+                        qDebug() << "Updated cropped coordinates for camera ID: " << cam_id; 
+                    } else {
+                        QString error = response_obj.contains("error") ? response_obj["error"].toString() : "Unknown error";
+                        // emit something error
+                        qDebug() << "Failed to update cropped coordinates: " << error;
+                    }
+                } 
+            } else {
+                    // emit somthing error
+                    qDebug() << "Network error: " << reply->errorString();
+            }
+            reply->deleteLater();
+        });
     }
     // fetch all rtsp_stream_info
     void fetch_all_rtsp_stream_info() {
@@ -201,17 +196,16 @@ public:
                         }
                         qDebug() << "Fetched: " << configs.size() << "rtsp configs";
                         emit send_all_rtsp_stream_info(configs);
-                    } else {}
-                } else {}
-            } else {}
+                    } else { }// emit something error }
+                } else { }// emit something error }
+            } else { } // emit something error }
             reply->deleteLater();
         });
-
     }
     
-
-
 signals:
+
+
     void request_finished(QNetworkReply* reply);
     void rtsp_source_added(int rtsp_id);    
     void send_all_rtsp_stream_info(const QVector<rtsp_config>& rtsp_configs);
@@ -219,6 +213,14 @@ signals:
 private:
     QNetworkAccessManager* m_network_mgr;
     QString m_api_route_header{"http://localhost:8080"};
+
+        explicit http_server(QObject* parent = nullptr)
+        : QObject{parent}
+        {
+        m_network_mgr = new QNetworkAccessManager{this};
+        connect(m_network_mgr, &QNetworkAccessManager::finished, this, &http_server::request_finished);
+    }
+    ~http_server() { }
 };
 
 
