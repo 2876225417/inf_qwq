@@ -298,12 +298,9 @@ void rtsp_config_window::create_connections() {
 
             });
 
-    auto& e_http_server = http_server::instance();
-
-
-    connect ( e_http_server
+    connect ( &http_server::instance()
             , &http_server::send_all_rtsp_stream_info
-            , this, [this](const QVector<rtsp_config>& configs){
+            , [this](const QVector<rtsp_config>& configs){
                 m_rtsp_configs = configs;
                 for (const auto& rtsp_url: m_rtsp_configs) {
                     QString url = rtsp_url.rtsp_url;

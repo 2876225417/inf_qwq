@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/common.h"
 #include <components/grouping_sidebar.h>
 #include <utils/chars_ort_inferer.h>
 #include <windows/rtsp_config_window.h>
@@ -79,7 +80,8 @@ private:
     
     void setup_UI();
     void setup_connections();
-
+    void establish_rtsp_connections_when_startup();
+    QVector<rtsp_config> m_rtsp_configs;
 };
 
 

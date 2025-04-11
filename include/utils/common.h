@@ -4,6 +4,7 @@
 
 #include <QString>
 #include <ostream>
+#include <qdebug.h>
 
 
 enum class rtsp_proto_type {
@@ -84,6 +85,20 @@ private:
              + "/cam/realmonitor?channel=1@subtype=0";
     }
 };
+
+#include <QDebug>
+inline QDebug operator<<(QDebug debug, const rtsp_config& config) {
+    QDebugStateSaver saver(debug);
+
+    debug.nospace() << " rtsp_config {\n"
+                    << " rtsp_id:       " << config.rtsp_id << '\n'
+                    << " rtsp_protocal_type: " << (config.is_hk() ? "HKVISION" : "DAHUA") << '\n'
+                    << " rt"
+
+    return debug;
+}
+
+
 
 
 #endif  //COMMON_H

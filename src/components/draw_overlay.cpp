@@ -23,82 +23,38 @@
 #include <qwindowdefs.h>
 #include <windows/expanded_camera_window.h>
 
-void draw_overlay::resizeEvent(QResizeEvent* event) {
-    QWidget::resizeEvent(event);
-    
-    // firs scaling 
-    if (m_first_resize && width() > 10 && height() > 10) {
-        m_base_size = size();
-        m_first_resize = false;
-        return;
-    }
-    
-    // check base size valid
-    if (m_base_size.width() <= 0 || m_base_size.height() <= 0) {
-        return;
-    }
-    
-    float width_ratio = static_cast<float>(width()) / m_base_size.width();
-    float height_ratio = static_cast<float>(height()) / m_base_size.height();
-    
-    for (int i = 0; i < m_rects.size(); ++i) {
-        int base_x = static_cast<int>(m_rects[i].rect.x() / m_rects[i].x_ratio);
-        int base_y = static_cast<int>(m_rects[i].rect.y() / m_rects[i].y_ratio);
-        int base_width = static_cast<int>(m_rects[i].rect.width() / m_rects[i].x_ratio);
-        int base_height = static_cast<int>(m_rects[i].rect.height() / m_rects[i].y_ratio);
-        
-        m_rects[i].rect = QRect(
-            qRound(base_x * width_ratio),
-            qRound(base_y * height_ratio),
-            qRound(base_width * width_ratio),
-            qRound(base_height * height_ratio)
-        );
+draw_overlay::draw_overlay(int cam_id, QWidget* parent)
+    : QWidget(parent)
+    , m_cam_id{cam_id}
+    //, m_number_combobox{new QComboBox(this)}
+    , m_timer{new QTimer(this)}
+    , m_base_size(640, 480)
+    , m_first_resize(true)
+    , m_current_rect_x_ratio(1.f)
+    , m_current_rect_y_ratio(1.f)
+    {
+    setAttribute(Qt::WA_TransparentForMouseEvents, false);
+    setAttribute(Qt::WA_TranslucentBackground);
 
-        m_rects[i].x_ratio = width_ratio;
-        m_rects[i].y_ratio = height_ratio;
-    }
-    
-    if (m_is_dragging && m_current_rect.isValid()) {
-        float base_x = m_current_rect.x() / m_current_rect_x_ratio;
-        float base_y = m_current_rect.y() / m_current_rect_y_ratio;
+    // default http alarm url
+    m_http_url = "http://32.121.0.166:8018/TOOLS-M-AlarmMessage/send" ;
 
-        float base_width = m_current_rect.width() / m_current_rect_x_ratio;
-        float base_height = m_current_rect.height() / m_current_rect_y_ratio;
+    connect (m_timer, &QTimer::timeout, this, [this]() {
+        if (!m_rects.isEmpty()) emit timer_timeout_update(m_rects);
+        //else qDebug() << "No rects selected.";
+    }); m_timer->start(5000);
 
-        m_current_rect = QRect(
-            qRound(base_x * width_ratio),
-            qRound(base_y * height_ratio),
-            qRound(base_width * width_ratio),
-            qRound(base_height * height_ratio)
-        );
-        
-        m_current_rect_x_ratio = width_ratio;
-        m_current_rect_y_ratio = height_ratio;
-    }
 
-    if (m_drag_idx != -1) {
-        float base_x = m_drag_start_pos.x() / m_current_rect_x_ratio;
-        float base_y = m_drag_start_pos.y() / m_current_rect_y_ratio;
-        
-        m_drag_start_pos = QPoint(
-            qRound(base_x * width_ratio),
-            qRound(base_y * height_ratio)
-        );
-    }
+    m_warning_timer = new QTimer(this);
+    m_warning_timer->setSingleShot(true);
+    connect (m_warning_timer, &QTimer::timeout, [this]() {
+        m_show_warning = false;
+        update();
+    });
 
-    if (m_is_dragging) {
-        float base_x = m_start.x() / m_current_rect_x_ratio;
-        float base_y = m_start.y() / m_current_rect_y_ratio;
 
-        m_start = QPoint(
-            qRound(base_x * width_ratio),
-            qRound(base_y * height_ratio)
-        );
-    }
- 
-    update();
+    m_network_mgr = new QNetworkAccessManager(this); 
 }
-
 
 void draw_overlay::set_inference_result(const QString& result) {
     m_inference_result = result;
@@ -367,38 +323,7 @@ QString draw_overlay::detect_matched_keywords( const QString& text
     return matched_keywords.join(" ");
 }
 
-draw_overlay::draw_overlay(int cam_id, QWidget* parent)
-    : QWidget(parent)
-    , m_cam_id{cam_id}
-    //, m_number_combobox{new QComboBox(this)}
-    , m_timer{new QTimer(this)}
-    , m_base_size(640, 480)
-    , m_first_resize(true)
-    , m_current_rect_x_ratio(1.f)
-    , m_current_rect_y_ratio(1.f)
-    {
-    setAttribute(Qt::WA_TransparentForMouseEvents, false);
-    setAttribute(Qt::WA_TranslucentBackground);
 
-    // default http alarm url
-    m_http_url = "http://32.121.0.166:8018/TOOLS-M-AlarmMessage/send" ;
-
-    connect (m_timer, &QTimer::timeout, this, [this]() {
-        if (!m_rects.isEmpty()) emit timer_timeout_update(m_rects);
-        //else qDebug() << "No rects selected.";
-    }); m_timer->start(5000);
-
-
-    m_warning_timer = new QTimer(this);
-    m_warning_timer->setSingleShot(true);
-    connect (m_warning_timer, &QTimer::timeout, [this]() {
-        m_show_warning = false;
-        update();
-    });
-
-
-    m_network_mgr = new QNetworkAccessManager(this); 
-}
 
 void draw_overlay::send_http_alarm(int record_id) {
     // force http alarm enabled
@@ -545,8 +470,6 @@ QRect draw_overlay::get_switch_btn_rect() const {
     );
 }
 
-
-
 void draw_overlay::handle_rect_number_changed(int idx) {
     if (m_edit_idx >= 0 && m_edit_idx < m_rects.size()) {
         m_rects[m_edit_idx].number = idx + 1;
@@ -662,6 +585,174 @@ void draw_overlay::draw_resize_handles(QPainter& painter, const QRect& rect) {
         QRect handle_rect = get_resize_handle_rect(rect, static_cast<resize_handle>(handle));
         painter.drawRect(handle_rect);
     }
+}
+
+
+void draw_overlay::leaveEvent(QEvent* event) {
+    m_hover_idx = -1;
+    m_expand_btn_hovered = false;
+    m_switch_btn_hovered = false;
+    
+    if (!m_is_dragging && m_drag_idx == -1 && m_resize_idx == -1) 
+        setCursor(Qt::ArrowCursor);
+
+    update();
+    QWidget::leaveEvent(event);
+}
+
+void draw_overlay::paintEvent(QPaintEvent* e) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    float font_scale = width() / static_cast<float>(m_base_size.width());
+
+    for (int i = 0; i < m_rects.size(); ++i) {
+        const auto& rd = m_rects[i];
+            
+        float line_width_scale = width() / static_cast<float>(m_base_size.width());
+
+        painter.setPen(QPen(i == m_hover_idx ? Qt::cyan : Qt::red, 2 * line_width_scale));
+        painter.setBrush(QColor(255, 0, 0, i == m_hover_idx ? 80 : 30));
+        painter.drawRect(rd.rect);
+
+        if (i == m_hover_idx) {
+            QRect btn = paint_close_btn(rd.rect);
+            painter.setPen(QPen(Qt::white, 2));
+            painter.drawLine(btn.topLeft(), btn.bottomRight());
+            painter.drawLine(btn.topRight(), btn.bottomLeft());
+            
+            draw_resize_handles(painter, rd.rect);
+        }
+        
+        QFont font("Arial", static_cast<int>(10 * font_scale), QFont::Bold);
+
+
+        painter.setPen(Qt::white);
+        painter.setFont(font);
+        painter.drawText(rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft | Qt::AlignTop, QString::number(rd.number));
+    }
+
+    if (m_is_dragging && m_current_rect.isValid()) {
+        painter.setPen(QPen(Qt::blue, 2));
+        painter.setBrush(QColor(0, 0, 255, 30));
+        painter.drawRect(m_current_rect);
+    }
+
+   //  QRect expand_btn = get_expand_btn_rect();
+   //  painter.setPen(Qt::NoPen);
+   //  painter.setBrush(m_expand_btn_hovered ? QColor(100, 100, 100, 180) : QColor(60, 60, 60, 180));
+   //  painter.drawEllipse(expand_btn);
+   //
+   //  painter.setPen(QPen(Qt::white, 2));
+   //  int center_X = expand_btn.center().x();
+   //  int center_Y = expand_btn.center().y();
+   //  int icon_size = expand_btn.width() / 3;
+   //
+   //  painter.drawEllipse(QPoint(center_X - 2, center_Y - 2), icon_size / 2, icon_size / 2);
+   // 
+   //  painter.drawLine(center_X + icon_size / 3, center_Y + icon_size / 3, center_X + icon_size / 2, center_Y + icon_size / 2);
+
+
+    QRect switch_btn = get_switch_btn_rect();
+    painter.setPen(QPen(Qt::white, 2)); 
+    painter.setBrush(m_switch_btn_hovered ? QColor(100, 100, 100, 180) : QColor(60, 60, 60, 180));
+    painter.drawRoundedRect(switch_btn, 4, 4);
+
+    int cx = switch_btn.center().x();
+    int cy = switch_btn.center().y();
+
+   
+    QPolygon arrow;
+    float scale = width() / static_cast<float>(m_base_size.width());
+    int arrow_height = static_cast<int>(6 * scale);
+    int arrow_width = static_cast<int>(6 * scale);
+    arrow << QPoint(cx, cy - arrow_height) << QPoint(cx - arrow_width, cy + arrow_height / 2) << QPoint(cx + arrow_width, cy + arrow_height / 2);
+    painter.setBrush(Qt::white);
+    painter.drawPolygon(arrow);
+
+
+    draw_status_indicator(painter);
+    draw_inference_result(painter);
+    
+    draw_camera_id(painter);
+    draw_camera_name(painter);
+    draw_warning(painter);
+}
+
+void draw_overlay::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    
+    // firs scaling 
+    if (m_first_resize && width() > 10 && height() > 10) {
+        m_base_size = size();
+        m_first_resize = false;
+        return;
+    }
+    
+    // check base size valid
+    if (m_base_size.width() <= 0 || m_base_size.height() <= 0) {
+        return;
+    }
+    
+    float width_ratio = static_cast<float>(width()) / m_base_size.width();
+    float height_ratio = static_cast<float>(height()) / m_base_size.height();
+    
+    for (int i = 0; i < m_rects.size(); ++i) {
+        int base_x = static_cast<int>(m_rects[i].rect.x() / m_rects[i].x_ratio);
+        int base_y = static_cast<int>(m_rects[i].rect.y() / m_rects[i].y_ratio);
+        int base_width = static_cast<int>(m_rects[i].rect.width() / m_rects[i].x_ratio);
+        int base_height = static_cast<int>(m_rects[i].rect.height() / m_rects[i].y_ratio);
+        
+        m_rects[i].rect = QRect(
+            qRound(base_x * width_ratio),
+            qRound(base_y * height_ratio),
+            qRound(base_width * width_ratio),
+            qRound(base_height * height_ratio)
+        );
+
+        m_rects[i].x_ratio = width_ratio;
+        m_rects[i].y_ratio = height_ratio;
+    }
+    
+    if (m_is_dragging && m_current_rect.isValid()) {
+        float base_x = m_current_rect.x() / m_current_rect_x_ratio;
+        float base_y = m_current_rect.y() / m_current_rect_y_ratio;
+
+        float base_width = m_current_rect.width() / m_current_rect_x_ratio;
+        float base_height = m_current_rect.height() / m_current_rect_y_ratio;
+
+        m_current_rect = QRect(
+            qRound(base_x * width_ratio),
+            qRound(base_y * height_ratio),
+            qRound(base_width * width_ratio),
+            qRound(base_height * height_ratio)
+        );
+        
+        m_current_rect_x_ratio = width_ratio;
+        m_current_rect_y_ratio = height_ratio;
+    }
+
+    if (m_drag_idx != -1) {
+        float base_x = m_drag_start_pos.x() / m_current_rect_x_ratio;
+        float base_y = m_drag_start_pos.y() / m_current_rect_y_ratio;
+        
+        m_drag_start_pos = QPoint(
+            qRound(base_x * width_ratio),
+            qRound(base_y * height_ratio)
+        );
+    }
+
+    if (m_is_dragging) {
+        float base_x = m_start.x() / m_current_rect_x_ratio;
+        float base_y = m_start.y() / m_current_rect_y_ratio;
+
+        m_start = QPoint(
+            qRound(base_x * width_ratio),
+            qRound(base_y * height_ratio)
+        );
+    }
+ 
+    update();
 }
 
 void draw_overlay::mousePressEvent(QMouseEvent* e) {
@@ -872,99 +963,9 @@ void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
     }
 }
 
-void draw_overlay::leaveEvent(QEvent* event) {
-    m_hover_idx = -1;
-    m_expand_btn_hovered = false;
-    m_switch_btn_hovered = false;
-    
-    if (!m_is_dragging && m_drag_idx == -1 && m_resize_idx == -1) 
-        setCursor(Qt::ArrowCursor);
 
-    update();
-    QWidget::leaveEvent(event);
-}
-
-void draw_overlay::paintEvent(QPaintEvent* e) {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    
-    float font_scale = width() / static_cast<float>(m_base_size.width());
-
-    for (int i = 0; i < m_rects.size(); ++i) {
-        const auto& rd = m_rects[i];
-            
-        float line_width_scale = width() / static_cast<float>(m_base_size.width());
-
-        painter.setPen(QPen(i == m_hover_idx ? Qt::cyan : Qt::red, 2 * line_width_scale));
-        painter.setBrush(QColor(255, 0, 0, i == m_hover_idx ? 80 : 30));
-        painter.drawRect(rd.rect);
-
-        if (i == m_hover_idx) {
-            QRect btn = paint_close_btn(rd.rect);
-            painter.setPen(QPen(Qt::white, 2));
-            painter.drawLine(btn.topLeft(), btn.bottomRight());
-            painter.drawLine(btn.topRight(), btn.bottomLeft());
-            
-            draw_resize_handles(painter, rd.rect);
-        }
-        
-        QFont font("Arial", static_cast<int>(10 * font_scale), QFont::Bold);
-
-
-        painter.setPen(Qt::white);
-        painter.setFont(font);
-        painter.drawText(rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft | Qt::AlignTop, QString::number(rd.number));
-    }
-
-    if (m_is_dragging && m_current_rect.isValid()) {
-        painter.setPen(QPen(Qt::blue, 2));
-        painter.setBrush(QColor(0, 0, 255, 30));
-        painter.drawRect(m_current_rect);
-    }
-
-   //  QRect expand_btn = get_expand_btn_rect();
-   //  painter.setPen(Qt::NoPen);
-   //  painter.setBrush(m_expand_btn_hovered ? QColor(100, 100, 100, 180) : QColor(60, 60, 60, 180));
-   //  painter.drawEllipse(expand_btn);
-   //
-   //  painter.setPen(QPen(Qt::white, 2));
-   //  int center_X = expand_btn.center().x();
-   //  int center_Y = expand_btn.center().y();
-   //  int icon_size = expand_btn.width() / 3;
-   //
-   //  painter.drawEllipse(QPoint(center_X - 2, center_Y - 2), icon_size / 2, icon_size / 2);
-   // 
-   //  painter.drawLine(center_X + icon_size / 3, center_Y + icon_size / 3, center_X + icon_size / 2, center_Y + icon_size / 2);
-
-
-    QRect switch_btn = get_switch_btn_rect();
-    painter.setPen(QPen(Qt::white, 2)); 
-    painter.setBrush(m_switch_btn_hovered ? QColor(100, 100, 100, 180) : QColor(60, 60, 60, 180));
-    painter.drawRoundedRect(switch_btn, 4, 4);
-
-    int cx = switch_btn.center().x();
-    int cy = switch_btn.center().y();
-
-   
-    QPolygon arrow;
-    float scale = width() / static_cast<float>(m_base_size.width());
-    int arrow_height = static_cast<int>(6 * scale);
-    int arrow_width = static_cast<int>(6 * scale);
-    arrow << QPoint(cx, cy - arrow_height) << QPoint(cx - arrow_width, cy + arrow_height / 2) << QPoint(cx + arrow_width, cy + arrow_height / 2);
-    painter.setBrush(Qt::white);
-    painter.drawPolygon(arrow);
-
-
-    draw_status_indicator(painter);
-    draw_inference_result(painter);
-    
-    draw_camera_id(painter);
-    draw_camera_name(painter);
-    draw_warning(painter);
-}
 
 bool draw_overlay::eventFilter(QObject* obj, QEvent* e) {
-  
     return QWidget::eventFilter(obj, e); 
 }
 
