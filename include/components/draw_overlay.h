@@ -27,7 +27,6 @@ struct rect_data {
     
     float x_ratio = 1.f;
     float y_ratio = 1.f;
-
 };
 
 class QTimer;
@@ -55,6 +54,7 @@ public:
     void update_keywords_no_args();
     void set_cam_id(int cam_id) { m_cam_id = cam_id; }
     void set_rtsp_config(const rtsp_config& rtsp_cfg) { m_rtsp_config = rtsp_cfg; }
+    void update_cropped_coords(float x, float y, float dx, float dy);
 
     void hint_warning();    // warning relatives
     int record_warning2db();   

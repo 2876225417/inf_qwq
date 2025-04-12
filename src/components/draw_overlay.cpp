@@ -39,6 +39,7 @@ draw_overlay::draw_overlay(int cam_id, QWidget* parent)
     // default http alarm url
     m_http_url = "http://32.121.0.166:8018/TOOLS-M-AlarmMessage/send" ;
 
+    m_rects.append(rect_data());
     connect (m_timer, &QTimer::timeout, this, [this]() {
         if (!m_rects.isEmpty()) emit timer_timeout_update(m_rects);
         //else qDebug() << "No rects selected.";
@@ -72,6 +73,17 @@ void draw_overlay::update_keywords_no_args() {
     update();
 }
 
+void draw_overlay::update_cropped_coords(float x, float y, float dx, float dy) {
+    if (m_rects.isEmpty()) m_rects[0] = rect_data();
+    m_rects[0].rect = QRect( static_cast<int>(x * width())
+                           , static_cast<int>(y * height())
+                           , static_cast<int>(dx * width())
+                           , static_cast<int>(dy * height())
+                           );
+    update();
+}
+
+
 void draw_overlay::set_status() {
     m_is_normal_status = m_keywords.isEmpty();
     update();
@@ -91,6 +103,7 @@ void draw_overlay::hint_warning() {
         m_warning_timer->start(10000);
         // stop inferring
         m_rects.clear();
+        m_rects.append(rect_data());
         m_is_inf = false;
          
         if (m_last_record_id > 0) send_http_alarm(m_last_record_id);
@@ -497,14 +510,16 @@ void draw_overlay::update_hover_state(const QPoint& pos) {
     
     int old_hover_idx = m_hover_idx;
     m_hover_idx = -1;
-
-    for (int i = 0; i < m_rects.size(); ++i) {
-        QRect btn_rect = paint_close_btn(m_rects[i].rect);
-        if (btn_rect.contains(pos)) {
-            m_hover_idx = i;
-            return;
+    
+    if (!m_rects.empty()) {
+        for (int i = 0; i < m_rects.size(); ++i) {
+            QRect btn_rect = paint_close_btn(m_rects[i].rect);
+            if (btn_rect.contains(pos)) {
+                m_hover_idx = i;
+                return;
+            }
+            if (m_rects[i].rect.contains(pos)) m_hover_idx = i;
         }
-        if (m_rects[i].rect.contains(pos)) m_hover_idx = i;
     }
     if (old_hover_idx != m_hover_idx) {
         if (m_hover_idx == -1) {
@@ -520,16 +535,18 @@ void draw_overlay::check_resize_handles(const QPoint& pos) {
     m_resize_idx = -1;
     
     if (m_hover_idx == -1) return;
-
-    const QRect& rect = m_rects[m_hover_idx].rect;
     
-    for (int handle = top_left; handle <= left; ++handle) {
-        QRect handle_rect 
-            = get_resize_handle_rect(rect, static_cast<resize_handle>(handle));
-        if (handle_rect.contains(pos)) {
-            m_resize_handle = static_cast<resize_handle>(handle);
-            m_resize_idx = m_hover_idx;
-            return;
+    if (m_hover_idx != -1 && !m_rects.isEmpty() && m_hover_idx < m_rects.size()) {
+        const QRect& rect = m_rects[m_hover_idx].rect;
+   
+        for (int handle = top_left; handle <= left; ++handle) {
+            QRect handle_rect 
+                = get_resize_handle_rect(rect, static_cast<resize_handle>(handle));
+            if (handle_rect.contains(pos)) {
+                m_resize_handle = static_cast<resize_handle>(handle);
+                m_resize_idx = m_hover_idx;
+                return;
+            }
         }
     }
 }
@@ -605,31 +622,33 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
     painter.setRenderHint(QPainter::Antialiasing);
     
     float font_scale = width() / static_cast<float>(m_base_size.width());
-
-    for (int i = 0; i < m_rects.size(); ++i) {
-        const auto& rd = m_rects[i];
+    
+    if (!m_rects.empty()) {
+        for (int i = 0; i < m_rects.size(); ++i) {
+            const auto& rd = m_rects[i];
             
-        float line_width_scale = width() / static_cast<float>(m_base_size.width());
+            float line_width_scale = width() / static_cast<float>(m_base_size.width());
 
-        painter.setPen(QPen(i == m_hover_idx ? Qt::cyan : Qt::red, 2 * line_width_scale));
-        painter.setBrush(QColor(255, 0, 0, i == m_hover_idx ? 80 : 30));
-        painter.drawRect(rd.rect);
+            painter.setPen(QPen(i == m_hover_idx ? Qt::cyan : Qt::red, 2 * line_width_scale));
+            painter.setBrush(QColor(255, 0, 0, i == m_hover_idx ? 80 : 30));
+            painter.drawRect(rd.rect);
 
-        if (i == m_hover_idx) {
-            QRect btn = paint_close_btn(rd.rect);
-            painter.setPen(QPen(Qt::white, 2));
-            painter.drawLine(btn.topLeft(), btn.bottomRight());
-            painter.drawLine(btn.topRight(), btn.bottomLeft());
+            if (i == m_hover_idx) {
+                QRect btn = paint_close_btn(rd.rect);
+                painter.setPen(QPen(Qt::white, 2));
+                painter.drawLine(btn.topLeft(), btn.bottomRight());
+                painter.drawLine(btn.topRight(), btn.bottomLeft());
             
-            draw_resize_handles(painter, rd.rect);
-        }
+                draw_resize_handles(painter, rd.rect);
+            }
         
-        QFont font("Arial", static_cast<int>(10 * font_scale), QFont::Bold);
+            QFont font("Arial", static_cast<int>(10 * font_scale), QFont::Bold);
 
 
-        painter.setPen(Qt::white);
-        painter.setFont(font);
-        painter.drawText(rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft | Qt::AlignTop, QString::number(rd.number));
+            painter.setPen(Qt::white);
+            painter.setFont(font);
+            painter.drawText(rd.rect.adjusted(5, 5, 0, 0), Qt::AlignLeft | Qt::AlignTop, QString::number(rd.number));
+        }
     }
 
     if (m_is_dragging && m_current_rect.isValid()) {
@@ -697,23 +716,24 @@ void draw_overlay::resizeEvent(QResizeEvent* event) {
     float width_ratio = static_cast<float>(width()) / m_base_size.width();
     float height_ratio = static_cast<float>(height()) / m_base_size.height();
     
-    for (int i = 0; i < m_rects.size(); ++i) {
-        int base_x = static_cast<int>(m_rects[i].rect.x() / m_rects[i].x_ratio);
-        int base_y = static_cast<int>(m_rects[i].rect.y() / m_rects[i].y_ratio);
-        int base_width = static_cast<int>(m_rects[i].rect.width() / m_rects[i].x_ratio);
-        int base_height = static_cast<int>(m_rects[i].rect.height() / m_rects[i].y_ratio);
+    if (!m_rects.empty()) {
+        for (int i = 0; i < m_rects.size(); ++i) {
+            int base_x = static_cast<int>(m_rects[i].rect.x() / m_rects[i].x_ratio);
+            int base_y = static_cast<int>(m_rects[i].rect.y() / m_rects[i].y_ratio);
+            int base_width = static_cast<int>(m_rects[i].rect.width() / m_rects[i].x_ratio);
+            int base_height = static_cast<int>(m_rects[i].rect.height() / m_rects[i].y_ratio);
         
-        m_rects[i].rect = QRect(
-            qRound(base_x * width_ratio),
-            qRound(base_y * height_ratio),
-            qRound(base_width * width_ratio),
-            qRound(base_height * height_ratio)
-        );
+            m_rects[i].rect = QRect(
+                qRound(base_x * width_ratio),
+                qRound(base_y * height_ratio),
+                qRound(base_width * width_ratio),
+                qRound(base_height * height_ratio)
+            );
 
-        m_rects[i].x_ratio = width_ratio;
-        m_rects[i].y_ratio = height_ratio;
+            m_rects[i].x_ratio = width_ratio;
+            m_rects[i].y_ratio = height_ratio;
+        }
     }
-    
     if (m_is_dragging && m_current_rect.isValid()) {
         float base_x = m_current_rect.x() / m_current_rect_x_ratio;
         float base_y = m_current_rect.y() / m_current_rect_y_ratio;
@@ -879,22 +899,22 @@ void draw_overlay::mouseReleaseEvent(QMouseEvent* e) {
             m_is_inf = true;
             m_current_rect = QRect();
         }
-        
-        float coord_x = static_cast<float>(m_rects[0].rect.x()) / width();
-        float coord_y = static_cast<float>(m_rects[0].rect.y()) / height();
-        float coord_dx = static_cast<float>(m_rects[0].rect.width()) / width();
-        float coord_dy = static_cast<float>(m_rects[0].rect.height()) / height();
+       
+        if (!m_rects.isEmpty()) {
+            float coord_x = static_cast<float>(m_rects[0].rect.x()) / width();
+            float coord_y = static_cast<float>(m_rects[0].rect.y()) / height();
+            float coord_dx = static_cast<float>(m_rects[0].rect.width()) / width();
+            float coord_dy = static_cast<float>(m_rects[0].rect.height()) / height();
 
 
-        qDebug() << "Cropped coords: " << m_rects[0].rect
-                 << "X Ratio: "  << coord_x  << '\n'
-                 << "Y Ratio: "  << coord_y  << '\n'
-                 << "DX Ratio: " << coord_dx << '\n'
-                 << "DY Ratio: " << coord_dy << '\n';
+            qDebug() << "Cropped coords: " << m_rects[0].rect
+                    << "X Ratio: "  << coord_x  << '\n'
+                    << "Y Ratio: "  << coord_y  << '\n'
+                    << "DX Ratio: " << coord_dx << '\n'
+                    << "DY Ratio: " << coord_dy << '\n';
     
-        http_server::instance().update_cropped_coords(cam_id, coord_x, coord_y, coord_dx, coord_dy);        
-        
-        
+            http_server::instance().update_cropped_coords(m_cam_id, coord_x, coord_y, coord_dx, coord_dy);        
+        }
 
         m_is_dragging = false;
         m_drag_idx = -1;

@@ -25,6 +25,7 @@
 #include <qmessagebox.h>
 #include <qnamespace.h>
 #include <qobject.h>
+#include <qprogressdialog.h>
 #include <qpushbutton.h>
 #include <qsettings.h>
 #include <qsharedpointer.h>
@@ -38,7 +39,8 @@
 #include <QStackedWidget>
 #include <QSplitter>
 #include <windows/expanded_camera_window.h>
-
+#include <QProgressBar>
+#include <QProgressDialog>
 
 /* ---- mainwindow layout ---- */
 mainwindow::mainwindow(QWidget* parent)
@@ -57,8 +59,9 @@ mainwindow::mainwindow(QWidget* parent)
     setup_UI();
     setup_connections();
     http_server::instance().fetch_all_rtsp_stream_info();
-    
-    QTimer::singleShot(2000, [this]() {
+
+
+    QTimer::singleShot(2000, this, [this]() {
         // 延迟自动连接RTSP流
         connect_saved_rtsp_streams();
     });
@@ -131,15 +134,18 @@ mainwindow::add_rtsp_stream(const QString& rtsp_url, const rtsp_config& config) 
     cam->get_draw_overlay()->set_rtsp_config(config);
 
     bool success = cam->set_rtsp_stream(rtsp_url);
-    cam->get_draw_overlay()->set_cam_id(cam->get_cam_id());
+    cam->get_draw_overlay()->set_cam_id(config.rtsp_id);
     cam->get_draw_overlay()->set_cam_name(config.rtsp_name);
 
+    cam->get_draw_overlay()->update_cropped_coords( config.cropped_pos.cropped_x
+                                                  , config.cropped_pos.cropped_y
+                                                  , config.cropped_pos.cropped_dx
+                                                  , config.cropped_pos.cropped_dy
+                                                  );
+                    
     return {cam, success};
 }
-
-
-
-
+ 
 void mainwindow::setup_camera_connections(camera_wrapper* cam, const rtsp_config& config) {
       connect( cam
              , &camera_wrapper::img_cropped4inf
@@ -319,7 +325,7 @@ void mainwindow::setup_connections() {
            , [this](const QVector<rtsp_config>& rtsp_configs) {
                 m_rtsp_configs = rtsp_configs;
                 qDebug() << "Fetched all in mainw and m_rtsp_configs' size: " << m_rtsp_configs.size(); 
-          
+                for (const auto& rtsp_config: rtsp_configs) qDebug() << rtsp_config;
            });
 }
 
