@@ -55,7 +55,7 @@ mainwindow::mainwindow(QWidget* parent)
     
     setup_UI();
     setup_connections();
-    establish_rtsp_connections_when_startup();
+    //http_server::instance().fetch_all_rtsp_stream_info();
 
     setWindowTitle("关键词监视器@春晖");
     resize(1400, 700);  // windows size w: 1400 h: 700
@@ -173,7 +173,7 @@ void mainwindow::setup_connections() {
                         url
                     );
                     
-                    qDebug() << "|-----Connection Info-----|"
+                    qDebug() << "|-----Connection Info-----|" << '\n'
                              << "RTSP Protocal Type: " << rtsp_protocal_type << '\n'
                              << "Username: "           << user_name          << '\n'
                              << "RTSP_ip:  "           << rtsp_ip            << '\n'
@@ -257,6 +257,9 @@ void mainwindow::setup_connections() {
                     }
 
                     m_sidebar = new grouping_sidebar(m_stream_group->currentIndex());
+                    addToolBar(Qt::LeftToolBarArea, m_sidebar);
+
+                    m_sidebar->set_current_group(m_stream_group->currentIndex());
 
                     connect( m_sidebar
                            , &grouping_sidebar::group_selected
@@ -284,18 +287,16 @@ void mainwindow::setup_connections() {
            , &http_server::send_all_rtsp_stream_info
            , [this](const QVector<rtsp_config>& rtsp_configs) {
                 m_rtsp_configs = rtsp_configs;
+                qDebug() << "Fetched all in mainw and m_rtsp_configs' size: " << m_rtsp_configs.size();
+                
+                auto tmp_rtsp_config_window = m_tool_bar->get_rtsp_config_window(); 
+                for (const auto& rtsp_config: m_rtsp_configs) {
+                    qDebug() << rtsp_config;
+                    tmp_rtsp_config_window->connect_when_startup(rtsp_config.rtsp_url, rtsp_config);
+                }
            });
 
 }
 
-void mainwindow::establish_rtsp_connections_when_startup() {
-    http_server::instance().fetch_all_rtsp_stream_info();
-    
-    for (const auto& rtsp_config: m_rtsp_configs) {
-        
-    }
-
-
-}
 
 

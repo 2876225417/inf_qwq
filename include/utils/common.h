@@ -91,10 +91,22 @@ inline QDebug operator<<(QDebug debug, const rtsp_config& config) {
     QDebugStateSaver saver(debug);
 
     debug.nospace() << " rtsp_config {\n"
-                    << " rtsp_id:       " << config.rtsp_id << '\n'
+                    << " rtsp_id:       "      << config.rtsp_id << '\n'
                     << " rtsp_protocal_type: " << (config.is_hk() ? "HKVISION" : "DAHUA") << '\n'
-                    << " rt"
-
+                    << " username:           " << config.username << '\n'
+                    << " password:           " << "*********" << '\n'
+                    << " ip:                 " << config.ip << '\n'
+                    << " port:               " << config.port << '\n'
+                    << " channel:            " << config.channel << '\n'
+                    << " subtype:            " << config.subtype << '\n'
+                    << " rtsp_url:           " << config.rtsp_url << '\n'
+                    << " cropped_position:  {"
+                    << config.cropped_pos.cropped_x << ", "
+                    << config.cropped_pos.cropped_y << ", "
+                    << config.cropped_pos.cropped_dx << ", "
+                    << config.cropped_pos.cropped_dy << "}\n"
+                    << " masked_url: " << config.config2url_mask() << '\n'
+                    << '}';
     return debug;
 }
 

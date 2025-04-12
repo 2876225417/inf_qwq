@@ -362,6 +362,12 @@ void rtsp_config_window::on_connect() {
     close();
 }
 
+bool rtsp_config_window::connect_when_startup(const QString& _rtsp_url4conn, const rtsp_config& _rtsp_config) {
+    emit send_rtsp_url(_rtsp_url4conn, _rtsp_config); 
+    return true;
+}
+
+
 void rtsp_config_window::on_cancel() {
     close();
 }

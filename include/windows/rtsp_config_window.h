@@ -44,6 +44,8 @@ private slots:
     void on_cancel();
     void update_rtsp_url();
 public:
+    bool connect_when_startup(const QString& _rtsp_url4conn, const rtsp_config& _rtsp_config);
+
     void setup_UI();
     void create_connections();
     void save_settings();

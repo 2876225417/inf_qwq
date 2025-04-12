@@ -80,7 +80,6 @@ private:
     
     void setup_UI();
     void setup_connections();
-    void establish_rtsp_connections_when_startup();
     QVector<rtsp_config> m_rtsp_configs;
 };
 

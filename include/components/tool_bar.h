@@ -17,6 +17,7 @@ class tool_bar: public QToolBar{
 public:
     explicit tool_bar(QWidget* parent = nullptr);
 
+    rtsp_config_window* get_rtsp_config_window() { return m_rtsp_config_window; }
 signals:
     void send_rtsp_url(const QString& rtsp_url, const rtsp_config& rtsp_cfg);
     void send_scale_factor(float factor);
@@ -30,7 +31,6 @@ signals:
     void send_rtsp_stream_num(int rtsp_stream_num);
 private:
     rtsp_config_window* m_rtsp_config_window = nullptr;
-
     stream_settings_window* m_stream_settings_window = nullptr;
     db_config_window* m_db_config_window = nullptr;
     keywords_edit_window* m_keywords_edit_window = nullptr;
