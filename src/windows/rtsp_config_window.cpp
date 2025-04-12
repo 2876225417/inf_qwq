@@ -23,11 +23,7 @@ rtsp_config_window::rtsp_config_window(QWidget* parent)
     setWindowTitle(tr("RTSP配置"));
     setMinimumWidth(500);
     setMinimumHeight(350);
-   
-
     m_settings = new QSettings("Chun Hui", "inf_qwq", this);
-
-
     setup_UI();
     create_connections();
     load_settings();
@@ -60,7 +56,6 @@ void rtsp_config_window::setup_UI() {
     m_rtsp_stream_name_layout->addWidget(m_rtsp_stream_name_label);
     m_rtsp_stream_name_layout->addWidget(m_rtsp_stream_name_edit);
     
-
     // devide average
     m_rtsp_protocal__name_layout->addLayout(m_rtsp_proto_layout);
     m_rtsp_protocal__name_layout->addLayout(m_rtsp_stream_name_layout);
@@ -152,8 +147,6 @@ void rtsp_config_window::setup_UI() {
     m_rtsp_url_combo_layout->addWidget(m_rtsp_url_combo_lable, 1);
     m_rtsp_url_combo_layout->addWidget(m_rtsp_url_combo, 3);
     
-
-
     // buttons
     m_button_layout = new QHBoxLayout();
     m_test_button = new QPushButton(tr("测试连接"));
@@ -403,7 +396,7 @@ void rtsp_config_window::load_settings() {
     m_port_edit->setText(m_rtsp_config.port);
     m_channel_edit->setText(m_rtsp_config.channel);
     m_subtype_edit->setText(m_rtsp_config.subtype);
-    
+     
     update_rtsp_url();
 }
 

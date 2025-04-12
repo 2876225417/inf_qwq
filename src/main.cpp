@@ -33,6 +33,9 @@
 
 #include <utils/chars_ort_inferer.h>
 
+
+
+
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv); 
     mainwindow main_mainwindow;

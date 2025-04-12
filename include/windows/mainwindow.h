@@ -71,6 +71,15 @@ private:
    
     chars_ort_inferer* m_chars_ort_inferer;
     
+    std::tuple<camera_wrapper*, bool>
+    add_rtsp_stream(const QString& rtsp_url, const rtsp_config& config);
+
+    void setup_camera_connections(camera_wrapper* cam, const rtsp_config& config);
+
+    void update_sidebar();
+    void connect_saved_rtsp_streams();
+
+
     // todo struct expanded map data 
     QMap<int, rtsp_config> m_expands_window2rtsp_config; 
     QMap<int, QString> m_expanded_window2_inf_res;
@@ -81,6 +90,9 @@ private:
     void setup_UI();
     void setup_connections();
     QVector<rtsp_config> m_rtsp_configs;
+
+    bool m_is_first_conn_when_startup = false;
+
 };
 
 
