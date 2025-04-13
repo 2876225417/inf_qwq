@@ -511,7 +511,7 @@ void draw_overlay::update_hover_state(const QPoint& pos) {
     int old_hover_idx = m_hover_idx;
     m_hover_idx = -1;
     
-    if (!m_rects.empty()) {
+    if (!m_rects.isEmpty()) {
         for (int i = 0; i < m_rects.size(); ++i) {
             QRect btn_rect = paint_close_btn(m_rects[i].rect);
             if (btn_rect.contains(pos)) {
@@ -570,7 +570,9 @@ QRect draw_overlay::get_resize_handle_rect(const QRect& rect, resize_handle hand
 }
 
 void draw_overlay::update_rect_with_resize(const QPoint& pos) {
-    if (m_resize_idx == -1 || m_resize_handle == none) return;
+    if ( m_resize_idx == -1 || 
+         m_resize_handle == none || 
+         m_resize_idx >= m_rects.size()) return;
 
     QRect& rect = m_rects[m_resize_idx].rect;
 
@@ -623,7 +625,7 @@ void draw_overlay::paintEvent(QPaintEvent* e) {
     
     float font_scale = width() / static_cast<float>(m_base_size.width());
     
-    if (!m_rects.empty()) {
+    if (!m_rects.isEmpty()) {
         for (int i = 0; i < m_rects.size(); ++i) {
             const auto& rd = m_rects[i];
             
@@ -827,7 +829,7 @@ void draw_overlay::mousePressEvent(QMouseEvent* e) {
             return;
         }
         
-        if (m_hover_idx != -1) {
+        if (m_hover_idx != -1 && !m_rects.isEmpty() && m_hover_idx < m_rects.size()) {
             QRect btn_rect = paint_close_btn(m_rects[m_hover_idx].rect);
             if (btn_rect.contains(e->pos())) {
                 m_rects.remove(m_hover_idx);
@@ -943,7 +945,7 @@ void draw_overlay::mouseMoveEvent(QMouseEvent* e) {
         return;
     }
     
-    if (m_drag_idx != -1) {
+    if (m_drag_idx != -1 && !m_rects.isEmpty() && m_drag_idx < m_rects.size()) {
         QPoint delta = e->pos() - m_drag_start_pos;
         m_rects[m_drag_idx].rect.translate(delta);
         m_drag_start_pos = e->pos();

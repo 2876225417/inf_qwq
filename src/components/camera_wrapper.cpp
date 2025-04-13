@@ -102,7 +102,7 @@ camera_wrapper::camera_wrapper(int cam_id, QWidget* parent)
             , &draw_overlay::timer_timeout_update
             , [this](QVector<rect_data>& rects) {  
                 if (!rects.empty()) {
-                    qDebug() << "Frame updated";
+                    //qDebug() << "Frame updated";
                     rect2image(rects);
                     if (m_expanded_camera_widnow)
                         m_expanded_camera_widnow->set_cropped_image(m_cropped_images[0].image);
